@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "cypress": "cypress open --env environment=develop",
-    "cypress:prod": "cypress open --env environment=production"
+    "cypress:prod": "cypress open --env environment=production",
+    "test": "cypress run --env environment=develop"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
