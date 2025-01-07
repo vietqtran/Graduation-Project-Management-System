@@ -7,14 +7,14 @@ on:
       - staging
       - production
     paths:
-      - "client/**"
+      - ./client/**
   pull_request:
     branches:
       - develop
       - staging
       - production
     paths:
-      - "client/**"
+      - ./client/**
 
 jobs:
   build:
