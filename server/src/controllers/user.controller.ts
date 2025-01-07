@@ -1,14 +1,26 @@
 // controllers/user.controller.ts
-import { Request, Response, NextFunction } from 'express'
-import { UserService } from '@/services/user.service'
+
+import { NextFunction, Request, Response } from 'express'
+
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
+import { UserService } from '@/services/user.service'
 
 export class UserController {
-  private userService: UserService
+  private readonly userService: UserService
 
   constructor() {
     this.userService = new UserService()
+  }
+
+  async getAllUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await this.userService.getAllUsers()
+      ResponseHandler.sendSuccess(res, users, 'Users retrieved successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
   }
 
   async createUser(req: Request, res: Response, next: NextFunction) {

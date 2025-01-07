@@ -1,9 +1,11 @@
 import express, { Application } from 'express'
-import swaggerUi from 'swagger-ui-express'
+
+import RouteList from 'route-list'
+import connect from './database'
 import cors from 'cors'
 import swaggerJSDoc from 'swagger-jsdoc'
+import swaggerUi from 'swagger-ui-express'
 import { userRoutes } from './routes/user.route'
-import connect from './database'
 
 class App {
   public app: Application
@@ -48,6 +50,8 @@ class App {
 
   private initializeRoutes(): void {
     this.app.use('/api/users', userRoutes)
+    const routesMap = RouteList.getRoutes(this.app, 'express')
+    RouteList.printRoutes(routesMap)
   }
 }
 
