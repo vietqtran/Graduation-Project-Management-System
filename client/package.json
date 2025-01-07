@@ -1,0 +1,50 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --experimental-https",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "cypress": "cypress open --env environment=develop",
+    "cypress:prod": "cypress open --env environment=production"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@reduxjs/toolkit": "^2.5.0",
+    "axios": "^1.7.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "lucide-react": "^0.468.0",
+    "next": "15.1.1",
+    "next-themes": "^0.4.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.1",
+    "react-redux": "^9.2.0",
+    "redux-persist": "^6.0.0",
+    "swiper": "^11.1.15",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "cypress": "^13.17.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.1",
+    "fluid-tailwind": "^1.0.4",
+    "postcss": "^8",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
