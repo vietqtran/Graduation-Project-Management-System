@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, production, staging, develop ]
+    branches: [ production, staging, develop ]
   pull_request:
-    branches: [ main, production, staging, develop ]
+    branches: [ production, staging, develop ]
 
 env:
   PRODUCTION_BRANCH: production
