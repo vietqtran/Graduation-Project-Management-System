@@ -1,51 +1,42 @@
-import { Model } from 'mongoose'
-import UserModel, { IUser } from '@/models/user.model'
-import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import * as bcrypt from 'bcrypt'
+
+import UserModel, { IUser } from '@/models/user.model'
+
+import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
+import { Model } from 'mongoose'
 
 export class UserService {
   constructor(private readonly userModel: Model<IUser> = UserModel) {}
 
+  async getAllUsers() {
+    return await this.userModel.find()
+  }
+
   async createUser(createUserDto: CreateUserDto) {
-    const session = await this.userModel.startSession()
-    session.startTransaction()
+    const isExisted = await this.userModel.findOne({
+      $or: [{ email: createUserDto.email }, { username: createUserDto.username }]
+    })
 
-    try {
-      const isExisted = await this.userModel
-        .findOne({
-          $or: [{ email: createUserDto.email }, { username: createUserDto.username }]
-        })
-        .session(session)
-
-      if (isExisted) {
-        throw new HttpException('User already exists.', 400)
-      }
-
-      const hashed_password = await this.hashPassword(createUserDto.password)
-
-      const createdUser = await this.userModel.create(
-        [
-          {
-            ...createUserDto,
-            hashed_password
-          }
-        ],
-        { session }
-      )
-
-      if (!createdUser) {
-        throw new HttpException('Error at creating user', 400)
-      }
-
-      await session.commitTransaction()
-      return createdUser
-    } catch (err) {
-      await session.abortTransaction()
-      throw err
-    } finally {
-      session.endSession()
+    if (isExisted) {
+      throw new HttpException('User already exists.', 400)
     }
+
+    const hashed_password = await this.hashPassword(createUserDto.password)
+    if (!hashed_password) {
+      throw new HttpException('Error hashing password', 500)
+    }
+
+    const createdUser = await this.userModel.create({
+      ...createUserDto,
+      hashed_password
+    })
+
+    if (!createdUser) {
+      throw new HttpException('Error at creating user', 400)
+    }
+
+    return createdUser
   }
 
   private async hashPassword(password: string) {

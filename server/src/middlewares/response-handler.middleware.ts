@@ -7,44 +7,19 @@ export interface CustomResponse {
   statusCode: number
 }
 
-import { Request, Response, NextFunction } from 'express'
+import { NextFunction, Request, Response } from 'express'
 
 export class ResponseHandler {
-  static success(req: Request, res: Response, next: NextFunction) {
-    const originalJson = res.json
-    const originalSend = res.send
-
-    res.json = function (data: any): Response {
-      const customResponse: CustomResponse = {
-        success: true,
-        data: data || null,
-        message: res.locals.message || 'Operation successful',
-        timestamp: new Date().toISOString(),
-        path: req.originalUrl,
-        statusCode: res.statusCode
-      }
-
-      return originalJson.call(this, customResponse)
-    }
-
-    res.send = function (data: any): Response {
-      if (typeof data === 'object') {
-        return res.json(data)
-      }
-      return originalSend.call(this, data)
-    }
-
-    next()
-  }
-
   static sendSuccess(res: Response, data: any = null, message: string = 'Success') {
-    res.locals.message = message
-    return res.status(200).json(data)
-  }
-
-  static sendCreated(res: Response, data: any = null, message: string = 'Resource created successfully') {
-    res.locals.message = message
-    return res.status(201).json(data)
+    return res.status(200).json({
+      success: true,
+      data,
+      message,
+      timestamp: new Date().toISOString(),
+      path: res.req.originalUrl,
+      statusCode: res.statusCode,
+      error: null
+    })
   }
 
   static sendError(res: Response, error: any) {
@@ -53,11 +28,16 @@ export class ResponseHandler {
 
     return res.status(statusCode).json({
       success: false,
+      data: null,
+      message,
+      timestamp: new Date().toISOString(),
+      path: res.req.originalUrl,
+      statusCode,
       error: {
         message,
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-      },
-      data: null
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+        statusCode
+      }
     })
   }
 }

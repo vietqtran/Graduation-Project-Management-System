@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, production, staging, develop ]
+    branches: [production, staging, develop]
   pull_request:
-    branches: [ main, production, staging, develop ]
+    branches: [production, staging, develop]
 
 env:
   PRODUCTION_BRANCH: production
@@ -14,164 +14,140 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         app: [client, server]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.17.0'
-        cache: 'yarn'
-    
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.yarn/cache
-          ${{ matrix.app }}/node_modules
-        key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-build-
 
-    - name: Install Dependencies
-      working-directory: ${{ matrix.app }}
-      run: yarn
-    
-    - name: Build
-      working-directory: ${{ matrix.app }}
-      env:
-        NODE_ENV: ${{ github.ref_name == 'production' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
-      run: yarn build
-    
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.app }}-build
-        path: |
-          ${{ matrix.app }}/${{ matrix.app == 'client' && '.next' || 'dist' }}
-        retention-days: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.17.0"
+
+      - name: Install Dependencies
+        working-directory: ${{ matrix.app }}
+        run: yarn
+
+      - name: Build
+        working-directory: ${{ matrix.app }}
+        run: yarn build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: |
+            ${{ matrix.app }}/${{ matrix.app == 'client' && '.next' || 'dist' }}
+          retention-days: 1
 
   test:
     needs: build
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         app: [client]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.17.0'
-        cache: 'yarn'
-    
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.yarn/cache
-          client/node_modules
-        key: ${{ runner.os }}-test-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-test-
 
-    - name: Install Dependencies
-      working-directory: client
-      run: yarn
-    
-    - name: Download Client Build
-      uses: actions/download-artifact@v4
-      with:
-        name: client-build
-        path: client/.next
-    
-    - name: Install Cypress
-      working-directory: client
-      run: yarn add cypress --dev
-    
-    - name: Run Cypress Tests
-      working-directory: client
-      run: |
-        if [[ $GITHUB_REF == 'refs/heads/production' ]]; then
-          yarn cypress run --env environment=production --headless
-        else
-          yarn cypress run --env environment=develop --headless
-        fi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.17.0"
+
+      - name: Install Dependencies
+        working-directory: client
+        run: yarn
+
+      - name: Download Client Build
+        uses: actions/download-artifact@v4
+        with:
+          name: client-build
+          path: client/.next
+
+      - name: Install Cypress
+        working-directory: client
+        run: yarn add cypress --dev
+
+      - name: Run Cypress Tests
+        working-directory: client
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/production' ]]; then
+            yarn cypress run --env environment=production --headless
+          else
+            yarn cypress run --env environment=develop --headless
+          fi
 
   deploy:
     needs: [build, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/production' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download Client Build
-      uses: actions/download-artifact@v4
-      with:
-        name: client-build
-        path: client/.next
-    
-    - name: Download Server Build
-      uses: actions/download-artifact@v4
-      with:
-        name: server-build
-        path: server/dist
-    
-    - name: Set Environment Variables
-      run: |
-        if [[ $GITHUB_REF == 'refs/heads/production' ]]; then
-          echo "DEPLOY_ENV=production" >> $GITHUB_ENV
-          echo "Setting production environment variables"
-        elif [[ $GITHUB_REF == 'refs/heads/staging' ]]; then
-          echo "DEPLOY_ENV=staging" >> $GITHUB_ENV
-          echo "Setting staging environment variables"
-        else
-          echo "DEPLOY_ENV=development" >> $GITHUB_ENV
-          echo "Setting development environment variables"
-        fi
-    
-    - name: Deploy Client
-      env:
-        DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
-      run: |
-        if [[ $DEPLOY_ENV == 'production' ]]; then
-          echo "Deploying client to production environment"
-          # Add production deployment commands
-        elif [[ $DEPLOY_ENV == 'staging' ]]; then
-          echo "Deploying client to staging environment"
-          # Add staging deployment commands
-        else
-          echo "Deploying client to development environment"
-          # Add development deployment commands
-        fi
-    
-    - name: Deploy Server
-      env:
-        DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
-      run: |
-        if [[ $DEPLOY_ENV == 'production' ]]; then
-          echo "Deploying server to production environment"
-          # Add production deployment commands
-        elif [[ $DEPLOY_ENV == 'staging' ]]; then
-          echo "Deploying server to staging environment"
-          # Add staging deployment commands
-        else
-          echo "Deploying server to development environment"
-          # Add development deployment commands
-        fi
-    
-    - name: Notification
-      if: always()
-      run: |
-        echo "Deployment to ${{ env.DEPLOY_ENV }} environment ${{ job.status }}"
-        # Add notification commands (e.g., Slack, Email)
+      - uses: actions/checkout@v4
+
+      - name: Download Client Build
+        uses: actions/download-artifact@v4
+        with:
+          name: client-build
+          path: client/.next
+
+      - name: Download Server Build
+        uses: actions/download-artifact@v4
+        with:
+          name: server-build
+          path: server/dist
+
+      - name: Set Environment Variables
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/production' ]]; then
+            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+            echo "Setting production environment variables"
+          elif [[ $GITHUB_REF == 'refs/heads/staging' ]]; then
+            echo "DEPLOY_ENV=staging" >> $GITHUB_ENV
+            echo "Setting staging environment variables"
+          else
+            echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+            echo "Setting development environment variables"
+          fi
+
+      - name: Deploy Client
+        env:
+          DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
+        run: |
+          if [[ $DEPLOY_ENV == 'production' ]]; then
+            echo "Deploying client to production environment"
+            # Add production deployment commands
+          elif [[ $DEPLOY_ENV == 'staging' ]]; then
+            echo "Deploying client to staging environment"
+            # Add staging deployment commands
+          else
+            echo "Deploying client to development environment"
+            # Add development deployment commands
+          fi
+
+      - name: Deploy Server
+        env:
+          DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
+        run: |
+          if [[ $DEPLOY_ENV == 'production' ]]; then
+            echo "Deploying server to production environment"
+            # Add production deployment commands
+          elif [[ $DEPLOY_ENV == 'staging' ]]; then
+            echo "Deploying server to staging environment"
+            # Add staging deployment commands
+          else
+            echo "Deploying server to development environment"
+            # Add development deployment commands
+          fi
+
+      - name: Notification
+        if: always()
+        run: |
+          echo "Deployment to ${{ env.DEPLOY_ENV }} environment ${{ job.status }}"
+          # Add notification commands (e.g., Slack, Email)
