@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ production, staging, develop ]
+    branches: [ main, production, staging, develop ]
   pull_request:
-    branches: [ production, staging, develop ]
+    branches: [ main, production, staging, develop ]
 
 env:
   PRODUCTION_BRANCH: production
@@ -27,8 +27,17 @@ jobs:
       with:
         node-version: '20.17.0'
         cache: 'yarn'
-        cache-dependency-path: ${{ matrix.app }}/yarn.lock
     
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.yarn/cache
+          ${{ matrix.app }}/node_modules
+        key: ${{ runner.os }}-build-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-
+
     - name: Install Dependencies
       working-directory: ${{ matrix.app }}
       run: yarn
@@ -36,7 +45,7 @@ jobs:
     - name: Build
       working-directory: ${{ matrix.app }}
       env:
-        NODE_ENV: ${{ github.ref == 'refs/heads/production' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
+        NODE_ENV: ${{ github.ref_name == 'production' && 'production' || github.ref_name == 'staging' && 'staging' || 'development' }}
       run: yarn build
     
     - name: Upload Build Artifact
@@ -63,8 +72,17 @@ jobs:
       with:
         node-version: '20.17.0'
         cache: 'yarn'
-        cache-dependency-path: client/yarn.lock
     
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.yarn/cache
+          client/node_modules
+        key: ${{ runner.os }}-test-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-test-
+
     - name: Install Dependencies
       working-directory: client
       run: yarn
