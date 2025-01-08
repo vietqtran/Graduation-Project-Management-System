@@ -7,19 +7,20 @@ import UserModel, { IUser } from '@/models/user.model'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import SessionModel, { ISession } from '@/models/session.model'
-import { Inject, Service } from 'typedi'
 import * as jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
 
-@Service()
 export class AuthService {
-  constructor(
-    private readonly accountModel: Model<IAccount> = AccountModel,
-    private readonly userModel: Model<IUser> = UserModel,
-    private readonly sessionModel: Model<ISession> = SessionModel
-  ) {}
+  private readonly accountModel: Model<IAccount>
+  private readonly userModel: Model<IUser>
+  private readonly sessionModel: Model<ISession>
+  constructor() {
+    this.accountModel = AccountModel
+    this.userModel = UserModel
+    this.sessionModel = SessionModel
+  }
 
   async signIn(signInDto: SignInDto) {
     const { email, password, device, device_id } = signInDto
@@ -167,49 +168,49 @@ export class AuthService {
   }
 
   signAccessToken(data: TokenPayload) {
-      try {
-        return jwt.sign(
-          {
-            ...data
-          },
-          process.env.JWT_ACCESS_SECRET ?? '',
-          { expiresIn: process.env.JWT_ACCESS_EXPIRE_AT ?? '' }
-        )
-      } catch (err) {
-        throw new HttpException('Error while sign access token', 500)
-      }
+    try {
+      return jwt.sign(
+        {
+          ...data
+        },
+        process.env.JWT_ACCESS_SECRET ?? '',
+        { expiresIn: process.env.JWT_ACCESS_EXPIRE_AT ?? '' }
+      )
+    } catch (err) {
+      throw new HttpException('Error while sign access token', 500)
     }
-  
-    signRefreshToken(data: TokenPayload) {
-      try {
-        return jwt.sign(
-          {
-            ...data
-          },
-          process.env.JWT_REFRESH_SECRET ?? '',
-          { expiresIn: process.env.JWT_REFRESH_EXPIRE_AT ?? '' }
-        )
-      } catch (err) {
-        console.log(err)
-        throw new HttpException('Error while sign refresh token', 500)
-      }
+  }
+
+  signRefreshToken(data: TokenPayload) {
+    try {
+      return jwt.sign(
+        {
+          ...data
+        },
+        process.env.JWT_REFRESH_SECRET ?? '',
+        { expiresIn: process.env.JWT_REFRESH_EXPIRE_AT ?? '' }
+      )
+    } catch (err) {
+      console.log(err)
+      throw new HttpException('Error while sign refresh token', 500)
     }
-  
-    verifyAccessToken(token: string) {
-      try {
-        return jwt.verify(token, process.env.JWT_ACCESS_SECRET ?? '')
-      } catch (err) {
-        console.log(err)
-        throw new HttpException('Error while sign refresh token', 401)
-      }
+  }
+
+  verifyAccessToken(token: string) {
+    try {
+      return jwt.verify(token, process.env.JWT_ACCESS_SECRET ?? '')
+    } catch (err) {
+      console.log(err)
+      throw new HttpException('Error while sign refresh token', 401)
     }
-  
-    verifyRefreshToken(token: string) {
-      try {
-        return jwt.verify(token, process.env.JWT_REFRESH_SECRET ?? '')
-      } catch (err) {
-        console.log(err)
-        throw new HttpException('Error while sign refresh token', 401)
-      }
+  }
+
+  verifyRefreshToken(token: string) {
+    try {
+      return jwt.verify(token, process.env.JWT_REFRESH_SECRET ?? '')
+    } catch (err) {
+      console.log(err)
+      throw new HttpException('Error while sign refresh token', 401)
     }
+  }
 }
