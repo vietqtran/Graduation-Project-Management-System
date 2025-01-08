@@ -3,4 +3,5 @@ export interface TokenPayload {
   email: string
   username: string
   roles: string[]
+  device_id: string
 }

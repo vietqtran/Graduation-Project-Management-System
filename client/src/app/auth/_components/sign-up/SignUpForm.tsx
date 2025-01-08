@@ -7,26 +7,34 @@ import { Button } from '@/components/ui/button'
 import GithubLoginButton from '../ui/GithubLoginButton'
 import GoogleLoginButton from '../ui/GoogleLoginButton'
 import { Input } from '@/components/ui/input'
-import axios from 'axios'
-import { delay } from '@/helpers'
+import { useAuth } from '@/hooks/useAuth'
 import { useForm } from 'react-hook-form'
+import { useRouter } from '@/hooks/useRouter'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const formSchema = z
   .object({
     email: z.string().min(1, 'Email is required.').email('Invalid email.').max(255, 'Email is too long.'),
-    firstName: z.string().min(1, 'First name is required.').max(64, 'First name is too long.'),
-    lastName: z.string().min(1, 'Last name is required.').max(64, 'Last name is too long.'),
-    password: z.string().min(1, 'Password is required.'),
-    confirmPassword: z.string().min(1, 'Confirm password is required.')
+    first_name: z.string().min(1, 'First name is required.').max(50, 'First name is too long.'),
+    last_name: z.string().min(1, 'Last name is required.').max(50, 'Last name is too long.'),
+    password: z
+      .string()
+      .min(1, 'Password is required.')
+      .min(8, 'Password is too short. Minimum length is 8 characters.')
+      .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, {
+        message: 'Password must contain at least one letter and one number.'
+      }),
+    confirm_password: z.string().min(1, 'Confirm password is required.')
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.confirm_password, {
     message: 'Passwords do not match.',
-    path: ['confirmPassword']
+    path: ['confirm_password']
   })
 
 const SignUpForm = () => {
+  const { signUp } = useAuth()
+  const { replace } = useRouter()
   const [isPending, startTransition] = useTransition()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -34,18 +42,24 @@ const SignUpForm = () => {
     defaultValues: {
       email: '',
       password: '',
-      confirmPassword: '',
-      firstName: '',
-      lastName: ''
+      confirm_password: '',
+      first_name: '',
+      last_name: ''
     }
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const { email, password, first_name, last_name } = values
     startTransition(async () => {
-      console.log(values)
-      const apiCall = axios.get('https://jsonplaceholder.typicode.com/todos/1')
-      const [res] = await Promise.all([apiCall, delay(2500)])
-      console.log(res)
+      const user = await signUp({
+        email,
+        password,
+        first_name,
+        last_name
+      })
+      if (user) {
+        replace('/')
+      }
     })
   }
 
@@ -60,7 +74,7 @@ const SignUpForm = () => {
           <div className='flex w-full items-start justify-between gap-2'>
             <FormField
               control={form.control}
-              name='firstName'
+              name='first_name'
               render={({ field }) => (
                 <FormItem className='w-full'>
                   <FormLabel>First name</FormLabel>
@@ -73,7 +87,7 @@ const SignUpForm = () => {
             />
             <FormField
               control={form.control}
-              name='lastName'
+              name='last_name'
               render={({ field }) => (
                 <FormItem className='w-full'>
                   <FormLabel>Last name</FormLabel>
@@ -116,7 +130,7 @@ const SignUpForm = () => {
 
           <FormField
             control={form.control}
-            name='confirmPassword'
+            name='confirm_password'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Confirm password</FormLabel>
