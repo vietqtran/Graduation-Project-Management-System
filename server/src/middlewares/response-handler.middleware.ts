@@ -11,6 +11,24 @@ import { NextFunction, Request, Response } from 'express'
 
 export class ResponseHandler {
   static sendSuccess(res: Response, data: any = null, message: string = 'Success') {
+    if(data?.accessToken) {
+      res.cookie('accessToken', data.accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'none',
+        maxAge: 60 * 60 * 1000
+      });
+    }
+
+    if(data?.refeshToken) {
+      res.cookie('refeshToken', data.refeshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'none',
+        maxAge: 60 * 60 * 1000 * 2
+      });
+    }
+
     return res.status(200).json({
       success: true,
       data,
