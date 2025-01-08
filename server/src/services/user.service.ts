@@ -5,7 +5,9 @@ import UserModel, { IUser } from '@/models/user.model'
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { Model } from 'mongoose'
+import { Service } from 'typedi'
 
+@Service()
 export class UserService {
   constructor(private readonly userModel: Model<IUser> = UserModel) {}
 

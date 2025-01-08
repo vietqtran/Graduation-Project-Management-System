@@ -3,18 +3,18 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 export interface IUser extends Document {
   email: string
   username: string
-  first_name?: string
-  last_name?: string
-  hashed_password: string
+  first_name: string
+  last_name: string
+  roles?: [string]
 }
 
 const UserSchema = new Schema<IUser>(
   {
-    email: { type: String, required: true, unique: true },
-    username: { type: String, required: false, unique: true },
-    first_name: { type: String, required: false, default: null },
-    last_name: { type: String, required: false, default: null },
-    hashed_password: { type: String, required: true }
+    email: { type: String, required: true, unique: true, index: true, maxlength: 255 },
+    username: { type: String, required: false, unique: true, index: true, maxlength: 50 },
+    first_name: { type: String, required: true, default: '', maxlength: 50 },
+    last_name: { type: String, required: true, default: '', maxlength: 50 },
+    roles: { type: Array, required: true, default: ['user'] }
   },
   {
     timestamps: {

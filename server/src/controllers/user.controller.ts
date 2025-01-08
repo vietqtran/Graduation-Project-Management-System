@@ -1,11 +1,11 @@
-// controllers/user.controller.ts
-
 import { NextFunction, Request, Response } from 'express'
 
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { UserService } from '@/services/user.service'
+import { Service } from 'typedi'
 
+@Service()
 export class UserController {
   private readonly userService: UserService
 

@@ -1,21 +1,28 @@
+import 'reflect-metadata'
 import express, { Application } from 'express'
-
 import RouteList from 'route-list'
 import connect from './database'
 import cors from 'cors'
 import swaggerJSDoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
-import { userRoutes } from './routes/user.route'
+import { Container } from 'typedi'
+import { useContainer as useContainerRoutingControllers } from 'routing-controllers'
+import { authRoutes, userRoutes } from './routes'
 
 class App {
   public app: Application
 
   constructor() {
     this.app = express()
+    this.configureContainer()
     this.connectdb()
     this.initializeMiddlewares()
     this.initializeSwagger()
     this.initializeRoutes()
+  }
+
+  private configureContainer(): void {
+    useContainerRoutingControllers(Container)
   }
 
   private connectdb(): void {
@@ -50,6 +57,7 @@ class App {
 
   private initializeRoutes(): void {
     this.app.use('/api/users', userRoutes)
+    this.app.use('/api/auth', authRoutes)
     const routesMap = RouteList.getRoutes(this.app, 'express')
     RouteList.printRoutes(routesMap)
   }
