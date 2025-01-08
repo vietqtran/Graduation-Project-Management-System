@@ -7,19 +7,27 @@ import { Button } from '@/components/ui/button'
 import GithubLoginButton from '../ui/GithubLoginButton'
 import GoogleLoginButton from '../ui/GoogleLoginButton'
 import { Input } from '@/components/ui/input'
-import axios from 'axios'
-import { delay } from '@/helpers'
+import { useAuth } from '@/hooks/useAuth'
 import { useForm } from 'react-hook-form'
+import { useRouter } from '@/hooks/useRouter'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const formSchema = z.object({
   email: z.string().min(1, 'Email is required.').email('Invalid email.').max(255, 'Email is too long.'),
-  password: z.string().min(1, 'Password is required.')
+  password: z
+    .string()
+    .min(1, 'Password is required.')
+    .min(8, 'Password is too short. Minimum length is 8 characters.')
+    .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, {
+      message: 'Password must contain at least one letter and one number.'
+    })
 })
 
 const SignInForm = () => {
   const [isPending, startTransition] = useTransition()
+  const { signIn } = useAuth()
+  const { replace } = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -29,12 +37,13 @@ const SignInForm = () => {
     }
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
-      console.log(values)
-      const apiCall = axios.get('https://jsonplaceholder.typicode.com/todos/1')
-      const [res] = await Promise.all([apiCall, delay(2500)])
-      console.log(res)
+      const { email, password } = values
+      const user = await signIn({ email, password })
+      if (user) {
+        replace('/')
+      }
     })
   }
 

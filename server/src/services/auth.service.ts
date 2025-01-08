@@ -1,14 +1,16 @@
+import * as argon2 from 'argon2'
+import * as dotenv from 'dotenv'
+import * as jwt from 'jsonwebtoken'
+
 import AccountModel, { IAccount } from '@/models/account.model'
+import SessionModel, { ISession } from '@/models/session.model'
+import UserModel, { IUser } from '@/models/user.model'
+
+import { HttpException } from '@/shared/exceptions/http.exception'
 import { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
-import { HttpException } from '@/shared/exceptions/http.exception'
-import * as argon2 from 'argon2'
-import UserModel, { IUser } from '@/models/user.model'
-import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
-import SessionModel, { ISession } from '@/models/session.model'
-import * as jwt from 'jsonwebtoken'
-import * as dotenv from 'dotenv'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 
 dotenv.config()
 
@@ -26,54 +28,61 @@ export class AuthService {
     const { email, password, device, device_id } = signInDto
     const account = await this.accountModel.findOne({ email })
     if (!account) {
-      throw new HttpException('Account not found', 400)
+      throw new HttpException('Account not found', 404)
     }
     await this.verifyPassword(account.hashed_password, password)
     const user = await this.userModel.findOne({ _id: account.user_id })
     if (!user) {
-      throw new HttpException('User not found', 400)
+      throw new HttpException('User not found', 404)
     }
     const payload: TokenPayload = {
       _id: user._id as string,
       email: account.email,
       roles: user.roles ?? [],
-      username: user.username
+      username: user.username,
+      device_id
     }
     const accessToken = this.signAccessToken(payload)
     const refreshToken = this.signRefreshToken(payload)
-    const hashedAccessToken = await this.hashToken(accessToken)
-    const hashedRefreshToken = await this.hashToken(refreshToken)
 
-    const createdSesison = await this.sessionModel.create({
-      device,
-      device_id,
-      hashed_access_token: hashedAccessToken,
-      hashed_refresh_token: hashedRefreshToken,
-      access_token_expires_at: new Date(Date.now() + 60 * 60 * 1000),
-      refresh_token_expires_at: new Date(Date.now() + 60 * 60 * 1000 * 2)
-    })
-
-    if (!createdSesison) {
-      throw new HttpException("Can't create session", 400)
-    }
-
-    const updatedAccount = await this.accountModel.updateOne(
-      { _id: account._id },
+    const upsertSession = await this.sessionModel.updateOne(
+      { device_id },
       {
         $set: {
-          sessions: [...account.sessions, { ...createdSesison }]
+          device,
+          device_id,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
+          refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
         }
-      }
+      },
+      { upsert: true }
     )
 
-    if (!updatedAccount) {
-      throw new HttpException("Can't update account", 400)
+    if (!upsertSession) {
+      throw new HttpException("Can't create session", 500)
+    }
+
+    if (upsertSession.upsertedId) {
+      const updatedAccount = await this.accountModel.updateOne(
+        { _id: account._id },
+        {
+          $set: {
+            sessions: [...account.sessions, upsertSession.upsertedId]
+          }
+        }
+      )
+      if (!updatedAccount) {
+        throw new HttpException("Can't update account", 500)
+      }
     }
 
     return {
       user,
       accessToken,
-      refreshToken
+      refreshToken,
+      deviceId: device_id
     }
   }
 
@@ -99,31 +108,30 @@ export class AuthService {
       last_name
     })
     if (!createdUser) {
-      throw new HttpException("Can't create user", 400)
+      throw new HttpException("Can't create user", 500)
     }
 
     const payload: TokenPayload = {
       _id: createdUser._id as string,
       email: createdUser.email,
       roles: createdUser.roles ?? [],
-      username: createdUser.username
+      username: createdUser.username,
+      device_id
     }
     const accessToken = this.signAccessToken(payload)
     const refreshToken = this.signRefreshToken(payload)
-    const hashedAccessToken = await this.hashToken(accessToken)
-    const hashedRefreshToken = await this.hashToken(refreshToken)
 
-    const createdSesison = await this.sessionModel.create({
+    const createdSession = await this.sessionModel.create({
       device,
       device_id,
-      hashed_access_token: hashedAccessToken,
-      hashed_refresh_token: hashedRefreshToken,
-      access_token_expires_at: new Date(Date.now() + 60 * 60 * 1000),
-      refresh_token_expires_at: new Date(Date.now() + 60 * 60 * 1000 * 2)
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
+      refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
     })
 
-    if (!createdSesison) {
-      throw new HttpException("Can't create session", 400)
+    if (!createdSession) {
+      throw new HttpException("Can't create session", 500)
     }
 
     const createdAccount = await this.accountModel.create({
@@ -131,25 +139,105 @@ export class AuthService {
       email,
       username,
       hashed_password: hashedPassword,
-      sessions: [createdSesison._id]
+      sessions: [createdSession._id]
     })
 
     if (!createdAccount) {
-      throw new HttpException("Can't create account", 400)
+      throw new HttpException("Can't create account", 500)
     }
 
     return {
       user: createdUser,
       accessToken,
+      refreshToken,
+      deviceId: device_id
+    }
+  }
+
+  async logout(accessToken: string) {
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
+    const session = await this.sessionModel.findOne({
+      device_id: decoded.device_id
+    })
+    if (!session) {
+      throw new HttpException('Session not found', 404)
+    }
+    const deletedSession = await this.sessionModel.deleteOne({
+      _id: session._id
+    })
+    if (!deletedSession) {
+      throw new HttpException('Error at delete session', 500)
+    }
+    const account = await this.accountModel.findOne({ user_id: decoded._id })
+    if (!account) {
+      throw new HttpException('Account not found', 404)
+    }
+    const updatedAccount = await this.accountModel.updateOne(
+      { _id: account?._id },
+      {
+        $set: {
+          sessions: account?.sessions.filter((s: any) => {
+            return !s.equals(session._id)
+          })
+        }
+      }
+    )
+    if (!updatedAccount) {
+      throw new HttpException('Error at update account', 500)
+    }
+    return null
+  }
+
+  async refresh(token: string) {
+    const decoded = this.verifyRefreshToken(token) as TokenPayload
+    const user = await this.userModel.findOne({ _id: decoded._id })
+    if (!user) {
+      throw new HttpException('User not found', 404)
+    }
+    const session = await this.sessionModel.findOne({
+      device_id: decoded.device_id
+    })
+    if (!session) {
+      throw new HttpException('Session not found', 404)
+    }
+    const payload: TokenPayload = {
+      _id: user._id as string,
+      email: user.email,
+      roles: user.roles ?? [],
+      username: user.username,
+      device_id: decoded.device_id
+    }
+    const accessToken = this.signAccessToken(payload)
+    const refreshToken = this.signRefreshToken(payload)
+    const updatedSession = await this.sessionModel.updateOne(
+      { _id: session._id },
+      {
+        $set: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
+          refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
+        }
+      },
+      { upsert: true }
+    )
+    if (!updatedSession) {
+      throw new HttpException("Can't update session", 400)
+    }
+    return {
+      accessToken,
       refreshToken
     }
   }
 
-  async logout() {}
-
-  async refresh() {}
-
-  async me() {}
+  async me(accessToken: string) {
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
+    const user = await this.userModel.findOne({ _id: decoded._id })
+    if (!user) {
+      throw new HttpException('User not found', 404)
+    }
+    return user
+  }
 
   private async verifyPassword(hashedPassword: string, password: string) {
     try {
@@ -161,10 +249,6 @@ export class AuthService {
 
   private async hashPassword(password: string) {
     return await argon2.hash(password)
-  }
-
-  private async hashToken(token: string) {
-    return await argon2.hash(token)
   }
 
   signAccessToken(data: TokenPayload) {
@@ -191,7 +275,6 @@ export class AuthService {
         { expiresIn: process.env.JWT_REFRESH_EXPIRE_AT ?? '' }
       )
     } catch (err) {
-      console.log(err)
       throw new HttpException('Error while sign refresh token', 500)
     }
   }
@@ -200,7 +283,6 @@ export class AuthService {
     try {
       return jwt.verify(token, process.env.JWT_ACCESS_SECRET ?? '')
     } catch (err) {
-      console.log(err)
       throw new HttpException('Error while sign refresh token', 401)
     }
   }
@@ -209,7 +291,6 @@ export class AuthService {
     try {
       return jwt.verify(token, process.env.JWT_REFRESH_SECRET ?? '')
     } catch (err) {
-      console.log(err)
       throw new HttpException('Error while sign refresh token', 401)
     }
   }
