@@ -1,13 +1,14 @@
 export interface User {
-  id: string
-  name: string
+  _id: string
   email: string
+  username: string
+  first_name: string
+  last_name: string
+  roles: string[]
 }
 
 export interface AuthState {
-  isAuthenticated: boolean
   user: User | null
-  accessToken: string | null
 }
 
 export interface RootState {

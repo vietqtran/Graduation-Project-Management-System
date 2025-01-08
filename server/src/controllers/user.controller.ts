@@ -1,5 +1,3 @@
-// controllers/user.controller.ts
-
 import { NextFunction, Request, Response } from 'express'
 
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
@@ -27,7 +25,7 @@ export class UserController {
     try {
       const createUserDto: CreateUserDto = req.body
       const createdUser = await this.userService.createUser(createUserDto)
-      ResponseHandler.sendSuccess(res, createdUser, 'Users retrieved successfully')
+      ResponseHandler.sendSuccess(res, createdUser, 'User created successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)
