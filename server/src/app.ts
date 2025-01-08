@@ -8,6 +8,8 @@ import swaggerUi from 'swagger-ui-express'
 import { Container } from 'typedi'
 import { useContainer as useContainerRoutingControllers } from 'routing-controllers'
 import { authRoutes, userRoutes } from './routes'
+import { AuthService } from './services/auth.service'
+import AccountModel from './models/account.model'
 
 class App {
   public app: Application
@@ -23,6 +25,8 @@ class App {
 
   private configureContainer(): void {
     useContainerRoutingControllers(Container)
+    Container.set(AuthService, AuthService)
+    Container.set('AccountModel', AccountModel)
   }
 
   private connectdb(): void {

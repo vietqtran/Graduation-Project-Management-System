@@ -3,11 +3,14 @@ import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { AuthService } from '@/services/auth.service'
 import { NextFunction, Request, Response } from 'express'
-import { Service } from 'typedi'
+import Container, { Service } from 'typedi'
 
 @Service()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly authService: AuthService
+  constructor() {
+    this.authService = Container.get(AuthService)
+  }
 
   async signIn(req: Request, res: Response, next: NextFunction) {
     try {
@@ -23,7 +26,7 @@ export class AuthController {
   async signUp(req: Request, res: Response, next: NextFunction) {
     try {
       const signUpDto: SignUpDto = req.body
-      const response = await this.authService.signIn(signUpDto)
+      const response = await this.authService.signUp(signUpDto)
       ResponseHandler.sendSuccess(res, response, 'Sign up successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)

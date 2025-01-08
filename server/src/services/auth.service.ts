@@ -1,5 +1,4 @@
 import AccountModel, { IAccount } from '@/models/account.model'
-import { JwtService } from './jwt.service'
 import { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
@@ -8,12 +7,15 @@ import UserModel, { IUser } from '@/models/user.model'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import SessionModel, { ISession } from '@/models/session.model'
-import { Service } from 'typedi'
+import { Inject, Service } from 'typedi'
+import * as jwt from 'jsonwebtoken'
+import * as dotenv from 'dotenv'
+
+dotenv.config()
 
 @Service()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
     private readonly accountModel: Model<IAccount> = AccountModel,
     private readonly userModel: Model<IUser> = UserModel,
     private readonly sessionModel: Model<ISession> = SessionModel
@@ -36,8 +38,8 @@ export class AuthService {
       roles: user.roles ?? [],
       username: user.username
     }
-    const accessToken = this.jwtService.signAccessToken(payload)
-    const refreshToken = this.jwtService.signRefreshToken(payload)
+    const accessToken = this.signAccessToken(payload)
+    const refreshToken = this.signRefreshToken(payload)
     const hashedAccessToken = await this.hashToken(accessToken)
     const hashedRefreshToken = await this.hashToken(refreshToken)
 
@@ -76,13 +78,13 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto) {
     const { email, first_name, last_name, password, username, device, device_id } = signUpDto
-    const isExistedUser = await this.userModel.find({
+    const isExistedUser = await this.userModel.findOne({
       $or: [{ username }, { email }]
     })
     if (isExistedUser) {
       throw new HttpException('Account already existed', 400)
     }
-    const isExistedAccount = await this.accountModel.find({
+    const isExistedAccount = await this.accountModel.findOne({
       $or: [{ username }, { email }]
     })
     if (isExistedAccount) {
@@ -95,7 +97,6 @@ export class AuthService {
       first_name,
       last_name
     })
-
     if (!createdUser) {
       throw new HttpException("Can't create user", 400)
     }
@@ -106,8 +107,8 @@ export class AuthService {
       roles: createdUser.roles ?? [],
       username: createdUser.username
     }
-    const accessToken = this.jwtService.signAccessToken(payload)
-    const refreshToken = this.jwtService.signRefreshToken(payload)
+    const accessToken = this.signAccessToken(payload)
+    const refreshToken = this.signRefreshToken(payload)
     const hashedAccessToken = await this.hashToken(accessToken)
     const hashedRefreshToken = await this.hashToken(refreshToken)
 
@@ -164,4 +165,51 @@ export class AuthService {
   private async hashToken(token: string) {
     return await argon2.hash(token)
   }
+
+  signAccessToken(data: TokenPayload) {
+      try {
+        return jwt.sign(
+          {
+            ...data
+          },
+          process.env.JWT_ACCESS_SECRET ?? '',
+          { expiresIn: process.env.JWT_ACCESS_EXPIRE_AT ?? '' }
+        )
+      } catch (err) {
+        throw new HttpException('Error while sign access token', 500)
+      }
+    }
+  
+    signRefreshToken(data: TokenPayload) {
+      try {
+        return jwt.sign(
+          {
+            ...data
+          },
+          process.env.JWT_REFRESH_SECRET ?? '',
+          { expiresIn: process.env.JWT_REFRESH_EXPIRE_AT ?? '' }
+        )
+      } catch (err) {
+        console.log(err)
+        throw new HttpException('Error while sign refresh token', 500)
+      }
+    }
+  
+    verifyAccessToken(token: string) {
+      try {
+        return jwt.verify(token, process.env.JWT_ACCESS_SECRET ?? '')
+      } catch (err) {
+        console.log(err)
+        throw new HttpException('Error while sign refresh token', 401)
+      }
+    }
+  
+    verifyRefreshToken(token: string) {
+      try {
+        return jwt.verify(token, process.env.JWT_REFRESH_SECRET ?? '')
+      } catch (err) {
+        console.log(err)
+        throw new HttpException('Error while sign refresh token', 401)
+      }
+    }
 }
