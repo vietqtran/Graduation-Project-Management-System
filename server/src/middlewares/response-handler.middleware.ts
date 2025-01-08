@@ -1,3 +1,9 @@
+import * as dotenv from 'dotenv'
+
+import { Response } from 'express'
+
+dotenv.config()
+
 export interface CustomResponse {
   success: boolean
   data: any
@@ -6,27 +12,24 @@ export interface CustomResponse {
   path: string
   statusCode: number
 }
-
-import { NextFunction, Request, Response } from 'express'
-
 export class ResponseHandler {
   static sendSuccess(res: Response, data: any = null, message: string = 'Success') {
-    if(data?.accessToken) {
-      res.cookie('accessToken', data.accessToken, {
+    if (data?.accessToken) {
+      res.cookie('Authentication', data.accessToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: 'none',
-        maxAge: 60 * 60 * 1000
-      });
+        maxAge: Number(process.env.JWT_ACCESS_EXPIRE_AT)
+      })
     }
 
-    if(data?.refeshToken) {
-      res.cookie('refeshToken', data.refeshToken, {
+    if (data?.refreshToken) {
+      res.cookie('Refresh', data.refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: 'none',
-        maxAge: 60 * 60 * 1000 * 2
-      });
+        maxAge: Number(process.env.JWT_REFRESH_EXPIRE_AT)
+      })
     }
 
     return res.status(200).json({
@@ -53,8 +56,7 @@ export class ResponseHandler {
       statusCode,
       error: {
         message,
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-        statusCode
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
       }
     })
   }
