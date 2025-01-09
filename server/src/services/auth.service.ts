@@ -23,6 +23,7 @@ import {
   RegistrationResponseJSON
 } from '@simplewebauthn/types'
 import { VerifyRegistrationPasskeyDto } from '@/dtos/auth/verify-registration-passkey.dto'
+import { VerifyAuthenticationPasskey } from '@/dtos/auth/verify-authentication-passkey.dto'
 
 dotenv.config()
 
@@ -330,6 +331,67 @@ export class AuthService {
       return null
     }
     throw new HttpException('Failed to verify registration', 400)
+  }
+
+  async startAuthentication(accessToken: string) {
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
+    const account = await this.accountModel.findOne({
+      email: decoded.email
+    })
+
+    if (!account) {
+      throw new HttpException('Account not found', 404)
+    }
+
+    const options: PublicKeyCredentialRequestOptionsJSON = await generateAuthenticationOptions({
+      rpID: 'localhost',
+      allowCredentials: account.passkeys.map((passkey) => ({
+        id: passkey.credential_id,
+        transports: passkey.transports as AuthenticatorTransportFuture[]
+      }))
+    })
+
+    if (!options) {
+      console.error('Failed to start authentication')
+      throw new HttpException('Failed to start authentication', 400)
+    }
+
+    return options
+  }
+
+  async verifyAuthentication(accessToken: string, dto: VerifyAuthenticationPasskey) {
+    const { response, challenge } = dto
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
+    const account = await this.accountModel.findOne({
+      email: decoded.email
+    })
+    if (!account) {
+      throw new HttpException('Account not found', 404)
+    }
+
+    if (!account.passkeys || !Array.isArray(account.passkeys) || account.passkeys.length === 0) {
+      throw new HttpException('Passkeys not found', 404)
+    }
+
+    for (const passkey of account.passkeys) {
+      const verifyResponse = await verifyAuthenticationResponse({
+        response,
+        expectedChallenge: challenge,
+        expectedOrigin: process.env.CLIENT_URL ?? 'https://localhost:3000',
+        expectedRPID: process.env.CLIENT_HOST ?? 'localhost',
+        credential: {
+          id: passkey.credential_id,
+          publicKey: Buffer.from(passkey.public_key, 'base64'),
+          counter: passkey.counter,
+          transports: passkey.transports as AuthenticatorTransportFuture[]
+        }
+      })
+
+      if (verifyResponse.verified) {
+        return verifyResponse
+      }
+    }
+    throw new HttpException('Failed to verify authentication', 400)
   }
 
   private async verifyPassword(hashedPassword: string, password: string) {

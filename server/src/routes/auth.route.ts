@@ -11,5 +11,7 @@ router.post('/refresh', (req, res, next) => authController.refresh(req, res, nex
 router.post('/log-out', (req, res, next) => authController.logOut(req, res, next))
 router.get('/passkey/registration', (req, res, next) => authController.startRegistrationPasskey(req, res, next))
 router.post('/passkey/registration', (req, res, next) => authController.verifyRegistrationPasskey(req, res, next))
+router.get('/passkey/verify', (req, res, next) => authController.startAuthenticationPasskey(req, res, next))
+router.post('/passkey/verify', (req, res, next) => authController.verifyAuthenticationPasskey(req, res, next))
 
 export { router as authRoutes }

@@ -116,4 +116,33 @@ export class AuthController {
       next(error)
     }
   }
+
+  async startAuthenticationPasskey(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cookie = req.cookies['Authentication'] as string
+      if (!cookie) {
+        throw new HttpException('Refresh cookie is missing', 401)
+      }
+      const response = await this.authService.startAuthentication(cookie)
+      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  }
+
+  async verifyAuthenticationPasskey(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cookie = req.cookies['Authentication'] as string
+      if (!cookie) {
+        throw new HttpException('Refresh cookie is missing', 401)
+      }
+      const payload = req.body
+      const response = await this.authService.verifyRegistration(cookie, payload)
+      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  }
 }
