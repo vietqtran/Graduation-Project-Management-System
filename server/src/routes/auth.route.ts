@@ -9,5 +9,7 @@ router.post('/sign-up', (req, res, next) => authController.signUp(req, res, next
 router.get('/me', (req, res, next) => authController.me(req, res, next))
 router.post('/refresh', (req, res, next) => authController.refresh(req, res, next))
 router.post('/log-out', (req, res, next) => authController.logOut(req, res, next))
+router.get('/passkey/registration', (req, res, next) => authController.startRegistrationPasskey(req, res, next))
+router.post('/passkey/registration', (req, res, next) => authController.verifyRegistrationPasskey(req, res, next))
 
 export { router as authRoutes }

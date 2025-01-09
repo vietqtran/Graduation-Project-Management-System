@@ -11,8 +11,17 @@ import { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
-import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server'
-import { AuthenticatorTransportFuture, RegistrationResponseJSON } from '@simplewebauthn/types'
+import {
+  generateAuthenticationOptions,
+  generateRegistrationOptions,
+  verifyAuthenticationResponse,
+  verifyRegistrationResponse
+} from '@simplewebauthn/server'
+import {
+  AuthenticationResponseJSON,
+  AuthenticatorTransportFuture,
+  RegistrationResponseJSON
+} from '@simplewebauthn/types'
 import { VerifyRegistrationPasskeyDto } from '@/dtos/auth/verify-registration-passkey.dto'
 
 dotenv.config()
@@ -256,9 +265,10 @@ export class AuthService {
     return user
   }
 
-  async startRegistrationPasskey(email: string): Promise<PublicKeyCredentialCreationOptionsJSON> {
+  async startRegistrationPasskey(accessToken: string): Promise<PublicKeyCredentialCreationOptionsJSON> {
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
     const account = await this.accountModel.findOne({
-      email
+      user_id: decoded._id
     })
     if (!account) {
       throw new HttpException('Account not found', 404)
@@ -266,7 +276,7 @@ export class AuthService {
     const registrationOptions = await generateRegistrationOptions({
       rpName: process.env.APP_NAME ?? 'FCSM',
       rpID: process.env.CLIENT_HOST ?? 'localhost',
-      userName: account.username,
+      userName: decoded.username,
       attestationType: 'none',
       excludeCredentials: account.passkeys.map((passkey) => ({
         id: passkey.credential_id,
@@ -282,62 +292,44 @@ export class AuthService {
     return registrationOptions
   }
 
-  async verifyRegistration(verifyDto: VerifyRegistrationPasskeyDto) {
-    const { challenge, device, device_id, email, response } = verifyDto
+  async verifyRegistration(accessToken: string, dto: VerifyRegistrationPasskeyDto) {
+    const decoded = this.verifyAccessToken(accessToken) as TokenPayload
+    const { challenge, response } = dto
     const verifyResponse = await verifyRegistrationResponse({
       response,
       expectedChallenge: challenge,
-      expectedOrigin: process.env.CLIENT_APP_URL ?? '',
-      expectedRPID: process.env.CLIENT_HOST
+      expectedOrigin: process.env.CLIENT_URL ?? 'https://localhost:3000',
+      expectedRPID: process.env.CLIENT_HOST ?? 'localhost'
     })
 
     if (verifyResponse.verified) {
-      const user = await this.userModel.findOne({ email })
-      if (!user) {
-        throw new HttpException('User not found', 404)
+      const account = await this.accountModel.findOne({
+        email: decoded.email
+      })
+      if (!account) {
+        throw new HttpException('Account not found', 404)
       }
-      const payload: TokenPayload = {
-        _id: user._id as string,
-        email,
-        roles: user.roles ?? [],
-        username: user.username,
-        device_id
-      }
-      const accessToken = this.signAccessToken(payload)
-      const refreshToken = this.signRefreshToken(payload)
-
-      const upsertSession = await this.sessionModel.updateOne(
-        { device_id },
+      const updatedAccount = await this.accountModel.updateOne(
         {
-          $set: {
-            device,
-            device_id,
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
-            refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
-          }
+          _id: account._id
         },
-        { upsert: true }
-      )
-      if (!upsertSession) {
-        throw new HttpException("Can't create session", 500)
-      }
-
-      if (upsertSession.upsertedId) {
-        const updatedAccount = await this.accountModel.updateOne(
-          { email },
-          {
-            $push: {
-              sessions: upsertSession.upsertedId
-            }
+        {
+          $push: {
+            ...verifyResponse,
+            user_id: account.user_id,
+            aaguid: verifyResponse.registrationInfo?.aaguid,
+            credential_type: verifyResponse.registrationInfo?.credentialType,
+            credential_id: verifyResponse.registrationInfo?.credential.id,
+            public_key: Buffer.from(verifyResponse.registrationInfo?.credential.publicKey ?? '').toString('base64')
           }
-        )
-        if (!updatedAccount) {
-          throw new HttpException("Can't update account", 500)
         }
+      )
+      if (!updatedAccount) {
+        throw new HttpException("Can't update account", 400)
       }
+      return null
     }
+    throw new HttpException('Failed to verify registration', 400)
   }
 
   private async verifyPassword(hashedPassword: string, password: string) {
