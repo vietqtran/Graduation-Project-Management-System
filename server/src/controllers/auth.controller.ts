@@ -95,7 +95,7 @@ export class AuthController {
         throw new HttpException('Refresh cookie is missing', 401)
       }
       const response = await this.authService.startRegistrationPasskey(cookie)
-      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+      ResponseHandler.sendSuccess(res, response, 'Get registration passkey payload successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)
@@ -110,7 +110,7 @@ export class AuthController {
       }
       const payload = req.body
       const response = await this.authService.verifyRegistration(cookie, payload)
-      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+      ResponseHandler.sendSuccess(res, response, 'Passkey register successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)
@@ -119,12 +119,9 @@ export class AuthController {
 
   async startAuthenticationPasskey(req: Request, res: Response, next: NextFunction) {
     try {
-      const cookie = req.cookies['Authentication'] as string
-      if (!cookie) {
-        throw new HttpException('Refresh cookie is missing', 401)
-      }
-      const response = await this.authService.startAuthentication(cookie)
-      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+      const { email } = req.query
+      const response = await this.authService.startAuthentication(email as string)
+      ResponseHandler.sendSuccess(res, response, 'Get verify passkey payload successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)
@@ -133,13 +130,9 @@ export class AuthController {
 
   async verifyAuthenticationPasskey(req: Request, res: Response, next: NextFunction) {
     try {
-      const cookie = req.cookies['Authentication'] as string
-      if (!cookie) {
-        throw new HttpException('Refresh cookie is missing', 401)
-      }
       const payload = req.body
-      const response = await this.authService.verifyRegistration(cookie, payload)
-      ResponseHandler.sendSuccess(res, response, 'Logout successfully')
+      const response = await this.authService.verifyAuthentication(payload)
+      ResponseHandler.sendSuccess(res, response, 'Passkey verified successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)

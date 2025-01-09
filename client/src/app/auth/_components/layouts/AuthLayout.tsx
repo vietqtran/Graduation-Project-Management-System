@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react'
 
 import ThemeSwitcher from '../ui/ThemeSwitcher'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks'
 import { useRouter } from '@/hooks/useRouter'
 
 type Props = {
@@ -28,8 +28,8 @@ const AuthLayout = ({ children }: Props) => {
   }, [])
 
   return isPending ? null : (
-    <main className='grid grid-cols-2 relative min-h-screen min-w-full'>
-      <div className='p-3 lg:pr-0 col-span-1 size-full '>
+    <main className='grid md:grid-cols-2 relative min-h-screen min-w-full'>
+      <div className='p-3 hidden md:block lg:pr-0 col-span-1 size-full '>
         <div className="bg-neutral-700 size-full rounded-lg overflow-hidden bg-[url('/images/auth-cover.jpg')] bg-no-repeat bg-center bg-cover">
           <div className='size-full bg-black/40'></div>
         </div>
