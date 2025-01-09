@@ -1,6 +1,5 @@
 import * as React from 'react'
 
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
@@ -28,16 +27,31 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
             className='p-2 opacity-80 cursor-pointer absolute right-0 top-1/2 -translate-y-1/2'
           >
             {!isShowPassword ? (
-              <Image
-                className='size-4'
-                src='/icons/hide-password.svg'
-                width={16}
-                height={16}
-                alt='eye icon'
-                loading='lazy'
-              />
+              <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'>
+                <path
+                  fill='none'
+                  stroke='currentColor'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='1.5'
+                  d='M22 8s-4 6-10 6S2 8 2 8m13 5.5l1.5 2.5m3.5-5l2 2M2 13l2-2m5 2.5L7.5 16'
+                  color='currentColor'
+                />
+              </svg>
             ) : (
-              <Image className='size-4' src='/icons/eyes.svg' width={16} height={16} alt='eye icon' loading='lazy' />
+              <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'>
+                <g
+                  fill='none'
+                  stroke='currentColor'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='1.5'
+                  color='currentColor'
+                >
+                  <path d='M21.544 11.045c.304.426.456.64.456.955c0 .316-.152.529-.456.955C20.178 14.871 16.689 19 12 19c-4.69 0-8.178-4.13-9.544-6.045C2.152 12.529 2 12.315 2 12c0-.316.152-.529.456-.955C3.822 9.129 7.311 5 12 5c4.69 0 8.178 4.13 9.544 6.045' />
+                  <path d='M15 12a3 3 0 1 0-6 0a3 3 0 0 0 6 0' />
+                </g>
+              </svg>
             )}
           </button>
         )}
