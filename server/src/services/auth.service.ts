@@ -275,7 +275,7 @@ export class AuthService {
       throw new HttpException('Account not found', 404)
     }
     const registrationOptions = await generateRegistrationOptions({
-      rpName: process.env.APP_NAME ?? 'FCSM',
+      rpName: process.env.APP_NAME ?? 'GPMS',
       rpID: process.env.CLIENT_HOST ?? 'localhost',
       userName: decoded.username,
       attestationType: 'none',
