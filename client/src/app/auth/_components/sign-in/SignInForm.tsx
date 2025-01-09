@@ -122,8 +122,8 @@ const SignInForm = () => {
               type='button'
               className='grid place-items-center bg-transparent dark:bg-neutral-100 hover:bg-neutral-300 aspect-square relative'
             >
-              <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10'>
-                {isPendingPasskey ? <LineMdLoadingLoop /> : <Passkey fill='black' />}
+              <span className='absolute top-1/2 left-1/2 text-black -translate-x-1/2 -translate-y-1/2 z-10'>
+                {isPendingPasskey ? <LineMdLoadingLoop stroke='black' /> : <Passkey fill='black' />}
               </span>
             </Button>
           </div>
