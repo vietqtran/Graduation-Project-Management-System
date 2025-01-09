@@ -1,5 +1,6 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 import { ISession } from './session.model'
+import { IPasskey, PasskeySchema } from './passkey.model'
 
 export interface IAccount extends Document {
   user_id: string
@@ -7,6 +8,7 @@ export interface IAccount extends Document {
   username: string
   hashed_password: string
   sessions: ISession['_id'][]
+  passkeys: IPasskey[]
 }
 
 const AccountSchema = new Schema<IAccount>(
@@ -19,6 +21,12 @@ const AccountSchema = new Schema<IAccount>(
       {
         type: Schema.Types.ObjectId,
         ref: 'Session',
+        default: []
+      }
+    ],
+    passkeys: [
+      {
+        type: PasskeySchema,
         default: []
       }
     ]

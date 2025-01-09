@@ -6,7 +6,7 @@ export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       const environment = config.env.environment || 'develop'
-      const envPath = `.env.${environment}`
+      const envPath = `.env.cypress.${environment}`
       dotenv.config({ path: envPath })
       config.env = { ...config.env, BASE_URL: process.env.BASE_URL }
       return config
