@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button'
 import GithubLoginButton from '../ui/GithubLoginButton'
 import GoogleLoginButton from '../ui/GoogleLoginButton'
 import { Input } from '@/components/ui/input'
-import { useAuth } from '@/hooks/useAuth'
+import { LineMdLoadingLoop } from '@/components/icons/Loading'
+import Passkey from '@/components/icons/Passkey'
+import { toast } from 'sonner'
+import { useAuth } from '@/hooks'
 import { useForm } from 'react-hook-form'
 import { useRouter } from '@/hooks/useRouter'
 import { z } from 'zod'
@@ -26,7 +29,8 @@ const formSchema = z.object({
 
 const SignInForm = () => {
   const [isPending, startTransition] = useTransition()
-  const { signIn } = useAuth()
+  const [isPendingPasskey, startTransitionPasskey] = useTransition()
+  const { signIn, verifyPasskey } = useAuth()
   const { replace } = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,6 +51,28 @@ const SignInForm = () => {
     })
   }
 
+  const handleLoginByPasskey = async () => {
+    startTransitionPasskey(async () => {
+      const email = form.getValues('email')
+      if (form.formState.errors.email) {
+        toast.error(form.formState.errors.email.message)
+        form.setError('email', {
+          message: form.formState.errors.email.message
+        })
+        form.clearErrors('password')
+        document.getElementById('email-input')?.focus()
+        return
+      }
+      form.clearErrors('password')
+      const user = await verifyPasskey(email)
+      if (user) {
+        replace('/')
+      } else {
+        document.getElementById('email-input')?.focus()
+      }
+    })
+  }
+
   return (
     <div className='w-full max-w-lg space-y-4 rounded-lg p-5'>
       <div className='pt-3 text-left'>
@@ -62,7 +88,7 @@ const SignInForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input className='focus:ring-2' placeholder='example@domain.com' {...field} />
+                  <Input id='email-input' className='focus:ring-2' placeholder='example@domain.com' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -83,13 +109,22 @@ const SignInForm = () => {
             )}
           />
 
-          <div className='w-full pt-4'>
+          <div className='flex gap-3 items-center w-full pt-4'>
             <Button
               loading={isPending}
               className='w-full bg-blue-500 font-semibold hover:bg-blue-600 dark:text-white'
               type='submit'
             >
               Sign in
+            </Button>
+            <Button
+              onClick={handleLoginByPasskey}
+              type='button'
+              className='grid place-items-center aspect-square relative'
+            >
+              <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10'>
+                {isPendingPasskey ? <LineMdLoadingLoop /> : <Passkey fill='black' />}
+              </span>
             </Button>
           </div>
         </form>
