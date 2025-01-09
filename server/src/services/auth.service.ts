@@ -3,11 +3,6 @@ import * as dotenv from 'dotenv'
 import * as jwt from 'jsonwebtoken'
 
 import AccountModel, { IAccount } from '@/models/account.model'
-import {
-  AuthenticationResponseJSON,
-  AuthenticatorTransportFuture,
-  RegistrationResponseJSON
-} from '@simplewebauthn/types'
 import SessionModel, { ISession } from '@/models/session.model'
 import UserModel, { IUser } from '@/models/user.model'
 import {
@@ -17,7 +12,9 @@ import {
   verifyRegistrationResponse
 } from '@simplewebauthn/server'
 
+import { AuthenticatorTransportFuture } from '@simplewebauthn/types'
 import { HttpException } from '@/shared/exceptions/http.exception'
+import { MailService } from './mail.service'
 import { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
@@ -31,10 +28,12 @@ export class AuthService {
   private readonly accountModel: Model<IAccount>
   private readonly userModel: Model<IUser>
   private readonly sessionModel: Model<ISession>
+  private readonly mailService: MailService
   constructor() {
     this.accountModel = AccountModel
     this.userModel = UserModel
     this.sessionModel = SessionModel
+    this.mailService = new MailService()
   }
 
   // Sign in method
@@ -172,6 +171,18 @@ export class AuthService {
     if (!createdAccount) {
       throw new HttpException("Can't create account", 500)
     }
+
+    await this.mailService.sendMail({
+      to: email,
+      subject: 'Welcome to Graduation Project Management System',
+      templateName: 'welcome',
+      context: {
+        first_name,
+        last_name,
+        year: new Date().getFullYear(),
+        start_url: process.env.CLIENT_URL
+      }
+    })
 
     return {
       user: createdUser,
