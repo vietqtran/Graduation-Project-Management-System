@@ -1,21 +1,23 @@
-import { MailService } from '@/services/mail.service'
-import Queue, { Job } from 'bull'
 import * as dotenv from 'dotenv'
+
+import Queue, { Job } from 'bull'
+
+import { MailService } from '@/services/mail.service'
 
 dotenv.config()
 
 export class EmailQueue {
-  private emailQueue: any
+  private readonly emailQueue: any
 
   constructor(private readonly mailService: MailService) {
     this.emailQueue = new Queue('emailQueue', {
       redis: {
         host: process.env.REDIS_HOST ?? 'localhost',
         port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
+        password: process.env.REDIS_PASSWORD
       }
     })
     this.emailQueue.process(async (job: Job) => {
-      console.log(`Processing job ${job.id} for ${job.data.to}`)
       try {
         await this.mailService.sendMail(job.data)
       } catch (error) {

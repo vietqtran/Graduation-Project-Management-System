@@ -13,6 +13,7 @@ import {
 } from '@simplewebauthn/server'
 
 import { AuthenticatorTransportFuture } from '@simplewebauthn/types'
+import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
 import { Model } from 'mongoose'
@@ -21,7 +22,6 @@ import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { VerifyAuthenticationPasskey } from '@/dtos/auth/verify-authentication-passkey.dto'
 import { VerifyRegistrationPasskeyDto } from '@/dtos/auth/verify-registration-passkey.dto'
-import { EmailQueue } from '@/queues/email.queue'
 
 dotenv.config()
 
@@ -174,6 +174,7 @@ export class AuthService {
     if (!createdAccount) {
       throw new HttpException("Can't create account", 500)
     }
+
     this.emailQueue.addEmailJob({
       to: email,
       subject: 'Welcome to Graduation Project Management System',

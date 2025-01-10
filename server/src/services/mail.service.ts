@@ -1,9 +1,9 @@
 import Handlebars from 'handlebars'
 import { HttpException } from '@/shared/exceptions/http.exception'
+import { MailOptions } from '@/types/mail.type'
 import fs from 'fs/promises'
 import nodemailer from 'nodemailer'
 import path from 'path'
-import { MailOptions } from '@/types/mail.type'
 
 export class MailService {
   private readonly transporter: nodemailer.Transporter
@@ -26,7 +26,6 @@ export class MailService {
     try {
       const templatePath = path.join(this.templatesDir, `${templateName}.hbs`)
       const template = await fs.readFile(templatePath, 'utf-8')
-
       const compiledTemplate = Handlebars.compile(template)
       const html = compiledTemplate(context)
 
