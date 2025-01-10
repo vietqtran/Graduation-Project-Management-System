@@ -3,13 +3,7 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import fs from 'fs/promises'
 import nodemailer from 'nodemailer'
 import path from 'path'
-
-interface MailOptions {
-  to: string | string[]
-  subject: string
-  templateName: string
-  context: Record<string, any>
-}
+import { MailOptions } from '@/types/mail.type'
 
 export class MailService {
   private readonly transporter: nodemailer.Transporter
@@ -43,6 +37,7 @@ export class MailService {
         html
       })
     } catch (error) {
+      console.error('Email sending failed:', error)
       throw new HttpException(`Failed to send email`, 500)
     }
   }

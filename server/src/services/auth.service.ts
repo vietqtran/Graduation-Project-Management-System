@@ -21,6 +21,7 @@ import { SignUpDto } from '@/dtos/auth/sign-up.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { VerifyAuthenticationPasskey } from '@/dtos/auth/verify-authentication-passkey.dto'
 import { VerifyRegistrationPasskeyDto } from '@/dtos/auth/verify-registration-passkey.dto'
+import { EmailQueue } from '@/queues/email.queue'
 
 dotenv.config()
 
@@ -29,11 +30,13 @@ export class AuthService {
   private readonly userModel: Model<IUser>
   private readonly sessionModel: Model<ISession>
   private readonly mailService: MailService
+  private readonly emailQueue: EmailQueue
   constructor() {
     this.accountModel = AccountModel
     this.userModel = UserModel
     this.sessionModel = SessionModel
     this.mailService = new MailService()
+    this.emailQueue = new EmailQueue(this.mailService)
   }
 
   // Sign in method
@@ -171,8 +174,7 @@ export class AuthService {
     if (!createdAccount) {
       throw new HttpException("Can't create account", 500)
     }
-
-    await this.mailService.sendMail({
+    this.emailQueue.addEmailJob({
       to: email,
       subject: 'Welcome to Graduation Project Management System',
       templateName: 'welcome',
