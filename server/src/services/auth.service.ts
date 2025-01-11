@@ -41,37 +41,22 @@ export class AuthService {
 
   // Sign in method
   async signIn(signInDto: SignInDto) {
-    // Sử dụng destructuring nếu có thể để tránh code nhìn rối mắt (nếu không dùng thì sẽ phải dùng signInDto.email,...)
     const { email, password, device, device_id } = signInDto
-    // Tìm trong database có tồn tại email này trong acocunt nào không
-    const account = await this.accountModel.findOne({ email })
-    // Nếu không có trả về lỗi 404
+    const account = await this.accountModel.findOne({ email }).populate('user')
     if (!account) {
       throw new HttpException('Account not found', 404)
     }
-    // Nếu tồn tại email thì sẽ kiểm tra password được hash trong database (ở đây đã bắt lỗi sẵn rồi nên không cần check lại)
     await this.verifyPassword(account.hashed_password, password)
-    // Tìm trong database có user nào đã có email này không
-    const user = await this.userModel.findOne({ _id: account.user_id })
-    // Nếu không thì lỗi 404
-    if (!user) {
-      throw new HttpException('User not found', 404)
-    }
-    // Nếu có thì khởi tạo payload để đăng ký token bao gồm các thông tin như dưới
     const payload: TokenPayload = {
-      _id: user._id as string,
+      _id: account.user._id as string,
       email: account.email,
-      roles: user.roles ?? [],
-      username: user.username,
+      roles: account.user.roles ?? [],
+      username: account.user.username,
       device_id
     }
-    // Generate token
     const accessToken = this.signAccessToken(payload)
     const refreshToken = this.signRefreshToken(payload)
 
-    // Khi mà sign in, trong trường hợp đã đăng nhập trước đó thì sẽ có device_id
-    // Khi này sẽ dung upsert
-    // (nếu không có device_id tức là chưa từng đăng nhập => tạo mới session, còn không thì update session có device_id tương tự)
     const upsertSession = await this.sessionModel.updateOne(
       { device_id },
       {
@@ -87,12 +72,10 @@ export class AuthService {
       { upsert: true }
     )
 
-    // Nếu update lỗi
     if (!upsertSession) {
       throw new HttpException("Can't create session", 500)
     }
 
-    // Trong trường hợp session được update
     if (upsertSession.upsertedId) {
       const updatedAccount = await this.accountModel.updateOne(
         { _id: account._id },
@@ -108,7 +91,7 @@ export class AuthService {
     }
 
     return {
-      user,
+      user: account.user,
       accessToken,
       refreshToken,
       deviceId: device_id
@@ -117,12 +100,6 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto) {
     const { email, first_name, last_name, password, username, device, device_id } = signUpDto
-    const isExistedUser = await this.userModel.findOne({
-      $or: [{ username }, { email }]
-    })
-    if (isExistedUser) {
-      throw new HttpException('Account already existed', 400)
-    }
     const isExistedAccount = await this.accountModel.findOne({
       $or: [{ username }, { email }]
     })
@@ -165,6 +142,7 @@ export class AuthService {
 
     const createdAccount = await this.accountModel.create({
       user_id: createdUser._id,
+      user: createdUser._id,
       email,
       username,
       hashed_password: hashedPassword,
@@ -376,9 +354,11 @@ export class AuthService {
 
   async verifyAuthentication(dto: VerifyAuthenticationPasskey) {
     const { email, response, challenge, device_id, device } = dto
-    const account = await this.accountModel.findOne({
-      email
-    })
+    const account = await this.accountModel
+      .findOne({
+        email
+      })
+      .populate('user')
     if (!account) {
       throw new HttpException('Account not found', 404)
     }
@@ -402,15 +382,11 @@ export class AuthService {
       })
 
       if (verifyResponse.verified) {
-        const user = await this.userModel.findOne({ _id: account.user_id })
-        if (!user) {
-          throw new HttpException('User not found', 404)
-        }
         const payload: TokenPayload = {
-          _id: user._id as string,
+          _id: account.user._id as string,
           email: account.email,
-          roles: user.roles ?? [],
-          username: user.username,
+          roles: account.user.roles ?? [],
+          username: account.user.username,
           device_id
         }
         const accessToken = this.signAccessToken(payload)
@@ -449,7 +425,7 @@ export class AuthService {
           }
         }
         return {
-          user,
+          user: account.user,
           accessToken,
           refreshToken,
           deviceId: device_id
