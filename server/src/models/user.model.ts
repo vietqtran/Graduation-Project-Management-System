@@ -7,6 +7,8 @@ export interface IUser extends Document {
   username: string
   first_name: string
   last_name: string
+  display_name: string
+  avatar: string,
   roles?: [string]
   status: number
 }
@@ -16,7 +18,9 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, index: true, maxlength: 255 },
     username: { type: String, required: false, unique: true, index: true, maxlength: 50 },
     first_name: { type: String, required: true, default: '', maxlength: 50 },
+    display_name: { type: String, required: true, default: '', maxlength: 255 },
     last_name: { type: String, required: true, default: '', maxlength: 50 },
+    avatar: {type: String, required: false, default: ''},
     roles: { type: Array, required: true, default: ['user'] },
     status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.ACTIVATED }
   },

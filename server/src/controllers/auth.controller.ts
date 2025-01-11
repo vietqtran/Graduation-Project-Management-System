@@ -138,4 +138,26 @@ export class AuthController {
       next(error)
     }
   }
+
+  async googleSignIn(req: Request, res: Response, next: NextFunction) {
+    try {
+      const payload = req.body
+      const response = await this.authService.signInWithGoogle(payload)
+      ResponseHandler.sendSuccess(res, response, 'Sign in with Google successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  }
+
+  async googleSignUp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const payload = req.body
+      const response = await this.authService.signUpWithGoogle(payload)
+      ResponseHandler.sendSuccess(res, response, 'Sign up with Google successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  }
 }
