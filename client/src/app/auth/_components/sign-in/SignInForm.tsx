@@ -30,7 +30,7 @@ const formSchema = z.object({
 const SignInForm = () => {
   const [isPending, startTransition] = useTransition()
   const [isPendingPasskey, startTransitionPasskey] = useTransition()
-  const { signIn, verifyPasskey } = useAuth()
+  const { signIn, verifyPasskey, googleSignIn } = useAuth()
   const { replace } = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -137,7 +137,7 @@ const SignInForm = () => {
       </div>
 
       <div className='flex flex-col gap-3 md:flex-row'>
-        <GoogleLoginButton />
+        <GoogleLoginButton callback={googleSignIn} />
         <GithubLoginButton />
       </div>
 
