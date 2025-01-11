@@ -1,8 +1,22 @@
+import { User, signInWithPopup } from 'firebase/auth'
+import { auth, googleProvider } from '@/utils/firebase'
+
 import React from 'react'
 
-const GoogleLoginButton = () => {
+interface Props {
+  callback: (user: User) => Promise<void>
+}
+
+const GoogleLoginButton = ({ callback }: Props) => {
+  const googleSignIn = () => {
+    signInWithPopup(auth, googleProvider).then(async (result) => {
+      await callback(result.user)
+    })
+  }
+
   return (
     <button
+      onClick={googleSignIn}
       data-cy='continue-with-google-button'
       className='g flex w-full items-center justify-center gap-2 rounded-lg border p-2 transition duration-150 hover:bg-neutral-200 dark:hover:bg-neutral-800'
     >
@@ -28,6 +42,7 @@ const GoogleLoginButton = () => {
           d='M8.14 3.77a3.837 3.837 0 012.7 1.05l2.01-1.999a6.786 6.786 0 00-4.71-1.82 7.042 7.042 0 00-6.29 3.858L4.186 6.66c.556-1.658 2.116-2.89 3.952-2.89z'
         />
       </svg>
+
       <span className='text-sm font-medium'>
         <span className='hidden md:inline'>Continue with</span> Google
       </span>

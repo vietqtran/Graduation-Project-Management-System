@@ -18,7 +18,9 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
 import { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
+import { SignInGoogleDto } from '@/dtos/auth/sign-in-google.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
+import { SignUpWithGoogleDto } from '@/dtos/auth/sign-up-with-google.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { VerifyAuthenticationPasskey } from '@/dtos/auth/verify-authentication-passkey.dto'
 import { VerifyRegistrationPasskeyDto } from '@/dtos/auth/verify-registration-passkey.dto'
@@ -39,7 +41,6 @@ export class AuthService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  // Sign in method
   async signIn(signInDto: SignInDto) {
     const { email, password, device, device_id } = signInDto
     const account = await this.accountModel.findOne({ email }).populate('user')
@@ -47,6 +48,74 @@ export class AuthService {
       throw new HttpException('Account not found', 404)
     }
     await this.verifyPassword(account.hashed_password, password)
+    const payload: TokenPayload = {
+      _id: account.user._id as string,
+      email: account.email,
+      roles: account.user.roles ?? [],
+      username: account.user.username,
+      device_id
+    }
+    const accessToken = this.signAccessToken(payload)
+    const refreshToken = this.signRefreshToken(payload)
+
+    const upsertSession = await this.sessionModel.updateOne(
+      { device_id },
+      {
+        $set: {
+          device,
+          device_id,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
+          refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
+        }
+      },
+      { upsert: true }
+    )
+
+    if (!upsertSession) {
+      throw new HttpException("Can't create session", 500)
+    }
+
+    if (upsertSession.upsertedId) {
+      const updatedAccount = await this.accountModel.updateOne(
+        { _id: account._id },
+        {
+          $set: {
+            sessions: [...account.sessions, upsertSession.upsertedId]
+          }
+        }
+      )
+      if (!updatedAccount) {
+        throw new HttpException("Can't update account", 500)
+      }
+    }
+
+    return {
+      user: account.user,
+      accessToken,
+      refreshToken,
+      deviceId: device_id
+    }
+  }
+
+  async signInWithGoogle({displayName, email, photoURL, device, device_id}: SignInGoogleDto) {
+    const account = await this.accountModel.findOne({ email }).populate('user')
+    if (!account) {
+      throw new HttpException('Account not found', 404)
+    }
+
+    const userUpdated = await this.userModel.updateOne({ _id: account.user_id }, {
+      $set: {
+        display_name: displayName,
+        avatar: photoURL
+      }
+    })
+    console.log(userUpdated);
+    if (!userUpdated.modifiedCount) {
+      throw new HttpException("Can't update user", 500)
+    }
+
     const payload: TokenPayload = {
       _id: account.user._id as string,
       email: account.email,
@@ -111,7 +180,8 @@ export class AuthService {
       email,
       username,
       first_name,
-      last_name
+      last_name,
+      display_name: `${first_name} ${last_name}`
     })
     if (!createdUser) {
       throw new HttpException("Can't create user", 500)
@@ -139,6 +209,94 @@ export class AuthService {
     if (!createdSession) {
       throw new HttpException("Can't create session", 500)
     }
+
+    const createdAccount = await this.accountModel.create({
+      user_id: createdUser._id,
+      user: createdUser._id,
+      email,
+      username,
+      hashed_password: hashedPassword,
+      sessions: [createdSession._id]
+    })
+
+    if (!createdAccount) {
+      throw new HttpException("Can't create account", 500)
+    }
+
+    this.emailQueue.addEmailJob({
+      to: email,
+      subject: 'Welcome to Graduation Project Management System',
+      templateName: 'welcome',
+      context: {
+        first_name,
+        last_name,
+        year: new Date().getFullYear(),
+        start_url: process.env.CLIENT_URL
+      }
+    })
+
+    return {
+      user: createdUser,
+      accessToken,
+      refreshToken,
+      deviceId: device_id
+    }
+  }
+
+  async signUpWithGoogle({ email, photoURL, device, device_id, displayName }: SignUpWithGoogleDto) {
+    const username = email.split('@')[0]
+    const length = displayName.split(' ').length
+    const isContainsSpace = length > 1
+    let first_name, last_name
+    if (isContainsSpace) {
+      first_name = displayName.split(' ')[0]
+      last_name = displayName.split(' ')[length - 1]
+    } else {
+      first_name = ''
+      last_name = displayName
+    }
+    const isExistedAccount = await this.accountModel.findOne({
+      $or: [{ username }, { email }]
+    })
+    if (isExistedAccount) {
+      throw new HttpException('User already existed', 400)
+    }
+    const createdUser = await this.userModel.create({
+      email,
+      username,
+      first_name,
+      last_name,
+      avatar: photoURL,
+      display_name: `${first_name} ${last_name}`
+    })
+    if (!createdUser) {
+      throw new HttpException("Can't create user", 500)
+    }
+
+    const payload: TokenPayload = {
+      _id: createdUser._id as string,
+      email: createdUser.email,
+      roles: createdUser.roles ?? [],
+      username: createdUser.username,
+      device_id
+    }
+    const accessToken = this.signAccessToken(payload)
+    const refreshToken = this.signRefreshToken(payload)
+
+    const createdSession = await this.sessionModel.create({
+      device,
+      device_id,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      access_token_expires_at: new Date(Date.now() + Number(process.env.JWT_ACCESS_EXPIRE_AT)),
+      refresh_token_expires_at: new Date(Date.now() + Number(process.env.JWT_REFRESH_EXPIRE_AT))
+    })
+
+    if (!createdSession) {
+      throw new HttpException("Can't create session", 500)
+    }
+
+    const hashedPassword = await this.hashPassword('123@123')
 
     const createdAccount = await this.accountModel.create({
       user_id: createdUser._id,

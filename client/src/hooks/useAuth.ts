@@ -2,16 +2,19 @@
 
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 
+import { User } from 'firebase/auth'
 import axios from '@/utils/axios'
 import { setUser } from '@/store/slices/auth.slice'
 import { toast } from 'sonner'
 import { useAppDispatch } from './useStore'
 import { useDevice } from './useDevice'
+import { useRouter } from '@/hooks'
 import { v4 as uuidv4 } from 'uuid'
 
 export const useAuth = () => {
   const dispatch = useAppDispatch()
   const { getDeviceInformation } = useDevice()
+  const { push } = useRouter()
 
   const signUp = async ({
     email,
@@ -185,5 +188,53 @@ export const useAuth = () => {
     }
   }
 
-  return { signUp, signIn, me, logOut, registerPasskey, verifyPasskey }
+  const googleSignIn = async (user: User) => {
+    try {
+      const { email, photoURL, displayName } = user
+      const device_id = localStorage.getItem('device_id') ?? uuidv4()
+      const device = JSON.stringify(getDeviceInformation())
+      const response = await axios.post(
+        '/auth/google/sign-in',
+        { email, photoURL, displayName, device, device_id },
+        { withCredentials: true }
+      )
+      const { data } = response
+      if (data.success === true) {
+        dispatch(
+          setUser({
+            user: data?.data?.user
+          })
+        )
+        push('/')
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+    }
+  }
+
+  const googleSignUp = async (user: User) => {
+    try {
+      const { email, photoURL, displayName } = user
+      const device_id = localStorage.getItem('device_id') ?? uuidv4()
+      const device = JSON.stringify(getDeviceInformation())
+      const response = await axios.post(
+        '/auth/google/sign-up',
+        { email, photoURL, displayName, device, device_id },
+        { withCredentials: true }
+      )
+      const { data } = response
+      if (data.success === true) {
+        dispatch(
+          setUser({
+            user: data?.data?.user
+          })
+        )
+        push('/')
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+    }
+  }
+
+  return { signUp, signIn, me, logOut, registerPasskey, verifyPasskey, googleSignIn, googleSignUp }
 }

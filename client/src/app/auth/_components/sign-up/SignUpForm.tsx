@@ -33,7 +33,7 @@ const formSchema = z
   })
 
 const SignUpForm = () => {
-  const { signUp } = useAuth()
+  const { signUp, googleSignUp } = useAuth()
   const { replace } = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -161,7 +161,7 @@ const SignUpForm = () => {
       </div>
 
       <div className='flex flex-col gap-3 md:flex-row'>
-        <GoogleLoginButton />
+        <GoogleLoginButton callback={googleSignUp} />
         <GithubLoginButton />
       </div>
 
