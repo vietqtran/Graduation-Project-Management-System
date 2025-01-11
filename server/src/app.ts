@@ -1,10 +1,13 @@
 import { authRoutes, userRoutes } from './routes'
 import express, { Application } from 'express'
 
+import { PassportConfig } from './configs/passport.config'
 import RouteList from 'route-list'
 import connect from './database'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import passport from 'passport'
+import session from 'express-session'
 
 class App {
   public app: Application
@@ -12,12 +15,13 @@ class App {
   constructor() {
     this.app = express()
     this.app.use(cookieParser())
-    this.connectdb()
+    this.connectDb()
     this.initializeMiddlewares()
     this.initializeRoutes()
+    this.initializePassport()
   }
 
-  private connectdb(): void {
+  private connectDb(): void {
     connect()
   }
 
@@ -30,6 +34,19 @@ class App {
     )
     this.app.use(express.json())
     this.app.use(express.urlencoded({ extended: true }))
+    this.app.use(
+      session({
+        secret: process.env.SESSION_SECRET ?? 'session_secret',
+        resave: false,
+        saveUninitialized: false
+      })
+    )
+  }
+
+  private initializePassport(): void {
+    new PassportConfig()
+    this.app.use(passport.initialize())
+    this.app.use(passport.session())
   }
 
   private initializeRoutes(): void {

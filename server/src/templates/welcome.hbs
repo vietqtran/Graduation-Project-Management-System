@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Welcome to the Graduation Project Management System</title>
+    <style>
+      /* Base styles */ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px;
+      margin: 0 auto; padding: 20px; } .header { background-color: #004d99; color: #ffffff; padding: 20px; text-align:
+      center; border-radius: 5px; } .content { padding: 20px; background-color: #f9f9f9; border-radius: 5px; margin-top:
+      20px; } .footer { text-align: center; margin-top: 20px; padding: 20px; font-size: 12px; color: #666666; } /*
+      Button styles */ .button-container { text-align: center; margin: 20px 0; } .button-link { background-color:
+      #004d99; border-radius: 5px; color: #ffffff; display: inline-block; font-family: Arial, sans-serif; font-size:
+      16px; font-weight: bold; line-height: 50px; text-align: center; text-decoration: none; width: 200px;
+      -webkit-text-size-adjust: none; }
+    </style>
+  </head>
+  <body>
+    <div class='header'>
+      <h1>Welcome to the Graduation Project Management System</h1>
+    </div>
+
+    <div class='content'>
+      <p>Dear {{first_name}} {{last_name}},</p>
+
+      <p>Welcome to the Graduation Project Management System! Your account has been successfully created, and we're
+        excited to have you on board.</p>
+
+      <p>With our system, you'll be able to:</p>
+      <ul>
+        <li>Track your project progress in real-time</li>
+        <li>Interact seamlessly with your project supervisor</li>
+        <li>Submit reports and project-related documents</li>
+        <li>Receive timely notifications and feedback</li>
+      </ul>
+
+      <p>To start using the system, please click the button below:</p>
+
+      <!-- Updated button structure -->
+      <div class='button-container'>
+        <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+          <tr>
+            <td align='center'>
+              <a
+                href='{{start_url}}'
+                target='_blank'
+                style='background-color: #004d99; border-radius: 5px; color: #ffffff; display: inline-block; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; line-height: 50px; text-align: center; text-decoration: none; width: 200px; -webkit-text-size-adjust: none;'
+              >Get Started</a>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <p>If you need any assistance or have questions, please don't hesitate to contact our support team at
+        support@gpms.edu.</p>
+
+      <p>We wish you great success with your graduation project!</p>
+
+      <p>Best regards,<br />
+        The Graduation Project Management Team</p>
+    </div>
+
+    <div class='footer'>
+      <p>This is an automated email from the Graduation Project Management System. Please do not reply to this email.</p>
+      <p>© {{currentYear}} Graduation Project Management System. All rights reserved.</p>
+    </div>
+  </body>
+</html>

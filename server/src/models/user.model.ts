@@ -1,11 +1,14 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 
+import { USER_STATUS } from '@/constants/status'
+
 export interface IUser extends Document {
   email: string
   username: string
   first_name: string
   last_name: string
   roles?: [string]
+  status: number
 }
 
 const UserSchema = new Schema<IUser>(
@@ -14,7 +17,8 @@ const UserSchema = new Schema<IUser>(
     username: { type: String, required: false, unique: true, index: true, maxlength: 50 },
     first_name: { type: String, required: true, default: '', maxlength: 50 },
     last_name: { type: String, required: true, default: '', maxlength: 50 },
-    roles: { type: Array, required: true, default: ['user'] }
+    roles: { type: Array, required: true, default: ['user'] },
+    status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.ACTIVATED }
   },
   {
     timestamps: {
