@@ -1,12 +1,12 @@
 import './globals.css'
+import 'simplebar-react/dist/simplebar.min.css'
 
-import { DM_Sans } from 'next/font/google'
 import type { Metadata } from 'next'
+import { Roboto } from 'next/font/google'
 import StoreProvider from '@/components/providers/StoreProvider'
-import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 
-const dmSans = DM_Sans({
+const dmSans = Roboto({
   weight: ['400', '500', '700'],
   subsets: ['latin']
 })
@@ -26,10 +26,8 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning={true}>
       <body className={`antialiased ${dmSans.className}`}>
-        <ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
-          <StoreProvider>{children}</StoreProvider>
-          <Toaster richColors position='bottom-center' />
-        </ThemeProvider>
+        <StoreProvider>{children}</StoreProvider>
+        <Toaster richColors position='bottom-center' />
       </body>
     </html>
   )
