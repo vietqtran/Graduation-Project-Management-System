@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --experimental-https",
+    "dev": "next dev --experimental-https --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,9 +13,12 @@
     "test": "cypress run --env environment=develop"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.1.6",
     "@reduxjs/toolkit": "^2.5.0",
     "@simplewebauthn/browser": "^13.0.0",
     "axios": "^1.7.9",
@@ -31,6 +34,7 @@
     "react-hook-form": "^7.54.1",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
+    "simplebar-react": "^3.3.0",
     "sonner": "^1.7.1",
     "swiper": "^11.1.15",
     "tailwind-merge": "^2.5.5",
