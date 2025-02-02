@@ -1,5 +1,5 @@
 import { authRoutes, userRoutes } from './routes'
-import express, { Application } from 'express'
+import express, { Application, ErrorRequestHandler, Request, Response } from 'express'
 
 import { PassportConfig } from './configs/passport.config'
 import RouteList from 'route-list'
@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import passport from 'passport'
 import session from 'express-session'
+import { errorHandler } from './middlewares/response-handler.middleware'
 
 class App {
   public app: Application
@@ -19,6 +20,7 @@ class App {
     this.initializeMiddlewares()
     this.initializeRoutes()
     this.initializePassport()
+    this.app.use(errorHandler)
   }
 
   private connectDb(): void {

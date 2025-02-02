@@ -1,3 +1,5 @@
+import { NextFunction } from "express"
+
 export class HttpException extends Error {
   public statusCode: number
   public message: string
