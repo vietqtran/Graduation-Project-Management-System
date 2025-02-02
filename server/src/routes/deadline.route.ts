@@ -7,5 +7,7 @@ import { Router } from 'express'
 const router = Router()
 const deadlineController = new DeadlineController()
 
-router.post('/deadline/getAll', validateDto(GetDeadlinesDto), deadlineController.getAllDeadlinesBySemester)
-router.post('/deadline/update', validateDto(UpdateDeadlineDto), deadlineController.updateDeadline)
+router.post('/getAll', validateDto(GetDeadlinesDto), deadlineController.getAllDeadlinesBySemester)
+router.post('/update', validateDto(UpdateDeadlineDto), deadlineController.updateDeadline)
+
+export { router as deadlineRoutes }

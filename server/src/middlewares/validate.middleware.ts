@@ -13,17 +13,15 @@ export const validateDto = (DtoClass: any, source: 'body' | 'query' | 'params' =
              { ...req.params }; // ✅ Copy params để tránh lỗi
 
             // 🔹 Chuyển đổi dữ liệu thành DTO
-            const dtoInstance = plainToInstance(DtoClass, data, { excludeExtraneousValues: true });
-
+            const dtoInstance = plainToInstance(DtoClass, data);
             // 🔹 Thực hiện validate
             const errors = await validate(dtoInstance);
             if (errors.length > 0) {
                 const errorResponse = {
                     statusCode: 400,
-                    message: 'Validation failed: '+ errors.map(err => ({
-                        field: err.property,
-                        message: Object.values(err.constraints || {}).join(', ')
-                    }))
+                    message: 'Validation failed: '+ errors.map(err => 
+                        `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`
+                    ).join('; '),
                 };
 
                 return ResponseHandler.sendError(res, errorResponse);

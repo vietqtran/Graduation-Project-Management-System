@@ -87,20 +87,22 @@ export const errorHandler: ErrorRequestHandler = (
         ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
       }
     })
+  } else {
+    res.status(500).json({ 
+      success: false,
+      data: null,
+      message: "Internal Server Error",
+      timestamp: new Date().toISOString(),
+      path: res.req.originalUrl,
+      statusCode,
+      error: {
+        message,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+      }
+    });
   }
 
-  res.status(500).json({ 
-    success: false,
-    data: null,
-    message: "Internal Server Error",
-    timestamp: new Date().toISOString(),
-    path: res.req.originalUrl,
-    statusCode,
-    error: {
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-    }
-  });
+
   
 
 };
