@@ -1,5 +1,5 @@
 import { GetDeadlinesDto, UpdateDeadlineDto } from "@/dtos/deadline/deadline.dto";
-import { CreateParameterDto, UpdateParameterDto } from "@/dtos/deadline/parameter.dto";
+import { CreateParameterDto, DeleteParameterDto, UpdateParameterDto } from "@/dtos/deadline/parameter.dto";
 import { asyncHandler } from "@/helpers/async-handler";
 import { getUser } from "@/helpers/auth-helper";
 import { ResponseHandler } from "@/middlewares/response-handler.middleware";
@@ -45,5 +45,11 @@ export class DeadlineController {
         const user = getUser(req)
         const parameter = await this.deadlineService.updateParameter(dto, user);
         return ResponseHandler.sendSuccess(res, parameter, 'Update parameter successfully')
+    })
+
+    deleteParameter = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const dto : DeleteParameterDto = req.body;
+        await this.deadlineService.deleteParameter(dto);
+        return ResponseHandler.sendSuccess(res, null, 'Delete parameter successfully')
     })
 }
