@@ -26,7 +26,7 @@ export const ParameterSchema = new Schema<IParameter>(
       type: String,
       required: [true, 'Parameter type is required'],
       enum: {
-        values: ['string', 'number', 'boolean', 'date', 'object'],
+        values: ['string', 'number', 'boolean', 'date'],
         message: '{VALUE} is not a valid parameter type'
       }
     },
