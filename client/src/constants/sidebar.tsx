@@ -40,22 +40,22 @@ export const SIDEBAR_LINKS = [
 export const TEACHER_SIDEBAR_LINKS = [
   {
     href: '/teacher/review-idea',
-    label: 'Duyệt đề tài',
+    label: 'Review Idea',
     icon: <ReviewIdeaIcon />
   },
   {
     href: '/teacher/submit-topic',
-    label: 'Gửi đề tài',
+    label: 'Submit Topic',
     icon: <SubmitTopicIcon />
   },
   {
     href: '/teacher/groups',
-    label: 'Quản lý nhóm',
+    label: 'Manage Groups',
     icon: <ManageGroupsIcon />
   },
   {
     href: '/teacher/assign-tasks',
-    label: 'Giao task',
+    label: 'Assign Tasks',
     icon: <AssignTaskIcon />
   }
 ]

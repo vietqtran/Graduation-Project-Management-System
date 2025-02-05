@@ -4,45 +4,45 @@ const DetailIdeaPage = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="space-y-6">
-        {/* Tên đề tài */}
+        {/* Topic Name */}
         <div>
-          <h1 className="text-2xl font-bold">Hệ thống quản lý đề tài khóa luận tốt nghiệp</h1>
-          <p className="text-gray-500">Ngày gửi: 15/03/2024</p>
+          <h1 className="text-2xl font-bold">Graduation Thesis Topic Management System</h1>
+          <p className="text-gray-500">Submission Date: 15/03/2024</p>
         </div>
 
-        {/* Chuyên ngành hẹp */}
+        {/* Specialization */}
         <div>
-          <h2 className="text-lg font-semibold">Chuyên ngành</h2>
-          <p>Công nghệ phần mềm</p>
+          <h2 className="text-lg font-semibold">Specialization</h2>
+          <p>Software Engineering</p>
         </div>
 
-        {/* Danh sách nhóm */}
+        {/* Group Members */}
         <div>
-          <h2 className="text-lg font-semibold">Thành viên nhóm</h2>
+          <h2 className="text-lg font-semibold">Group Members</h2>
           <ul className="list-disc list-inside">
-            <li>Nguyễn Văn A - SE170001</li>
-            <li>Trần Thị B - SE170002</li>
-            <li>Lê Văn C - SE170003</li>
+            <li>Nguyen Van A - SE170001</li>
+            <li>Tran Thi B - SE170002</li>
+            <li>Le Van C - SE170003</li>
           </ul>
         </div>
 
-        {/* Mô tả */}
+        {/* Description */}
         <div>
-          <h2 className="text-lg font-semibold">Mô tả đề tài</h2>
+          <h2 className="text-lg font-semibold">Topic Description</h2>
           <p className="text-gray-700">
-            Hệ thống giúp quản lý quy trình đăng ký và thực hiện đề tài khóa luận tốt nghiệp. 
-            Bao gồm các chức năng như đăng ký đề tài, phân công giảng viên hướng dẫn, 
-            theo dõi tiến độ và đánh giá kết quả.
+            The system helps manage the process of registering and implementing graduation thesis topics. 
+            It includes functions such as topic registration, assignment of supervising lecturers, 
+            progress tracking, and result evaluation.
           </p>
         </div>
 
-        {/* Sơ đồ nghiệp vụ */}
+        {/* Business Process Diagram */}
         <div>
-          <h2 className="text-lg font-semibold">Sơ đồ nghiệp vụ</h2>
+          <h2 className="text-lg font-semibold">Business Process Diagram</h2>
           <div className="mt-2 border rounded p-4">
-            {/* Placeholder cho sơ đồ nghiệp vụ */}
+            {/* Placeholder for business process diagram */}
             <div className="bg-gray-100 h-64 flex items-center justify-center">
-              <p className="text-gray-500">Sơ đồ nghiệp vụ sẽ được hiển thị tại đây</p>
+              <p className="text-gray-500">The business process diagram will be displayed here</p>
             </div>
           </div>
         </div>

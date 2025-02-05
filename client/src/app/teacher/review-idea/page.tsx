@@ -59,33 +59,46 @@ const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [groupFilter, setGroupFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
   const itemsPerPage = 10
 
   // Mock data for 20 project ideas
   const projectIdeas = Array(20).fill(null).map((_, index) => ({
     id: index + 1,
-    name: `Đề tài ${index + 1}: ${[
-      'Xây dựng ứng dụng học tập trực tuyến',
-      'Hệ thống quản lý đồ án sinh viên',
-      'Ứng dụng di động hỗ trợ học tiếng Anh',
-      'Website thương mại điện tử',
+    name: `Project ${index + 1}: ${[
+      'Building an Online Learning Application',
+      'Student Project Management System',
+      'Mobile App for English Language Learning Support',
+      'E-commerce Website',
     ][index % 4]}`,
-    team: `Nhóm ${index + 1}`
+    team: `Team ${index + 1}`,
+    hasGroup: index % 2 === 0 ? 'assigned' : 'pending',
+    status: ['pending', 'approved', 'rejected'][index % 3]
   }))
 
-  const totalPages = Math.ceil(projectIdeas.length / itemsPerPage)
+  // Filter ideas based on search query, group and status
+  const filteredIdeas = projectIdeas.filter(idea => {
+    const matchesSearch = idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         idea.team.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesGroup = !groupFilter || idea.hasGroup === groupFilter
+    const matchesStatus = !statusFilter || idea.status === statusFilter
+    
+    return matchesSearch && matchesGroup && matchesStatus
+  })
+
+  const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentIdeas = projectIdeas.slice(startIndex, startIndex + itemsPerPage)
+  const currentIdeas = filteredIdeas.slice(startIndex, startIndex + itemsPerPage)
 
   const groupOptions = [
-    { value: "pending", label: "Chưa có nhóm" },
-    { value: "assigned", label: "Đã có nhóm" }
+    { value: "pending", label: "No Group" },
+    { value: "assigned", label: "Has Group" }
   ]
 
   const statusOptions = [
-    { value: "pending", label: "Đang chờ" },
-    { value: "approved", label: "Đã duyệt" },
-    { value: "rejected", label: "Đã từ chối" }
+    { value: "pending", label: "Pending" },
+    { value: "approved", label: "Approved" },
+    { value: "rejected", label: "Rejected" }
   ]
 
   return (
@@ -94,8 +107,10 @@ const ReviewIdeas = () => {
         <div className="flex-1">
           <input
             type="text"
-            placeholder="Tìm kiếm đề tài..."
+            placeholder="Search projects..."
             className="w-full p-2 border rounded-md"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
@@ -103,23 +118,23 @@ const ReviewIdeas = () => {
           value={groupFilter}
           onChange={setGroupFilter}
           options={groupOptions}
-          placeholder="Tất cả nhóm"
+          placeholder="All Groups"
         />
 
         <CustomSelect
           value={statusFilter}
           onChange={setStatusFilter}
           options={statusOptions}
-          placeholder="Tất cả trạng thái"
+          placeholder="All Statuses"
         />
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>STT</TableHead>
-            <TableHead>Tên đề xuất</TableHead>
-            <TableHead>Tên nhóm</TableHead>
-            <TableHead>Hành động</TableHead>
+            <TableHead>Index</TableHead>
+            <TableHead>Project Name</TableHead>
+            <TableHead>Team Name</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -131,10 +146,10 @@ const ReviewIdeas = () => {
               <TableCell>
                 <div className="flex gap-2">
                   <Button variant="outline" className="bg-green-500 hover:bg-transparent hover:border-green-500 hover:text-green-500">
-                    Chấp nhận
+                    Accept
                   </Button>
                   <Button variant="outline" className="bg-red-500 hover:bg-transparent hover:border-red-500 hover:text-red-500">
-                    Từ chối
+                    Reject
                   </Button>
                 </div>
               </TableCell>
@@ -149,7 +164,7 @@ const ReviewIdeas = () => {
           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           disabled={currentPage === 1}
         >
-          Trước
+          Previous
         </Button>
         <div className="flex items-center gap-2">
           {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
@@ -167,7 +182,7 @@ const ReviewIdeas = () => {
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
         >
-          Sau
+          Next
         </Button>
       </div>
     </div>

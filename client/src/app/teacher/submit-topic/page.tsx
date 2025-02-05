@@ -1,4 +1,3 @@
-
 'use client'
 import React from 'react'
 
@@ -15,7 +14,7 @@ const page = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Gửi đề tài</h1>
+      <h1 className="text-2xl font-bold mb-6">Submit Topic</h1>
       
       <div className="flex gap-6">
         {/* Left sidebar with major buttons */}
@@ -39,36 +38,36 @@ const page = () => {
         <div className="flex-1">
           {selectedMajor ? (
             <form className="max-w-2xl space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Đề tài cho ngành {selectedMajor}</h2>
+              <h2 className="text-xl font-semibold mb-4">Topic for {selectedMajor}</h2>
               
               <div>
-                <label className="block mb-1 font-medium">Tên đề tài</label>
+                <label className="block mb-1 font-medium">Topic Name</label>
                 <input 
                   type="text"
                   className="w-full p-2 border rounded-lg"
-                  placeholder="Nhập tên đề tài"
+                  placeholder="Enter topic name"
                 />
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">Mô tả</label>
+                <label className="block mb-1 font-medium">Description</label>
                 <textarea
                   className="w-full p-2 border rounded-lg min-h-32"
-                  placeholder="Mô tả chi tiết về đề tài"
+                  placeholder="Provide detailed description about the topic"
                 />
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">Yêu cầu kỹ năng</label>
+                <label className="block mb-1 font-medium">Skill Requirements</label>
                 <input
                   type="text" 
                   className="w-full p-2 border rounded-lg"
-                  placeholder="VD: React, Node.js, Java,..."
+                  placeholder="e.g., React, Node.js, Java,..."
                 />
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">Số lượng sinh viên tối đa</label>
+                <label className="block mb-1 font-medium">Maximum Student Capacity</label>
                 <input
                   type="number"
                   min="1"
@@ -80,12 +79,12 @@ const page = () => {
                 type="submit"
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
-                Gửi đề tài
+                Submit Topic
               </button>
             </form>
           ) : (
             <div className="grid place-items-center h-full text-gray-500">
-              Vui lòng chọn chuyên ngành để gửi đề tài
+              Please select a major to submit a topic
             </div>
           )}
         </div>
