@@ -42,7 +42,7 @@ const ManageDeadlines = () => {
 
   return (
     <div className='p-6'>
-      <h1 className='text-3xl font-bold mb-4'>Management</h1>
+      <h1 className='text-2xl font-bold mb-4'>Deadlines Management</h1>
 
       {/* Term Selector */}
       <div className='mb-4'>
@@ -59,12 +59,12 @@ const ManageDeadlines = () => {
           <TableHeader>
             <TableRow>
               <TableHead>#</TableHead>
+              <TableHead>Deadline Date</TableHead>
+              <TableHead>Key</TableHead>
               <TableHead>Created by</TableHead>
               <TableHead>Updated by</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Updated At</TableHead>
-              <TableHead>Deadline Date</TableHead>
-              <TableHead>Key</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,12 +72,12 @@ const ManageDeadlines = () => {
             {deadlinesData.map((deadline, index) => (
               <TableRow key={deadline._id}>
                 <TableCell>{index + 1}</TableCell>
+                <TableCell>{dayjs(deadline.deadline_date).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                <TableCell>{deadline.deadline_key}</TableCell>
                 <TableCell>{deadline.created_by.display_name}</TableCell>
                 <TableCell>{deadline.updated_by.display_name}</TableCell>
                 <TableCell>{dayjs(deadline.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
                 <TableCell>{dayjs(deadline.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{dayjs(deadline.deadline_date).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{deadline.deadline_key}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -113,7 +113,9 @@ const ManageDeadlines = () => {
               <TableHead>Parameter Name</TableHead>
               <TableHead>Value</TableHead>
               <TableHead>Created At</TableHead>
+              <TableHead>Created By</TableHead>
               <TableHead>Updated At</TableHead>
+              <TableHead>Updated By</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Actions</TableHead>
@@ -126,7 +128,9 @@ const ManageDeadlines = () => {
                 <TableCell>{parameter.param_name}</TableCell>
                 <TableCell>{parameter.param_value}</TableCell>
                 <TableCell>{dayjs(parameter.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                <TableCell>{parameter.created_by.display_name}</TableCell>
                 <TableCell>{dayjs(parameter.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                <TableCell>{parameter.updated_by.display_name}</TableCell>
                 <TableCell>{parameter.param_type}</TableCell>
                 <TableCell>{parameter.description}</TableCell>
                 <TableCell>
