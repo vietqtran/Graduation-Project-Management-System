@@ -1,4 +1,3 @@
-
 import { DeadlineController } from '@/controllers/deadline.controller'
 import { GetDeadlinesDto, UpdateDeadlineDto } from '@/dtos/deadline/deadline.dto'
 import { validateDto } from '@/middlewares/validate.middleware'

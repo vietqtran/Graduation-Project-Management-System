@@ -63,16 +63,11 @@ export class ResponseHandler {
   }
 }
 
-export const errorHandler: ErrorRequestHandler = (
-  error,
-  req,
-  res,
-  next
-) => {
+export const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
   // console.error(`[ERROR] ${req.method} ${req.url}:`, error);
 
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Internal Server Error';
+  const statusCode = error.statusCode || 500
+  const message = error.message || 'Internal Server Error'
 
   if (error instanceof HttpException) {
     res.status(statusCode).json({
@@ -88,10 +83,10 @@ export const errorHandler: ErrorRequestHandler = (
       }
     })
   } else {
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       data: null,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
       timestamp: new Date().toISOString(),
       path: res.req.originalUrl,
       statusCode,
@@ -99,10 +94,6 @@ export const errorHandler: ErrorRequestHandler = (
         message,
         ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
       }
-    });
+    })
   }
-
-
-  
-
-};
+}
