@@ -10,20 +10,20 @@ export const authMiddleware = (requiredRoles?: string[]) => {
     // }
     const token = req.cookies['Authentication']
     if (!token) {
-      return next(new HttpException('Authentication cookie is missing', 401)); // ✅ Đẩy lỗi xuống errorHandler
-      }
+      return next(new HttpException('Authentication cookie is missing', 401)) // ✅ Đẩy lỗi xuống errorHandler
+    }
     try {
       const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET ?? '') as TokenPayload
       req.user = decoded
       if (requiredRoles && requiredRoles.length > 0) {
         const hasRequiredRole = decoded.roles.some((role) => requiredRoles.includes(role))
         if (!hasRequiredRole) {
-          return next(new HttpException('You do not have permission to access this resource', 403));
+          return next(new HttpException('You do not have permission to access this resource', 403))
         }
       }
       next()
     } catch (err) {
-      return next(new HttpException("Can't verify token", 500)); // ✅ Xử lý lỗi xác thực
+      return next(new HttpException("Can't verify token", 500)) // ✅ Xử lý lỗi xác thực
     }
   }
 }

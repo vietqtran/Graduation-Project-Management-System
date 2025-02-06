@@ -1,4 +1,4 @@
-import mongoose, { ClientSession } from 'mongoose';
+import mongoose, { ClientSession } from 'mongoose'
 
 /**
  * Hàm xử lý transaction chuyên nghiệp hơn, giúp tái sử dụng.
@@ -6,17 +6,17 @@ import mongoose, { ClientSession } from 'mongoose';
  * @returns Kết quả của transaction
  */
 export const runTransaction = async <T>(fn: (session: ClientSession) => Promise<T>): Promise<T> => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = await mongoose.startSession()
+  session.startTransaction()
 
   try {
-    const result = await fn(session); // Chạy logic trong transaction
-    await session.commitTransaction(); // Commit nếu thành công
-    return result;
+    const result = await fn(session) // Chạy logic trong transaction
+    await session.commitTransaction() // Commit nếu thành công
+    return result
   } catch (error) {
-    await session.abortTransaction(); // Rollback nếu có lỗi
-    throw error;
+    await session.abortTransaction() // Rollback nếu có lỗi
+    throw error
   } finally {
-    session.endSession(); // Đóng session
+    session.endSession() // Đóng session
   }
-};
+}

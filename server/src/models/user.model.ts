@@ -68,7 +68,7 @@ export const UserSchema = new Schema<IUser>(
     },
     campus: {
       type: Schema.Types.ObjectId,
-      ref: 'Campus',
+      ref: 'Campus'
       // required: [true, 'Campus is required']
     }
   },
