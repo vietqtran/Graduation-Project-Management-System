@@ -145,11 +145,14 @@ const ReviewIdeas = () => {
               <TableCell>{idea.team}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="bg-green-500 hover:bg-transparent hover:border-green-500 hover:text-green-500">
+                  <Button variant="outline" className="bg-blue-500 hover:bg-transparent hover:border-blue-500 hover:text-blue-500">
                     Accept
                   </Button>
                   <Button variant="outline" className="bg-red-500 hover:bg-transparent hover:border-red-500 hover:text-red-500">
                     Reject
+                  </Button>
+                  <Button variant="outline" className="bg-yellow-500 hover:bg-transparent hover:border-yellow-500 hover:text-yellow-500" onClick={() => window.location.href = '/teacher/detail-idea'}>
+                    Detail
                   </Button>
                 </div>
               </TableCell>
