@@ -1,14 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-
-import CommunityIcon from '@/components/icons/CommunityIcon'
+import { TEACHER_SIDEBAR_LINKS } from '@/constants/sidebar'
 import Image from 'next/image'
 import Link from 'next/link'
-import { SIDEBAR_LINKS } from '@/constants/sidebar'
-import { usePathname } from '@/hooks'
-import { Button } from '@/components/ui/button'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import CommunityIcon from '@/components/icons/CommunityIcon'
 
 const SideBar = () => {
   const [isExpanse, setIsExpanse] = useState(true)
@@ -20,7 +18,7 @@ const SideBar = () => {
     >
       <div className='size-full relative'>
         <div className='absolute top-12 -right-3'>
-          <Button
+          <button
             onClick={() => setIsExpanse(!isExpanse)}
             className='p-0.5 bg-background aspect-square rounded-full border'
           >
@@ -31,9 +29,9 @@ const SideBar = () => {
               height={18}
               alt=''
             />
-          </Button>
+          </button>
         </div>
-        <div className=' size-full max-h-screen flex flex-col'>
+        <div className='size-full max-h-screen flex flex-col'>
           <div className={`h-16 aspect-square px-1 ${isExpanse ? 'grid place-items-center' : ''}`}>
             <Image
               className={`h-full object-contain ${!isExpanse ? 'block' : 'hidden'}`}
@@ -52,14 +50,14 @@ const SideBar = () => {
           </div>
           <div className={`flex flex-col flex-1 justify-between ${isExpanse ? 'pt-10' : 'pt-0'}`}>
             <div className='p-2 w-full flex gap-1 flex-col'>
-              {SIDEBAR_LINKS.map((s) => {
+              {TEACHER_SIDEBAR_LINKS.map((s) => {
                 return (
                   <TooltipProvider key={`${s.label}`}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Link
                           href={s.href}
-                          className={`p-2 w-full gap-2 rounded-md  duration-100 ease-linear cursor-pointer flex h-12 items-center ${isExpanse ? '' : 'justify-center'} ${pathName === s.href ? 'bg-blue-500 text-white' : 'bg-background hover:bg-neutral-300'}`}
+                          className={`p-2 w-full gap-2 rounded-md duration-100 ease-linear cursor-pointer flex h-12 items-center ${isExpanse ? '' : 'justify-center'} ${pathName === s.href ? 'bg-blue-500 text-white' : 'bg-background hover:bg-neutral-300'}`}
                         >
                           {s.icon}
                           {isExpanse && <span className='font-medium'>{s.label}</span>}
