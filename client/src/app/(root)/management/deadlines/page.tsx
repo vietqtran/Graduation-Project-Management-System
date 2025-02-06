@@ -15,6 +15,7 @@ import AddParamDialog from './_components/dialog/add-param'
 import EditParamDialog from './_components/dialog/edit-params'
 import DeleteParamDialog from './_components/dialog/delete-param'
 import EditDeadlineDialog from './_components/dialog/edit-deadline'
+import useDebounce from '@/hooks/useDebounce'
 
 dayjs.extend(customParseFormat)
 
@@ -25,9 +26,11 @@ const ManageDeadlines = () => {
   const [selectedParam, setSelectedParam] = useState<ParametersResponse[0] | null>(null)
   const [selectedDeleteParam, setSelectedDeleteParam] = useState<ParametersResponse[0] | null>(null)
   const [selectedDeadline, setSelectedDeadline] = useState<DeadlinesResponse[0] | null>(null)
+  const [semester, setSemester] = useState('SP25')
+  const debouncedSemester = useDebounce(semester, 1000)
 
   const fetchDeadlines = async () => {
-    const response = await getDeadlines({ semester: 'SP25' })
+    const response = await getDeadlines({ semester: semester })
     setDeadlinesData(response)
   }
   const fetchParameters = async () => {
@@ -38,18 +41,24 @@ const ManageDeadlines = () => {
   useEffect(() => {
     fetchDeadlines()
     fetchParameters()
-  }, [])
+  }, [debouncedSemester])
 
   return (
     <div className='p-6'>
       <h1 className='text-2xl font-bold mb-4'>Deadlines Management</h1>
 
       {/* Term Selector */}
-      <div className='mb-4'>
+      <div className='mb-4 w-1/4'>
         <Label htmlFor='term' className='block font-medium mb-2'>
           Term
         </Label>
-        <Input id='term' placeholder='SP25' disabled className='w-full' />
+        <Input
+          id='term'
+          placeholder='Enter term'
+          className='w-full'
+          value={semester}
+          onChange={(e) => setSemester(e.target.value)}
+        />
       </div>
 
       {/* Manage Deadlines Table */}
@@ -69,29 +78,37 @@ const ManageDeadlines = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {deadlinesData.map((deadline, index) => (
-              <TableRow key={deadline._id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{dayjs(deadline.deadline_date).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{deadline.deadline_key}</TableCell>
-                <TableCell>{deadline.created_by.display_name}</TableCell>
-                <TableCell>{deadline.updated_by.display_name}</TableCell>
-                <TableCell>{dayjs(deadline.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{dayjs(deadline.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant='outline' size='sm'>
-                        <Ellipsis />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => setSelectedDeadline(deadline)}>Edit</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {deadlinesData?.length > 0 ? (
+              deadlinesData?.map((deadline, index) => (
+                <TableRow key={deadline._id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{dayjs(deadline.deadline_date).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                  <TableCell>{deadline.deadline_key}</TableCell>
+                  <TableCell>{deadline.created_by.display_name}</TableCell>
+                  <TableCell>{deadline.updated_by.display_name}</TableCell>
+                  <TableCell>{dayjs(deadline.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                  <TableCell>{dayjs(deadline.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='outline' size='sm'>
+                          <Ellipsis />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setSelectedDeadline(deadline)}>Edit</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className='text-center py-4 text-gray-500'>
+                  No results found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
