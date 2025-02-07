@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import 'reflect-metadata'
 import routes from './routes'
 import express, { Application, ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 
@@ -10,7 +10,7 @@ import cors from 'cors'
 import passport from 'passport'
 import session from 'express-session'
 import { errorHandler } from './middlewares/response-handler.middleware'
-import { authMiddleware } from './middlewares/authorization.middleware';
+import { authMiddleware } from './middlewares/authorization.middleware'
 
 class App {
   public app: Application
@@ -60,11 +60,11 @@ class App {
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      const error = new Error(`Cannot ${req.method} ${req.originalUrl}`);
-      (error as any).statusCode = 404;
-      next(error);
-  });
-  
+      const error = new Error(`Cannot ${req.method} ${req.originalUrl}`)
+      ;(error as any).statusCode = 404
+      next(error)
+    })
+
     const routesMap = RouteList.getRoutes(this.app, 'express')
 
     RouteList.printRoutes(routesMap)

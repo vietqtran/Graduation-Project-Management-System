@@ -44,7 +44,7 @@ export const ParameterSchema = new Schema<IParameter>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Updated user is required']
-    },
+    }
   },
   {
     timestamps: {
@@ -52,8 +52,7 @@ export const ParameterSchema = new Schema<IParameter>(
       updatedAt: 'updated_at'
     },
     versionKey: false
-  },
-  
+  }
 )
 
 const ParameterModel: Model<IParameter> = mongoose.model<IParameter>('Parameter', ParameterSchema)

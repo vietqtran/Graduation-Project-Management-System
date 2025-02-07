@@ -39,6 +39,7 @@ export const useAuth = () => {
           withCredentials: true
         }
       )
+
       const { data } = response
       if (data && data?.success === true) {
         dispatch(
