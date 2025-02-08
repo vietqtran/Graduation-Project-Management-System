@@ -110,6 +110,9 @@ const ReviewIdeas = () => {
     { value: "rejected", label: "Rejected" }
   ]
 
+  // Assuming availableSlots is a variable that needs to be defined or imported
+  const availableSlots = 10; // Example value
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex gap-4 items-center mb-6">
@@ -136,6 +139,12 @@ const ReviewIdeas = () => {
           options={statusOptions}
           placeholder="All Statuses"
         />
+
+        <div className="text-red-500">
+          Available Slots: {availableSlots}
+        </div>
+
+        
       </div>
       <Table>
         <TableHeader>
