@@ -1,7 +1,8 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../_components/ui/table'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 interface Option {
   value: string
@@ -55,32 +56,40 @@ const CustomSelect = ({ value, onChange, options, placeholder }: CustomSelectPro
   )
 }
 
+interface ProjectIdea {
+  _id: string
+  remark: string
+  type: string
+    status: string
+  }
+  
+
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [groupFilter, setGroupFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>([])
   const itemsPerPage = 10
 
-  // Mock data for 20 project ideas
-  const projectIdeas = Array(20).fill(null).map((_, index) => ({
-    id: index + 1,
-    name: `Project ${index + 1}: ${[
-      'Building an Online Learning Application',
-      'Student Project Management System',
-      'Mobile App for English Language Learning Support',
-      'E-commerce Website',
-    ][index % 4]}`,
-    team: `Team ${index + 1}`,
-    hasGroup: index % 2 === 0 ? 'assigned' : 'pending',
-    status: ['pending', 'approved', 'rejected'][index % 3]
-  }))
+  useEffect(() => {
+    const fetchProjectIdeas = async () => {
+      try {
+        const response = await axios.get('/api/getAllRequest')
+        setProjectIdeas(response.data)
+      } catch (error) {
+        console.error('Error fetching project ideas:', error)
+      }
+    }
+
+    fetchProjectIdeas()
+  }, [])
 
   // Filter ideas based on search query, group and status
   const filteredIdeas = projectIdeas.filter(idea => {
-    const matchesSearch = idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         idea.team.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGroup = !groupFilter || idea.hasGroup === groupFilter
+    const matchesSearch = idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         idea.type.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesGroup = !groupFilter || idea.status === groupFilter
     const matchesStatus = !statusFilter || idea.status === statusFilter
     
     return matchesSearch && matchesGroup && matchesStatus
@@ -139,10 +148,10 @@ const ReviewIdeas = () => {
         </TableHeader>
         <TableBody>
           {currentIdeas.map((idea, index) => (
-            <TableRow key={idea.id}>
+            <TableRow key={idea._id}>
               <TableCell>{startIndex + index + 1}</TableCell>
-              <TableCell>{idea.name}</TableCell>
-              <TableCell>{idea.team}</TableCell>
+              <TableCell>{idea.remark}</TableCell>
+              <TableCell>{idea.type}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button variant="outline" className="bg-blue-500 hover:bg-transparent hover:border-blue-500 hover:text-blue-500">

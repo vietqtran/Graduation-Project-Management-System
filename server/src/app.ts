@@ -59,6 +59,7 @@ class App {
     this.app.use(authMiddleware())
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
+    this.app.use('/api/request', routes.requestRoutes)
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const error = new Error(`Cannot ${req.method} ${req.originalUrl}`)
       ;(error as any).statusCode = 404
