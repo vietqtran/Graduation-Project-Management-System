@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express'
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { UserService } from '@/services/user.service'
+import { asyncHandler } from '@/helpers/async-handler'
 
 export class UserController {
   private readonly userService: UserService
@@ -31,4 +32,10 @@ export class UserController {
       next(error)
     }
   }
+
+  staffGetListStudents = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+    const body = req.body
+    const students = await this.userService.staffGetListStudents(body)
+    return ResponseHandler.sendSuccess(res, students)
+  })
 }

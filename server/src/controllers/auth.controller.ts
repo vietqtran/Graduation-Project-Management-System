@@ -5,6 +5,7 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
+import { asyncHandler } from '@/helpers/async-handler'
 
 export class AuthController {
   private readonly authService: AuthService
@@ -34,19 +35,29 @@ export class AuthController {
     }
   }
 
-  async me(req: Request, res: Response, next: NextFunction) {
-    try {
-      const cookie = req.cookies['Authentication'] as string
-      if (!cookie) {
-        throw new HttpException('Authentication cookie is missing', 401)
-      }
-      const response = await this.authService.me(cookie)
-      ResponseHandler.sendSuccess(res, response, 'Get current user successfully')
-    } catch (error) {
-      ResponseHandler.sendError(res, error)
-      next(error)
+  // async me(req: Request, res: Response, next: NextFunction) {
+  //   try {
+  //     const cookie = req.cookies['Authentication'] as string
+  //     if (!cookie) {
+  //       throw new HttpException('Authentication cookie is missing', 401)
+  //     }
+  //     const response = await this.authService.me(cookie)
+  //     ResponseHandler.sendSuccess(res, response, 'Get current user successfully')
+  //   } catch (error) {
+  //     ResponseHandler.sendError(res, error)
+  //     next(error)
+  //   }
+  // }
+
+  me = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const cookie = req.cookies['Authentication'] as string
+    if (!cookie) {
+      throw new HttpException('Authentication cookie is missing', 401)
     }
-  }
+    const response = await this.authService.me(cookie)
+    return ResponseHandler.sendSuccess(res, response, 'Get current user successfully')
+  })
+
 
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {

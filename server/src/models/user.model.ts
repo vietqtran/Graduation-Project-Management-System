@@ -3,6 +3,8 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 import { USER_STATUS } from '@/constants/status'
 import { emailRegex } from '@/constants/regex'
 import { ICampus } from './campus.model'
+import { IField } from './field.model'
+import { IMajor } from './major.model'
 
 export interface IUser extends Document {
   email: string
@@ -15,6 +17,8 @@ export interface IUser extends Document {
   status: number
   code: string
   campus: ICampus['_id']
+  field: IField['_id'][]
+  major: IMajor['_id'][]
 }
 
 export const UserSchema = new Schema<IUser>(
@@ -70,7 +74,21 @@ export const UserSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: 'Campus',
       // required: [true, 'Campus is required']
-    }
+        },
+    field: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Field',
+        // required: [true, 'Field is required']
+      }
+    ],
+    major: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Major',
+        // required: [true, 'Major is required']
+      }
+    ]
   },
   {
     timestamps: {
