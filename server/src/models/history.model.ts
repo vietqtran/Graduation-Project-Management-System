@@ -1,12 +1,12 @@
 import mongoose, { Document, Mixed, Model, Schema } from 'mongoose'
 
-export interface ICampus extends Document {
+export interface IHistory extends Document {
   old: Mixed
   new: Mixed
   type: string
 }
 
-export const CampusSchema = new Schema<ICampus>(
+export const HistorySchema = new Schema<IHistory>(
   {
     old: {
       type: Schema.Types.Mixed,
@@ -34,5 +34,5 @@ export const CampusSchema = new Schema<ICampus>(
   }
 )
 
-const CampusModel: Model<ICampus> = mongoose.model<ICampus>('Campus', CampusSchema)
-export default CampusModel
+const HistoryModel: Model<IHistory> = mongoose.model<IHistory>('History', HistorySchema)
+export default HistoryModel
