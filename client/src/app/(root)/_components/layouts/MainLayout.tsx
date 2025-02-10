@@ -1,7 +1,9 @@
 'use client'
 
+import React, { useEffect } from 'react'
+import { useAuth, useRouter } from '@/hooks'
+
 import Header from './Header'
-import React from 'react'
 import SideBar from './SideBar'
 
 type Props = {
@@ -9,6 +11,17 @@ type Props = {
 }
 
 const MainLayout = ({ children }: Props) => {
+  const { me } = useAuth()
+  const { replace } = useRouter()
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      const user = await me()
+      if (!user) replace('/auth/sign-in')
+    }
+    fetchMe()
+  }, [])
+
   return (
     <main className='size-full flex items-start min-h-screen relative'>
       <SideBar />

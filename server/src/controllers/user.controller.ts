@@ -33,13 +33,13 @@ export class UserController {
     }
   }
 
-  staffGetListStudents = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+  staffGetListStudents = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body
     const students = await this.userService.staffGetListStudents(body)
     return ResponseHandler.sendSuccess(res, students)
   })
 
-  staffGetListTeachers = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+  staffGetListTeachers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body
     const teachers = await this.userService.staffGetListTeachers(body)
     return ResponseHandler.sendSuccess(res, teachers)

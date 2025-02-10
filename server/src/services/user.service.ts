@@ -209,12 +209,14 @@ export class UserService {
       const teacherIds = teachers.map((teacher) => teacher._id)
 
       // 🔹 Lấy số lượng project mà mỗi teacher là supervisor
-      const projectsCount = await this.projectModel.aggregate([
-        // { $match: { supervisor: { $in: teacherIds } } },
-        { $unwind: "$supervisor" }, // Tách từng phần tử trong mảng supervisor thành 1 document riêng biệt
-        { $match: { supervisor: { $in: teacherIds } } }, // Lọc lại để chỉ lấy các supervisor thuộc danh sách teacherIds
-        { $group: { _id: "$supervisor", count: { $sum: 1 } } }
-      ]).session(session)
+      const projectsCount = await this.projectModel
+        .aggregate([
+          // { $match: { supervisor: { $in: teacherIds } } },
+          { $unwind: '$supervisor' }, // Tách từng phần tử trong mảng supervisor thành 1 document riêng biệt
+          { $match: { supervisor: { $in: teacherIds } } }, // Lọc lại để chỉ lấy các supervisor thuộc danh sách teacherIds
+          { $group: { _id: '$supervisor', count: { $sum: 1 } } }
+        ])
+        .session(session)
 
       log(projectsCount)
 

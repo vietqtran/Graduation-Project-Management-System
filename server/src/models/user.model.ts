@@ -74,18 +74,18 @@ export const UserSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: 'Campus'
       // required: [true, 'Campus is required']
-        },
+    },
     field: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Field',
+        ref: 'Field'
         // required: [true, 'Field is required']
       }
     ],
     major: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Major',
+        ref: 'Major'
         // required: [true, 'Major is required']
       }
     ]

@@ -58,7 +58,6 @@ export class AuthController {
     return ResponseHandler.sendSuccess(res, response, 'Get current user successfully')
   })
 
-
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const cookie = req.cookies['Refresh'] as string
