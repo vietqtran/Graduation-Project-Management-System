@@ -58,6 +58,7 @@ class App {
     this.app.use('/api/users', routes.userRoutes)
     this.app.use('/api/auth', routes.authRoutes)
     this.app.use(authMiddleware())
+    this.app.use('/api/upload', routes.s3Routes)
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
     this.app.use('/api/project', routes.projectRoutes)
