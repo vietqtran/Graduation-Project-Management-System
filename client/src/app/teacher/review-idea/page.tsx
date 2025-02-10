@@ -17,26 +17,26 @@ interface CustomSelectProps {
 
 const CustomSelect = ({ value, onChange, options, placeholder }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   return (
-    <div className="relative">
+    <div className='relative'>
       <button
-        type="button"
+        type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className="w-[180px] h-10 px-3 py-2 rounded-md border border-input bg-background text-sm flex items-center justify-between"
+        className='w-[180px] h-10 px-3 py-2 rounded-md border border-input bg-background text-sm flex items-center justify-between'
       >
-        {value ? options.find(opt => opt.value === value)?.label : placeholder}
-        <svg 
+        {value ? options.find((opt) => opt.value === value)?.label : placeholder}
+        <svg
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          xmlns="http://www.w3.org/2000/svg" 
-          viewBox="0 0 24 24"
+          xmlns='http://www.w3.org/2000/svg'
+          viewBox='0 0 24 24'
         >
-          <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+          <path d='M7 10l5 5 5-5z' fill='currentColor' />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg">
+        <div className='absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg'>
           {options.map((option) => (
             <div
               key={option.value}
@@ -44,7 +44,7 @@ const CustomSelect = ({ value, onChange, options, placeholder }: CustomSelectPro
                 onChange(option.value)
                 setIsOpen(false)
               }}
-              className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+              className='px-3 py-2 cursor-pointer hover:bg-gray-100'
             >
               {option.label}
             </div>
@@ -57,32 +57,37 @@ const CustomSelect = ({ value, onChange, options, placeholder }: CustomSelectPro
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const [groupFilter, setGroupFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [groupFilter, setGroupFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const itemsPerPage = 10
 
   // Mock data for 20 project ideas
-  const projectIdeas = Array(20).fill(null).map((_, index) => ({
-    id: index + 1,
-    name: `Project ${index + 1}: ${[
-      'Building an Online Learning Application',
-      'Student Project Management System',
-      'Mobile App for English Language Learning Support',
-      'E-commerce Website',
-    ][index % 4]}`,
-    team: `Team ${index + 1}`,
-    hasGroup: index % 2 === 0 ? 'assigned' : 'pending',
-    status: ['pending', 'approved', 'rejected'][index % 3]
-  }))
+  const projectIdeas = Array(20)
+    .fill(null)
+    .map((_, index) => ({
+      id: index + 1,
+      name: `Project ${index + 1}: ${
+        [
+          'Building an Online Learning Application',
+          'Student Project Management System',
+          'Mobile App for English Language Learning Support',
+          'E-commerce Website'
+        ][index % 4]
+      }`,
+      team: `Team ${index + 1}`,
+      hasGroup: index % 2 === 0 ? 'assigned' : 'pending',
+      status: ['pending', 'approved', 'rejected'][index % 3]
+    }))
 
   // Filter ideas based on search query, group and status
-  const filteredIdeas = projectIdeas.filter(idea => {
-    const matchesSearch = idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         idea.team.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredIdeas = projectIdeas.filter((idea) => {
+    const matchesSearch =
+      idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      idea.team.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesGroup = !groupFilter || idea.hasGroup === groupFilter
     const matchesStatus = !statusFilter || idea.status === statusFilter
-    
+
     return matchesSearch && matchesGroup && matchesStatus
   })
 
@@ -91,41 +96,36 @@ const ReviewIdeas = () => {
   const currentIdeas = filteredIdeas.slice(startIndex, startIndex + itemsPerPage)
 
   const groupOptions = [
-    { value: "pending", label: "No Group" },
-    { value: "assigned", label: "Has Group" }
+    { value: 'pending', label: 'No Group' },
+    { value: 'assigned', label: 'Has Group' }
   ]
 
   const statusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" }
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' }
   ]
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex gap-4 items-center mb-6">
-        <div className="flex-1">
+    <div className='p-6 space-y-4'>
+      <div className='flex gap-4 items-center mb-6'>
+        <div className='flex-1'>
           <input
-            type="text"
-            placeholder="Search projects..."
-            className="w-full p-2 border rounded-md"
+            type='text'
+            placeholder='Search projects...'
+            className='w-full p-2 border rounded-md'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
-        <CustomSelect
-          value={groupFilter}
-          onChange={setGroupFilter}
-          options={groupOptions}
-          placeholder="All Groups"
-        />
+
+        <CustomSelect value={groupFilter} onChange={setGroupFilter} options={groupOptions} placeholder='All Groups' />
 
         <CustomSelect
           value={statusFilter}
           onChange={setStatusFilter}
           options={statusOptions}
-          placeholder="All Statuses"
+          placeholder='All Statuses'
         />
       </div>
       <Table>
@@ -144,11 +144,17 @@ const ReviewIdeas = () => {
               <TableCell>{idea.name}</TableCell>
               <TableCell>{idea.team}</TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="bg-green-500 hover:bg-transparent hover:border-green-500 hover:text-green-500">
+                <div className='flex gap-2'>
+                  <Button
+                    variant='outline'
+                    className='bg-green-500 hover:bg-transparent hover:border-green-500 hover:text-green-500'
+                  >
                     Accept
                   </Button>
-                  <Button variant="outline" className="bg-red-500 hover:bg-transparent hover:border-red-500 hover:text-red-500">
+                  <Button
+                    variant='outline'
+                    className='bg-red-500 hover:bg-transparent hover:border-red-500 hover:text-red-500'
+                  >
                     Reject
                   </Button>
                 </div>
@@ -158,19 +164,19 @@ const ReviewIdeas = () => {
         </TableBody>
       </Table>
 
-      <div className="flex justify-center gap-2">
+      <div className='flex justify-center gap-2'>
         <Button
-          variant="outline"
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          variant='outline'
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
         >
           Previous
         </Button>
-        <div className="flex items-center gap-2">
-          {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+        <div className='flex items-center gap-2'>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <Button
               key={page}
-              variant={currentPage === page ? "default" : "outline"}
+              variant={currentPage === page ? 'default' : 'outline'}
               onClick={() => setCurrentPage(page)}
             >
               {page}
@@ -178,8 +184,8 @@ const ReviewIdeas = () => {
           ))}
         </div>
         <Button
-          variant="outline"
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          variant='outline'
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages}
         >
           Next

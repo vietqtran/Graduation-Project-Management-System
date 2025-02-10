@@ -34,7 +34,6 @@ export const SIDEBAR_LINKS = [
     label: 'Tasks',
     icon: <TaskIcon />
   }
-  
 ]
 
 export const TEACHER_SIDEBAR_LINKS = [
