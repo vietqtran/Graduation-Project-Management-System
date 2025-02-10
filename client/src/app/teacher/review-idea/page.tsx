@@ -75,8 +75,9 @@ const ReviewIdeas = () => {
   useEffect(() => {
     const fetchProjectIdeas = async () => {
       try {
-        const response = await axios.get('/api/getAllRequest')
+        const response = await axios.get('http://localhost:8080/api/requests')
         setProjectIdeas(response.data)
+        console.log(response.data)
       } catch (error) {
         console.error('Error fetching project ideas:', error)
       }
