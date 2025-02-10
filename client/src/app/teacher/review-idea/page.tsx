@@ -25,14 +25,13 @@ const ReviewRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/requests', {
-          withCredentials: true // Important for sending cookies
+        const response = await axios.get('/api/requests', {
+          withCredentials: true  
         })
         setRequests(response.data.data || [])
       } catch (error) {
         console.error('Error fetching requests:', error)
-        // Handle authentication error
-        window.location.href = '/login' // Redirect to login
+        window.location.href = '/login'  
       }
     }
 

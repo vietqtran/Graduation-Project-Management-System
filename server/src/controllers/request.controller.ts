@@ -1,37 +1,54 @@
 import { Request, Response, NextFunction } from 'express';
-import { asyncHandler } from '@/helpers/async-handler';
-import RequestModel from '@/models/request.model';
+import { RequestService } from '@/services/request.service';
+import { HttpException } from '@/shared/exceptions/http.exception';
 import { ResponseHandler } from '@/middlewares/response-handler.middleware';
+import { ApproveRequestDto } from '@/dtos/request/approve-request.dto';
+import { DenyRequestDto } from '@/dtos/request/deny-request.dto';
 
 export class RequestController {
-  getAllRequests = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const requests = await RequestModel.find().populate('to_user from_user approve_user');
-    return ResponseHandler.sendSuccess(res, requests);
-  });
+  private readonly requestService: RequestService;
 
-  approveRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const request = await RequestModel.findByIdAndUpdate(
-      id,
-      { status: 'approved' },
-      { new: true }
-    ).populate('to_user from_user approve_user');
-    if (!request) {
-      return ResponseHandler.sendError(res, 'Request not found');
-    }
-    return ResponseHandler.sendSuccess(res, request);
-  });
+  constructor() {
+    this.requestService = new RequestService();
+  }
 
-  denyRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const request = await RequestModel.findByIdAndUpdate(
-      id,
-      { status: 'rejected' },
-      { new: true }
-    ).populate('to_user from_user approve_user');
-    if (!request) {
-      return ResponseHandler.sendError(res, 'Request not found');
+  async getAllRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requests = await this.requestService.getAllRequests();
+      ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully');
+    } catch (error) {
+      ResponseHandler.sendError(res, error);
+      next(error);
     }
-    return ResponseHandler.sendSuccess(res, request);
-  });
+  }
+
+  async approveRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const approveRequestDto: ApproveRequestDto = req.body;
+      const request = await this.requestService.updateRequest(id, 'approved', approveRequestDto);
+      if (!request) {
+        throw new HttpException('Request not found', 404);
+      }
+      ResponseHandler.sendSuccess(res, request, 'Request approved successfully');
+    } catch (error) {
+      ResponseHandler.sendError(res, error);
+      next(error);
+    }
+  }
+
+  async denyRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const denyRequestDto: DenyRequestDto = req.body;
+      const request = await this.requestService.updateRequest(id, 'rejected', denyRequestDto);
+      if (!request) {
+        throw new HttpException('Request not found', 404);
+      }
+      ResponseHandler.sendSuccess(res, request, 'Request denied successfully');
+    } catch (error) {
+      ResponseHandler.sendError(res, error);
+      next(error);
+    }
+  }
 }
