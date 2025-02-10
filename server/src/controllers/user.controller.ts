@@ -38,4 +38,10 @@ export class UserController {
     const students = await this.userService.staffGetListStudents(body)
     return ResponseHandler.sendSuccess(res, students)
   })
+
+  staffGetListTeachers = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+    const body = req.body
+    const teachers = await this.userService.staffGetListTeachers(body)
+    return ResponseHandler.sendSuccess(res, teachers)
+  })
 }
