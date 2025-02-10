@@ -1,104 +1,84 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../_components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-interface Option {
-  value: string
-  label: string
-}
-
-interface CustomSelectProps {
-  value: string
-  onChange: (value: string) => void
-  options: Option[]
-  placeholder: string
-}
-
-const CustomSelect = ({ value, onChange, options, placeholder }: CustomSelectProps) => {
-  const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-[180px] h-10 px-3 py-2 rounded-md border border-input bg-background text-sm flex items-center justify-between"
-      >
-        {value ? options.find(opt => opt.value === value)?.label : placeholder}
-        <svg 
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          xmlns="http://www.w3.org/2000/svg" 
-          viewBox="0 0 24 24"
-        >
-          <path d="M7 10l5 5 5-5z" fill="currentColor"/>
-        </svg>
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg">
-          {options.map((option) => (
-            <div
-              key={option.value}
-              onClick={() => {
-                onChange(option.value)
-                setIsOpen(false)
-              }}
-              className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-            >
-              {option.label}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-interface ProjectIdea {
+interface RequestIdea {
   _id: string
   remark: string
   type: string
-    status: string
-  }
-  
+  status: string
+  from_user: { name: string }
+  to_user: { name: string }
+}
 
-const ReviewIdeas = () => {
+const ReviewRequests = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [groupFilter, setGroupFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>([])
+  const [requests, setRequests] = useState<RequestIdea[]>([])
   const itemsPerPage = 10
+  const availableSlots = 10 // You can replace with actual logic
 
   useEffect(() => {
-    const fetchProjectIdeas = async () => {
+    const fetchRequests = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/requests')
-        setProjectIdeas(response.data)
-        console.log(response.data)
+        const response = await axios.get('http://localhost:8080/api/requests', {
+          withCredentials: true // Important for sending cookies
+        })
+        setRequests(response.data.data || [])
       } catch (error) {
-        console.error('Error fetching project ideas:', error)
+        console.error('Error fetching requests:', error)
+        // Handle authentication error
+        window.location.href = '/login' // Redirect to login
       }
     }
 
-    fetchProjectIdeas()
+    fetchRequests()
   }, [])
 
-  // Filter ideas based on search query, group and status
-  const filteredIdeas = projectIdeas.filter(idea => {
-    const matchesSearch = idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         idea.type.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGroup = !groupFilter || idea.status === groupFilter
-    const matchesStatus = !statusFilter || idea.status === statusFilter
+  const handleApprove = async (id: string) => {
+    try {
+      await axios.post(`http://localhost:8080/api/approve/${id}`, {}, {
+        withCredentials: true
+      })
+      const response = await axios.get('http://localhost:8080/api/requests', {
+        withCredentials: true
+      })
+      setRequests(response.data.data || [])
+    } catch (error) {
+      console.error('Error approving request:', error)
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    try {
+      await axios.post(`http://localhost:8080/api/deny/${id}`, {}, {
+        withCredentials: true
+      })
+      const response = await axios.get('http://localhost:8080/api/requests', {
+        withCredentials: true
+      })
+      setRequests(response.data.data || [])
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+    }
+  }
+
+  const filteredRequests = requests.filter(request => {
+    const matchesSearch = request.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          request.type.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesGroup = !groupFilter || request.status === groupFilter
+    const matchesStatus = !statusFilter || request.status === statusFilter
     
     return matchesSearch && matchesGroup && matchesStatus
   })
 
-  const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentIdeas = filteredIdeas.slice(startIndex, startIndex + itemsPerPage)
+  const currentRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage)
 
   const groupOptions = [
     { value: "pending", label: "No Group" },
@@ -111,69 +91,82 @@ const ReviewIdeas = () => {
     { value: "rejected", label: "Rejected" }
   ]
 
-  // Assuming availableSlots is a variable that needs to be defined or imported
-  const availableSlots = 10; // Example value
-
   return (
     <div className="p-6 space-y-4">
       <div className="flex gap-4 items-center mb-6">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search projects..."
-            className="w-full p-2 border rounded-md"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Search projects..."
+          className="w-full p-2 border rounded-md"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         
-        <CustomSelect
+        <select 
           value={groupFilter}
-          onChange={setGroupFilter}
-          options={groupOptions}
-          placeholder="All Groups"
-        />
+          onChange={(e) => setGroupFilter(e.target.value)}
+          className="p-2 border rounded-md"
+        >
+          <option value="">All Groups</option>
+          {groupOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
 
-        <CustomSelect
+        <select 
           value={statusFilter}
-          onChange={setStatusFilter}
-          options={statusOptions}
-          placeholder="All Statuses"
-        />
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-2 border rounded-md"
+        >
+          <option value="">All Statuses</option>
+          {statusOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
 
         <div className="text-red-500">
           Available Slots: {availableSlots}
         </div>
-
-        
       </div>
+      
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Index</TableHead>
+            <TableHead>From</TableHead>
             <TableHead>Project Name</TableHead>
-            <TableHead>Team Name</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentIdeas.map((idea, index) => (
-            <TableRow key={idea._id}>
-              <TableCell>{startIndex + index + 1}</TableCell>
-              <TableCell>{idea.remark}</TableCell>
-              <TableCell>{idea.type}</TableCell>
+          {currentRequests.map((request) => (
+            <TableRow key={request._id}>
+              <TableCell>{request.from_user?.name || 'Unknown'}</TableCell>
+              <TableCell>{request.remark}</TableCell>
+              <TableCell>{request.status}</TableCell>
               <TableCell>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="bg-blue-500 hover:bg-transparent hover:border-blue-500 hover:text-blue-500">
-                    Accept
-                  </Button>
-                  <Button variant="outline" className="bg-red-500 hover:bg-transparent hover:border-red-500 hover:text-red-500">
-                    Reject
-                  </Button>
-                  <Button variant="outline" className="bg-yellow-500 hover:bg-transparent hover:border-yellow-500 hover:text-yellow-500" onClick={() => window.location.href = '/teacher/detail-idea'}>
-                    Detail
-                  </Button>
-                </div>
+                {request.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="bg-green-500 text-white hover:bg-green-600"
+                      onClick={() => handleApprove(request._id)}
+                    >
+                      Approve
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="bg-red-500 text-white hover:bg-red-600"
+                      onClick={() => handleReject(request._id)}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -188,17 +181,15 @@ const ReviewIdeas = () => {
         >
           Previous
         </Button>
-        <div className="flex items-center gap-2">
-          {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
-          ))}
-        </div>
+        {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+          <Button
+            key={page}
+            variant={currentPage === page ? "default" : "outline"}
+            onClick={() => setCurrentPage(page)}
+          >
+            {page}
+          </Button>
+        ))}
         <Button
           variant="outline"
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -211,4 +202,4 @@ const ReviewIdeas = () => {
   )
 }
 
-export default ReviewIdeas
+export default ReviewRequests
