@@ -12,7 +12,7 @@ export interface IProject extends Document {
   description: string
   members: IUser['_id'][]
   leader: IUser['_id']
-  supervisor: IUser['_id']
+  supervisor: IUser['_id'][]
   major: IMajor['_id'][]
   field: IField['_id'][]
   campus: ICampus['_id']
@@ -52,10 +52,10 @@ const ProjectSchema = new Schema<IProject>(
             ref: 'User',
             required: [true, 'Leader is required']
         },
-        supervisor: {
+        supervisor: [{
             type: Schema.Types.ObjectId,
             ref: 'User'
-        },
+        }],
         major: [
             {
                 type: Schema.Types.ObjectId,

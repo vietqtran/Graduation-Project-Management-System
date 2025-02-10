@@ -9,6 +9,7 @@ import { GetListStudentsDto } from '@/dtos/user/staff-manage-students.dto'
 import { runTransaction } from '@/helpers/transaction-helper'
 import ProjectModel, { IProject } from '@/models/project.model'
 import { GetListTeachersDto } from '@/dtos/user/staff-manage-teachers.dto'
+import { log } from 'console'
 require('../models/field.model')
 require('../models/major.model')
 require('../models/campus.model')
@@ -205,13 +206,17 @@ export class UserService {
         .lean()
         .session(session)
 
-      const teacherIds = teachers.map((teacher) => teacher._id.toString())
+      const teacherIds = teachers.map((teacher) => teacher._id)
 
       // 🔹 Lấy số lượng project mà mỗi teacher là supervisor
       const projectsCount = await this.projectModel.aggregate([
-        { $match: { supervisor: { $in: teacherIds } } },
-        { $group: { _id: '$supervisor', count: { $sum: 1 } } }
+        // { $match: { supervisor: { $in: teacherIds } } },
+        { $unwind: "$supervisor" }, // Tách từng phần tử trong mảng supervisor thành 1 document riêng biệt
+        { $match: { supervisor: { $in: teacherIds } } }, // Lọc lại để chỉ lấy các supervisor thuộc danh sách teacherIds
+        { $group: { _id: "$supervisor", count: { $sum: 1 } } }
       ]).session(session)
+
+      log(projectsCount)
 
       // 🔹 Tạo map teacherId -> số lượng project
       const supervisorProjectCountMap = new Map<string, number>()
