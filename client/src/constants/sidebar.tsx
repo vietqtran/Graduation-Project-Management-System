@@ -38,7 +38,6 @@ export const SIDEBAR_LINKS = [
     label: 'Tasks',
     icon: <TaskIcon />
   }
-  
 ]
 export const STUDENT_SIDEBAR_LINKS = [
   {

@@ -1,16 +1,17 @@
 import 'reflect-metadata'
-import routes from './routes'
-import express, { Application, ErrorRequestHandler, NextFunction, Request, Response } from 'express'
+
+import express, { Application, NextFunction, Request, Response } from 'express'
 
 import { PassportConfig } from './configs/passport.config'
 import RouteList from 'route-list'
+import { authMiddleware } from './middlewares/authorization.middleware'
 import connect from './database'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import passport from 'passport'
-import session from 'express-session'
 import { errorHandler } from './middlewares/response-handler.middleware'
-import { authMiddleware } from './middlewares/authorization.middleware'
+import passport from 'passport'
+import routes from './routes'
+import session from 'express-session'
 
 class App {
   public app: Application
@@ -57,8 +58,10 @@ class App {
     this.app.use('/api/users', routes.userRoutes)
     this.app.use('/api/auth', routes.authRoutes)
     this.app.use(authMiddleware())
+    this.app.use('/api/upload', routes.s3Routes)
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
+    this.app.use('/api/project', routes.projectRoutes)
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const error = new Error(`Cannot ${req.method} ${req.originalUrl}`)
       ;(error as any).statusCode = 404

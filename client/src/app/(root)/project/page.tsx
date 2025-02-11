@@ -1,7 +1,8 @@
+import ProjectPage from './_components/ProjectPage'
 import React from 'react'
 
-const page = () => {
-  return <div>page</div>
+const Project = () => {
+  return <ProjectPage />
 }
 
-export default page
+export default Project
