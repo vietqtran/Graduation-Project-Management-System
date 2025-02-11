@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useAppSelector } from './useStore'
 
 export const useUpload = () => {
-  const {user} = useAppSelector((state: RootState) => state.auth)
+  const { user } = useAppSelector((state: RootState) => state.auth)
 
   async function upload(fileList: FileList | null) {
     if (!fileList) return
