@@ -59,7 +59,7 @@ export class ProjectService {
         throw new HttpException('Error at getting projects', 400)
       }
       if (projects.length) {
-        return null
+        return projects[0] ?? null
       }
     })
   }
