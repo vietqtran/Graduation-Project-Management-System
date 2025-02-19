@@ -33,29 +33,26 @@ export const SIDEBAR_LINKS = [
     href: '/tasks',
     label: 'Tasks',
     icon: <TaskIcon />
-  }
-  
-]
-
-export const TEACHER_SIDEBAR_LINKS = [
+  },
   {
-    href: '/teacher/review-idea',
+    href: '/review-idea',
     label: 'Review Idea',
     icon: <ReviewIdeaIcon />
   },
   {
-    href: '/teacher/submit-topic',
+    href: '/submit-topic',
     label: 'Submit Topic',
     icon: <SubmitTopicIcon />
   },
   {
-    href: '/teacher/groups',
+    href: '/groups',
     label: 'Manage Groups',
     icon: <ManageGroupsIcon />
   },
   {
-    href: '/teacher/assign-tasks',
+    href: '/assign-tasks',
     label: 'Assign Tasks',
     icon: <AssignTaskIcon />
   }
 ]
+ 
