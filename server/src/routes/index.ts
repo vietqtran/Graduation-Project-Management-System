@@ -3,6 +3,7 @@ import { deadlineRoutes } from './deadline.route'
 import { manageUserRoutes } from './manage-users.route'
 import { parameterRoutes } from './parameter.route'
 import { projectRoutes } from './project.route'
+import { publicRoutes } from './public.route'
 import { s3Routes } from './s3.route'
 import { userRoutes } from './user.route'
 
@@ -13,7 +14,8 @@ const routes = {
   parameterRoutes,
   projectRoutes,
   s3Routes,
-  manageUserRoutes
+  manageUserRoutes,
+  publicRoutes
 }
 
 export default routes

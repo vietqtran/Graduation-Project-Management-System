@@ -55,6 +55,7 @@ class App {
   }
 
   private initializeRoutes(): void {
+    this.app.use('/api/public', routes.publicRoutes)
     this.app.use('/api/users', routes.userRoutes)
     this.app.use('/api/auth', routes.authRoutes)
     this.app.use(authMiddleware())
