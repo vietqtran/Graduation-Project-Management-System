@@ -2,6 +2,7 @@ import { USER_STATUS } from '@/constants/status'
 import { processSortObject, SortObject } from '@/helpers/sort-helper'
 import { Transform, Type } from 'class-transformer'
 import {
+  IsArray,
   IsEnum,
   IsIn,
   IsMongoId,
@@ -107,13 +108,14 @@ export class StaffUpdateTeacherDto {
   @IsMongoId({ message: 'Invalid Campus ID format' })
   campus: string
 
-  @IsNotEmpty({ message: 'Major is required' })
-  @IsMongoId({ message: 'Invalid Major ID format' })
-  major: string
+  @IsArray({ message: 'Major must be an array' })
+  @IsMongoId({ each: true, message: 'Invalid Major ID format' })
+  major: string[]
 
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsString({ message: 'Role must be a string' })
-  @IsIn(['lecturer', 'supervisor'], { message: 'Role must be either lecturer or supervisor' })
+  
+  @IsArray({ message: 'Roles must be an array' })
+  @IsString({ each: true, message: 'Each role must be a string' })
+  @IsIn(['lecturer', 'supervisor'], { each: true, message: 'Each role must be either lecturer or supervisor' })
   roles: string[]
 
 }

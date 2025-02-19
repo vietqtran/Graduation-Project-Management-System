@@ -13,7 +13,7 @@ export interface IUser extends Document {
   last_name: string
   display_name: string
   avatar: string
-  roles?: [string]
+  roles?: string[]
   status: number
   code: string
   campus: ICampus['_id']

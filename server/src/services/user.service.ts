@@ -5,7 +5,7 @@ import UserModel, { IUser } from '@/models/user.model'
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { Model } from 'mongoose'
-import { GetListStudentsDto, StaffUpdateStudentDto } from '@/dtos/user/staff-manage-students.dto'
+import { GetListStudentsDto, StaffGetDetailStudentDto, StaffUpdateStudentDto } from '@/dtos/user/staff-manage-students.dto'
 import { runTransaction } from '@/helpers/transaction-helper'
 import ProjectModel, { IProject } from '@/models/project.model'
 import { GetListTeachersDto, StaffGetDetailTeacherDto, StaffUpdateTeacherDto } from '@/dtos/user/staff-manage-teachers.dto'
@@ -157,6 +157,7 @@ export class UserService {
           _id: student._id,
           display_name: student.display_name,
           email: student.email,
+          status: student.status,
           code: student.code,
           campus: student.campus ? student.campus.name : undefined, // ✅ Chỉ lấy tên campus
           field: student.field?.map((f: any) => f.name) || [], // ✅ Lấy danh sách tên field (mảng)
@@ -173,18 +174,19 @@ export class UserService {
     })
   }
 
-  async staffGetDetailStudent(_id: string) {
+  async staffGetDetailStudent(body: StaffGetDetailStudentDto) {
     return runTransaction(async (session) => {
+      const { _id } = body
       const student = await this.userModel
         .findById(_id)
         .populate({ path: 'campus', select: 'name' }) 
         .populate({ path: 'field', select: 'name' }) 
         .populate({ path: 'major', select: 'name' }) 
-        .select('display_name email status code campus field major') 
+        .select('display_name email status code campus field major roles') 
         .lean()
         .session(session)
 
-      if (!student) {
+      if (!student || student.roles?.includes('student') === false) {
         throw new HttpException('Student not found', 404)
       }
 
@@ -198,6 +200,7 @@ export class UserService {
         _id: student._id,
         display_name: student.display_name,
         email: student.email,
+        status: student.status,
         code: student.code,
         campus: student.campus ? (student.campus as any).name : undefined,
         field: student.field?.map((f: any) => f.name) || [], 
@@ -216,7 +219,7 @@ export class UserService {
 
       const student = await this.userModel.findById(_id).session(session)
 
-      if (!student) {
+      if (!student || student.roles?.includes('student') === false) {
         throw new HttpException('Student not found', 404)
       }
 
@@ -283,6 +286,7 @@ export class UserService {
           _id: teacher._id,
           display_name: teacher.display_name,
           email: teacher.email,
+          status: teacher.status,
           code: teacher.code,
           roles: teacher.roles,
           campus: teacher.campus ? teacher.campus.name : undefined, // ✅ Chỉ lấy tên campus
@@ -327,6 +331,10 @@ export class UserService {
         throw new HttpException('Teacher not found', 404)
       }
 
+      if (!teacher.roles?.includes('lecturer') && !teacher.roles?.includes('supervisor')) {
+        throw new HttpException('Teacher not found', 400)
+      }
+
       const projects = await this.projectModel
         .find({ supervisor: body._id })
         .select('name _id')
@@ -336,6 +344,7 @@ export class UserService {
         _id: teacher._id,
         display_name: teacher.display_name,
         email: teacher.email,
+        status: teacher.status,
         code: teacher.code,
         roles: teacher.roles,
         campus: teacher.campus ? (teacher.campus as any).name : undefined,
@@ -349,12 +358,16 @@ export class UserService {
 
   async staffUpdateTeacher(body: StaffUpdateTeacherDto, user: TokenPayload) {
     return runTransaction(async (session) => {
-      const { _id, display_name, email, status, code, campus, major } = body
+      const { _id, display_name, email, status, code, campus, major, roles } = body
 
       const teacher = await this.userModel.findById(_id).session(session)
 
       if (!teacher) {
         throw new HttpException('Teacher not found', 404)
+      }
+
+      if (!teacher.roles?.includes('lecturer') && !teacher.roles?.includes('supervisor')) {
+        throw new HttpException('Teacher not found', 400)
       }
 
       teacher.display_name = display_name
@@ -363,6 +376,7 @@ export class UserService {
       teacher.code = code
       teacher.campus = campus
       teacher.major = Array.isArray(major) ? major : [major]
+      teacher.roles = roles
 
       await teacher.save({ session })
     })

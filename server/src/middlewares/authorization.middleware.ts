@@ -1,5 +1,6 @@
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
+import { log } from 'console'
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 

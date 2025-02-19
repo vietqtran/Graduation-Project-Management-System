@@ -2,6 +2,7 @@ import { USER_STATUS } from '@/constants/status'
 import { processSortObject, SortObject } from '@/helpers/sort-helper'
 import { Transform, Type } from 'class-transformer'
 import {
+  IsArray,
   IsEnum,
   IsMongoId,
   IsNotEmpty,
@@ -111,12 +112,12 @@ export class StaffUpdateStudentDto {
   @IsMongoId({ message: 'Invalid Campus ID format' })
   campus: string;
 
-  @IsNotEmpty({ message: 'Field ID is required' })
-  @IsMongoId({ message: 'Invalid Field ID format' })
+  @IsArray({ message: 'Field must be an array' })
+  @IsMongoId({ each: true, message: 'Invalid Field ID format' })
   field: [string];
 
-  @IsNotEmpty({ message: 'Major ID is required' })
-  @IsMongoId({ message: 'Invalid Major ID format' })
+  @IsArray({ message: 'Major must be an array' })
+  @IsMongoId({ each: true, message: 'Invalid Major ID format' })
   major: [string];
 
   //update project nào cho sinh viên thì ko ở màn này

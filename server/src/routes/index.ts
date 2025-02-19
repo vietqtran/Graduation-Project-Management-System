@@ -1,5 +1,6 @@
 import { authRoutes } from './auth.route'
 import { deadlineRoutes } from './deadline.route'
+import { manageUserRoutes } from './manage-users.route'
 import { parameterRoutes } from './parameter.route'
 import { projectRoutes } from './project.route'
 import { s3Routes } from './s3.route'
@@ -11,7 +12,8 @@ const routes = {
   deadlineRoutes,
   parameterRoutes,
   projectRoutes,
-  s3Routes
+  s3Routes,
+  manageUserRoutes
 }
 
 export default routes
