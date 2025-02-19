@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsIn,
   IsMongoId,
+  IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
@@ -71,4 +72,48 @@ export class GetListTeachersDto {
   @ValidateNested()
   @Transform(({ value }) => processSortObject(value, { created_at: -1 }, validFields))
   sort?: SortObject
+}
+
+export class StaffGetDetailTeacherDto {
+  @IsNotEmpty({ message: 'Teacher ID is required' })
+  @IsMongoId({ message: 'Invalid Teacher ID format' })
+  _id: string
+}
+
+
+export class StaffUpdateTeacherDto {
+
+  @IsMongoId({ message: 'Invalid Teacher ID format' })
+  _id: string
+
+  @IsNotEmpty({ message: 'Name is required' })
+  @IsString({ message: 'Name must be a string' })
+  display_name: string
+
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsString({ message: 'Email must be a string' })
+  email: string
+
+  @IsNotEmpty({ message: 'Status are required' })
+  @IsEnum(USER_STATUS, { message: 'Invalid status' })
+  status: number
+
+  @IsNotEmpty({ message: 'Code is required' })
+  @Matches(/^[A-Z0-9]+$/, { message: 'Code can only contain uppercase letters and numbers' })
+  @IsString({ message: 'Code must be a string' })
+  code: string
+
+  @IsNotEmpty({ message: 'Campus is required' })
+  @IsMongoId({ message: 'Invalid Campus ID format' })
+  campus: string
+
+  @IsNotEmpty({ message: 'Major is required' })
+  @IsMongoId({ message: 'Invalid Major ID format' })
+  major: string
+
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsString({ message: 'Role must be a string' })
+  @IsIn(['lecturer', 'supervisor'], { message: 'Role must be either lecturer or supervisor' })
+  roles: string[]
+
 }

@@ -5,11 +5,11 @@ import UserModel, { IUser } from '@/models/user.model'
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { Model } from 'mongoose'
-import { GetListStudentsDto } from '@/dtos/user/staff-manage-students.dto'
+import { GetListStudentsDto, StaffUpdateStudentDto } from '@/dtos/user/staff-manage-students.dto'
 import { runTransaction } from '@/helpers/transaction-helper'
 import ProjectModel, { IProject } from '@/models/project.model'
-import { GetListTeachersDto } from '@/dtos/user/staff-manage-teachers.dto'
-import { log } from 'console'
+import { GetListTeachersDto, StaffGetDetailTeacherDto, StaffUpdateTeacherDto } from '@/dtos/user/staff-manage-teachers.dto'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 require('../models/field.model')
 require('../models/major.model')
 require('../models/campus.model')
@@ -85,8 +85,8 @@ export class UserService {
       if (status !== undefined) filter.status = status
       if (code) filter.code = code
       if (campus) filter.campus = campus
-      if (field) filter.field = { $in: field }
-      if (major) filter.major = { $in: major }
+      if (field) filter.field = { $in: [field] }
+      if (major) filter.major = { $in: [major] }
 
       const userProjectsMap = new Map<string, { _id: string; isLeader: boolean; projectName: string }>()
 
@@ -100,7 +100,6 @@ export class UserService {
       // 🔹 Lấy danh sách leader + members trong cùng một truy vấn
       const projects = await this.projectModel.find(projectFilter).select('leader members name _id').session(session)
 
-      // log(projects)
       if (is_leader) {
         projects.forEach((project: any) => {
           const projectName = project.name
@@ -137,19 +136,15 @@ export class UserService {
 
       const students = await this.userModel
         .find(filter)
-        .populate({ path: 'campus', select: 'name' }) // ✅ Lấy tên campus
-        .populate({ path: 'field', select: 'name' }) // ✅ Lấy tên field
-        .populate({ path: 'major', select: 'name' }) // ✅ Lấy tên major
+        .populate({ path: 'campus', select: 'name' })
+        .populate({ path: 'field', select: 'name' })
+        .populate({ path: 'major', select: 'name' })
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('display_name email status code campus field major') // ✅ Chỉ trả về các trường cần thiết
+        .select('display_name email status code campus field major') // Chỉ trả về các trường cần thiết
         .lean()
         .session(session)
-
-      // ✅ Chuyển đổi dữ liệu để trả về format mong muốn
-
-      // console.log(students)
 
       const formattedStudents = students.map((student: any) => {
         const userProjectData = userProjectsMap.get(student._id.toString()) || {
@@ -157,7 +152,6 @@ export class UserService {
           isLeader: false,
           projectName: null
         }
-        console.log(userProjectData)
 
         return {
           _id: student._id,
@@ -165,14 +159,12 @@ export class UserService {
           email: student.email,
           code: student.code,
           campus: student.campus ? student.campus.name : undefined, // ✅ Chỉ lấy tên campus
-          field: student.field ? student.field.name : undefined, // ✅ Chỉ lấy tên field
-          major: student.major ? student.major.name : undefined, // ✅ Chỉ lấy tên major
+          field: student.field?.map((f: any) => f.name) || [], // ✅ Lấy danh sách tên field (mảng)
+          major: student.major?.map((m: any) => m.name) || [],
           project: { name: userProjectData.projectName, _id: userProjectData._id }, // ✅ Danh sách tên dự án mà student tham gia
           is_leader: userProjectData.isLeader // ✅ Đánh dấu student có phải leader không
         }
       })
-
-      // log(formattedStudents)
 
       return {
         list: formattedStudents,
@@ -180,6 +172,66 @@ export class UserService {
       }
     })
   }
+
+  async staffGetDetailStudent(_id: string) {
+    return runTransaction(async (session) => {
+      const student = await this.userModel
+        .findById(_id)
+        .populate({ path: 'campus', select: 'name' }) 
+        .populate({ path: 'field', select: 'name' }) 
+        .populate({ path: 'major', select: 'name' }) 
+        .select('display_name email status code campus field major') 
+        .lean()
+        .session(session)
+
+      if (!student) {
+        throw new HttpException('Student not found', 404)
+      }
+
+      const project = await this.projectModel
+        .findOne({ members: _id })
+        .select('leader members name _id')
+        .session(session)
+
+
+      const formattedStudent = {
+        _id: student._id,
+        display_name: student.display_name,
+        email: student.email,
+        code: student.code,
+        campus: student.campus ? (student.campus as any).name : undefined,
+        field: student.field?.map((f: any) => f.name) || [], 
+        major: student.major?.map((m: any) => m.name) || [],
+        project: project ? { name: project.name, _id: project._id } : null,
+        is_leader: project ? (project.leader as string).toString() === _id : false
+      }
+      return formattedStudent;
+    }
+    )
+  }
+
+  async staffUpdateStudent(body: StaffUpdateStudentDto, user: TokenPayload) {
+    return runTransaction(async (session) => {
+      const { _id, display_name, email, status, code, campus, field, major} = body
+
+      const student = await this.userModel.findById(_id).session(session)
+
+      if (!student) {
+        throw new HttpException('Student not found', 404)
+      }
+
+      student.display_name = display_name
+      student.email = email
+      student.status = status
+      student.code = code
+      student.campus = campus
+      student.field = Array.isArray(field) ? field : [field]
+      student.major = major
+
+      await student.save({ session })
+    })
+  }
+
 
   async staffGetListTeachers(body: GetListTeachersDto) {
     return runTransaction(async (session) => {
@@ -192,7 +244,7 @@ export class UserService {
       if (status !== undefined) filter.status = status
       if (code) filter.code = code
       if (campus) filter.campus = campus
-      if (major) filter.major = { $in: major }
+      if (major) filter.major = { $in: [major] }
       if (role) filter.roles = role
 
       const teachers = await this.userModel
@@ -218,8 +270,6 @@ export class UserService {
         ])
         .session(session)
 
-      log(projectsCount)
-
       // 🔹 Tạo map teacherId -> số lượng project
       const supervisorProjectCountMap = new Map<string, number>()
       projectsCount.forEach((item) => {
@@ -234,9 +284,9 @@ export class UserService {
           display_name: teacher.display_name,
           email: teacher.email,
           code: teacher.code,
-          roles: teacher.roles.join(', '),
+          roles: teacher.roles,
           campus: teacher.campus ? teacher.campus.name : undefined, // ✅ Chỉ lấy tên campus
-          major: teacher.major ? teacher.major.name : undefined, // ✅ Chỉ lấy tên major
+          major: teacher.major?.map((m: any) => m.name) || [],
           noProjects: projectCount
         }
       })
@@ -260,6 +310,61 @@ export class UserService {
         list: formattedTeachers,
         total: formattedTeachers.length
       }
+    })
+  }
+
+  async staffGetDetailTeacher(body: StaffGetDetailTeacherDto) {
+    return runTransaction(async (session) => {
+      const teacher = await this.userModel
+        .findById(body._id)
+        .populate({ path: 'campus', select: 'name' })
+        .populate({ path: 'major', select: 'name' })
+        .select('display_name email status code campus major noProjects roles')
+        .lean()
+        .session(session)
+
+      if (!teacher) {
+        throw new HttpException('Teacher not found', 404)
+      }
+
+      const projects = await this.projectModel
+        .find({ supervisor: body._id })
+        .select('name _id')
+        .session(session)
+
+      const formattedTeacher = {
+        _id: teacher._id,
+        display_name: teacher.display_name,
+        email: teacher.email,
+        code: teacher.code,
+        roles: teacher.roles,
+        campus: teacher.campus ? (teacher.campus as any).name : undefined,
+        major: teacher.major?.map((m: any) => m.name) || [],
+        noProjects: projects.length,
+        projects: projects.map((project: any) => ({ _id: project._id, name: project.name }))
+      }
+      return formattedTeacher
+    })
+  }
+
+  async staffUpdateTeacher(body: StaffUpdateTeacherDto, user: TokenPayload) {
+    return runTransaction(async (session) => {
+      const { _id, display_name, email, status, code, campus, major } = body
+
+      const teacher = await this.userModel.findById(_id).session(session)
+
+      if (!teacher) {
+        throw new HttpException('Teacher not found', 404)
+      }
+
+      teacher.display_name = display_name
+      teacher.email = email
+      teacher.status = status
+      teacher.code = code
+      teacher.campus = campus
+      teacher.major = Array.isArray(major) ? major : [major]
+
+      await teacher.save({ session })
     })
   }
 }
