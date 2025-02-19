@@ -1,10 +1,7 @@
-import AssignTaskIcon from '@/components/icons/AssignTaskIcon'
 import DashboardIcon from '@/components/icons/DashboardIcon'
-import ManageGroupsIcon from '@/components/icons/ManageGroupsIcon'
 import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
-import ReviewIdeaIcon from '@/components/icons/ReviewIdeaIcon'
-import SubmitTopicIcon from '@/components/icons/SubmitTopicIcon'
+import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
 
@@ -35,24 +32,24 @@ export const SIDEBAR_LINKS = [
     icon: <TaskIcon />
   },
   {
-    href: '/review-idea',
-    label: 'Review Idea',
-    icon: <ReviewIdeaIcon />
+    href: '/idea',
+    label: 'Idea',
+    icon: <IdeaIcon />
   },
-  {
-    href: '/submit-topic',
-    label: 'Submit Topic',
-    icon: <SubmitTopicIcon />
-  },
-  {
-    href: '/groups',
-    label: 'Manage Groups',
-    icon: <ManageGroupsIcon />
-  },
-  {
-    href: '/assign-tasks',
-    label: 'Assign Tasks',
-    icon: <AssignTaskIcon />
-  }
+  // {
+  //   href: '/submit-topic',
+  //   label: 'Submit Topic',
+  //   icon: <SubmitTopicIcon />
+  // },
+  // {
+  //   href: '/groups',
+  //   label: 'Manage Groups',
+  //   icon: <ManageGroupsIcon />
+  // },
+  // {
+  //   href: '/assign-tasks',
+  //   label: 'Assign Tasks',
+  //   icon: <AssignTaskIcon />
+  // }
 ]
  
