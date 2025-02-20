@@ -179,6 +179,7 @@ export class AuthService {
         throw new HttpException('User already existed', 400)
       }
 
+      const code = email.match(/@fpt.edu.vn$/) ? email.split('@')[0].slice(-8) : email.split('@')[0]
       const createdUser = await this.userModel.create(
         [
           {
@@ -187,7 +188,8 @@ export class AuthService {
             first_name,
             last_name,
             avatar: photoURL,
-            display_name: `${first_name} ${last_name}`
+            display_name: `${first_name} ${last_name}`,
+            code: code
           }
         ],
         { session }

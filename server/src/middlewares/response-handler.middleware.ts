@@ -14,7 +14,7 @@ export interface CustomResponse {
   statusCode: number
 }
 export class ResponseHandler {
-  static sendSuccess(res: Response, data: any = null, message: string = 'Success') {
+  static sendSuccess(res: Response, data: any = null, message: string = '') {
     if (data?.accessToken) {
       res.cookie('Authentication', data.accessToken, {
         httpOnly: true,
