@@ -3,8 +3,6 @@ import * as dotenv from 'dotenv'
 import * as jwt from 'jsonwebtoken'
 
 import AccountModel, { IAccount } from '@/models/account.model'
-import SessionModel, { ISession } from '@/models/session.model'
-import UserModel, { IUser } from '@/models/user.model'
 import {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -13,12 +11,14 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse
 } from '@simplewebauthn/server'
+import SessionModel, { ISession } from '@/models/session.model'
+import UserModel, { IUser } from '@/models/user.model'
+import mongoose, { Model } from 'mongoose'
 
 import { AuthenticatorTransportFuture } from '@simplewebauthn/types'
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
-import mongoose, { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { SignInGoogleDto } from '@/dtos/auth/sign-in-google.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'

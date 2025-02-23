@@ -52,6 +52,14 @@ export class ProjectService {
             }
           ]
         })
+        .populate({
+          path: 'documents',
+          populate: [
+            {
+              path: 'user'
+            }
+          ]
+        })
         .session(session)
         .exec()
 
