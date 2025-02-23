@@ -81,9 +81,7 @@ export class StaffGetDetailTeacherDto {
   _id: string
 }
 
-
 export class StaffUpdateTeacherDto {
-
   @IsMongoId({ message: 'Invalid Teacher ID format' })
   _id: string
 
@@ -112,10 +110,8 @@ export class StaffUpdateTeacherDto {
   @IsMongoId({ each: true, message: 'Invalid Major ID format' })
   major: string[]
 
-  
   @IsArray({ message: 'Roles must be an array' })
   @IsString({ each: true, message: 'Each role must be a string' })
   @IsIn(['lecturer', 'supervisor'], { each: true, message: 'Each role must be either lecturer or supervisor' })
   roles: string[]
-
 }

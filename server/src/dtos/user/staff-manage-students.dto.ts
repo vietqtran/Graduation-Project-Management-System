@@ -86,40 +86,39 @@ export class StaffGetDetailStudentDto {
 export class StaffUpdateStudentDto {
   @IsNotEmpty({ message: 'Student ID is required' })
   @IsMongoId({ message: 'Invalid student ID format' })
-  _id: string;
+  _id: string
 
   @IsNotEmpty({ message: 'Display name is required' })
   @IsString({ message: 'Name must be a string' })
-  display_name: string;
+  display_name: string
 
   @IsNotEmpty({ message: 'Email is required' })
   @IsString({ message: 'Email must be a string' })
-  email: string;
+  email: string
 
   @IsNotEmpty({ message: 'Code is required' })
   @IsString({ message: 'Code must be a string' })
   @Matches(/^[A-Z0-9]+$/, { message: 'Code can only contain uppercase letters and numbers' })
-  code: string;
+  code: string
 
   // @IsNotEmpty({ message: 'Leader status is required' })
   // is_leader: boolean;
 
   @IsNotEmpty({ message: 'Status is required' })
   @IsEnum(USER_STATUS, { message: 'Invalid status' })
-  status: number;
+  status: number
 
   @IsNotEmpty({ message: 'Campus ID is required' })
   @IsMongoId({ message: 'Invalid Campus ID format' })
-  campus: string;
+  campus: string
 
   @IsArray({ message: 'Field must be an array' })
   @IsMongoId({ each: true, message: 'Invalid Field ID format' })
-  field: [string];
+  field: [string]
 
   @IsArray({ message: 'Major must be an array' })
   @IsMongoId({ each: true, message: 'Invalid Major ID format' })
-  major: [string];
+  major: [string]
 
   //update project nào cho sinh viên thì ko ở màn này
-
 }

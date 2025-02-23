@@ -5,10 +5,18 @@ import UserModel, { IUser } from '@/models/user.model'
 import { CreateUserDto } from '@/dtos/user/create-user.dto'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { Model } from 'mongoose'
-import { GetListStudentsDto, StaffGetDetailStudentDto, StaffUpdateStudentDto } from '@/dtos/user/staff-manage-students.dto'
+import {
+  GetListStudentsDto,
+  StaffGetDetailStudentDto,
+  StaffUpdateStudentDto
+} from '@/dtos/user/staff-manage-students.dto'
 import { runTransaction } from '@/helpers/transaction-helper'
 import ProjectModel, { IProject } from '@/models/project.model'
-import { GetListTeachersDto, StaffGetDetailTeacherDto, StaffUpdateTeacherDto } from '@/dtos/user/staff-manage-teachers.dto'
+import {
+  GetListTeachersDto,
+  StaffGetDetailTeacherDto,
+  StaffUpdateTeacherDto
+} from '@/dtos/user/staff-manage-teachers.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 require('../models/field.model')
 require('../models/major.model')
@@ -179,10 +187,10 @@ export class UserService {
       const { _id } = body
       const student = await this.userModel
         .findById(_id)
-        .populate({ path: 'campus', select: 'name' }) 
-        .populate({ path: 'field', select: 'name' }) 
-        .populate({ path: 'major', select: 'name' }) 
-        .select('display_name email status code campus field major roles') 
+        .populate({ path: 'campus', select: 'name' })
+        .populate({ path: 'field', select: 'name' })
+        .populate({ path: 'major', select: 'name' })
+        .select('display_name email status code campus field major roles')
         .lean()
         .session(session)
 
@@ -195,7 +203,6 @@ export class UserService {
         .select('leader members name _id')
         .session(session)
 
-
       const formattedStudent = {
         _id: student._id,
         display_name: student.display_name,
@@ -203,19 +210,18 @@ export class UserService {
         status: student.status,
         code: student.code,
         campus: student.campus ? (student.campus as any).name : undefined,
-        field: student.field?.map((f: any) => f.name) || [], 
+        field: student.field?.map((f: any) => f.name) || [],
         major: student.major?.map((m: any) => m.name) || [],
         project: project ? { name: project.name, _id: project._id } : null,
         is_leader: project ? (project.leader as string).toString() === _id : false
       }
-      return formattedStudent;
-    }
-    )
+      return formattedStudent
+    })
   }
 
   async staffUpdateStudent(body: StaffUpdateStudentDto, user: TokenPayload) {
     return runTransaction(async (session) => {
-      const { _id, display_name, email, status, code, campus, field, major} = body
+      const { _id, display_name, email, status, code, campus, field, major } = body
 
       const student = await this.userModel.findById(_id).session(session)
 
@@ -234,7 +240,6 @@ export class UserService {
       await student.save({ session })
     })
   }
-
 
   async staffGetListTeachers(body: GetListTeachersDto) {
     return runTransaction(async (session) => {
@@ -335,10 +340,7 @@ export class UserService {
         throw new HttpException('Teacher not found', 400)
       }
 
-      const projects = await this.projectModel
-        .find({ supervisor: body._id })
-        .select('name _id')
-        .session(session)
+      const projects = await this.projectModel.find({ supervisor: body._id }).select('name _id').session(session)
 
       const formattedTeacher = {
         _id: teacher._id,

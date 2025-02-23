@@ -1,8 +1,16 @@
 import { Router } from 'express'
 import { UserController } from '@/controllers/user.controller'
 import { validateDto } from '@/middlewares/validate.middleware'
-import { GetListStudentsDto, StaffGetDetailStudentDto, StaffUpdateStudentDto } from '@/dtos/user/staff-manage-students.dto'
-import { GetListTeachersDto, StaffGetDetailTeacherDto, StaffUpdateTeacherDto } from '@/dtos/user/staff-manage-teachers.dto'
+import {
+  GetListStudentsDto,
+  StaffGetDetailStudentDto,
+  StaffUpdateStudentDto
+} from '@/dtos/user/staff-manage-students.dto'
+import {
+  GetListTeachersDto,
+  StaffGetDetailTeacherDto,
+  StaffUpdateTeacherDto
+} from '@/dtos/user/staff-manage-teachers.dto'
 
 const router = Router()
 const userController = new UserController()
