@@ -1,10 +1,11 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 
-import { USER_STATUS } from '@/constants/status'
-import { emailRegex } from '@/constants/regex'
 import { ICampus } from './campus.model'
 import { IField } from './field.model'
 import { IMajor } from './major.model'
+import { IProject } from './project.model'
+import { USER_STATUS } from '@/constants/status'
+import { emailRegex } from '@/constants/regex'
 
 export interface IUser extends Document {
   email: string
@@ -19,6 +20,7 @@ export interface IUser extends Document {
   campus: ICampus['_id']
   field: IField['_id'][]
   major: IMajor['_id'][]
+  project?: IProject['_id']
 }
 
 export const UserSchema = new Schema<IUser>(
@@ -88,7 +90,12 @@ export const UserSchema = new Schema<IUser>(
         ref: 'Major'
         // required: [true, 'Major is required']
       }
-    ]
+    ],
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
+      require: false
+    }
   },
   {
     timestamps: {

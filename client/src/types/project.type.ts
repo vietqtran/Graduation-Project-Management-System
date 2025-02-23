@@ -3,6 +3,7 @@ import { Field } from './field.type'
 import { History } from './history.type'
 import { Major } from './major.type'
 import { Task } from './task.type'
+import { UploadDocument } from './document.type'
 import { User } from './user.type'
 
 export enum ProjectCategory {
@@ -27,6 +28,7 @@ export interface Project {
   status: number
   stage: number
   slow_count: number
+  documents: UploadDocument[]
   created_at: Date
   updated_at: Date
 }

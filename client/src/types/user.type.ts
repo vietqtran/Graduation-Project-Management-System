@@ -12,4 +12,5 @@ export interface User {
   display_name?: string
   major?: Major[]
   field?: Field[]
+  project?: string
 }
