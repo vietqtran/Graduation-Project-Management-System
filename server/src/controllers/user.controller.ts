@@ -48,7 +48,7 @@ export class UserController {
 
   staffUpdateStudent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body
-    const tokenPayload = getUser(req);
+    const tokenPayload = getUser(req)
     await this.userService.staffUpdateStudent(body, tokenPayload)
     return ResponseHandler.sendSuccess(res, null, 'Student updated successfully')
   })
@@ -67,7 +67,7 @@ export class UserController {
 
   staffUpdateTeacher = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body
-    const tokenPayload = getUser(req);
+    const tokenPayload = getUser(req)
     await this.userService.staffUpdateTeacher(body, tokenPayload)
     return ResponseHandler.sendSuccess(res, null, 'Teacher updated successfully')
   })
