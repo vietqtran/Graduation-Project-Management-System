@@ -6,6 +6,7 @@ import instance from '@/utils/axios'
 import { useAppSelector } from './useStore'
 
 export const useProject = () => {
+  const [isLoading, setIsLoading] = useState(true)
   const { user } = useAppSelector((state: RootState) => state.auth)
   const [project, setProject] = useState<Project | null>(null)
   useEffect(() => {
@@ -13,10 +14,16 @@ export const useProject = () => {
   }, [])
 
   const getProject = async () => {
-    if (!user?._id) return
-    const { data } = await instance.get(`/project/?userIds=${user?._id}`, { withCredentials: true })
-    setProject(data.data)
+    try {
+      if (!user?._id) return
+      const { data } = await instance.get(`/project/?userIds=${user?._id}`, { withCredentials: true })
+      setProject(data.data)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setTimeout(() => setIsLoading(false), 2500)
+    }
   }
 
-  return { getProject, project }
+  return { getProject, project, isLoading }
 }

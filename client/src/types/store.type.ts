@@ -5,6 +5,7 @@ export interface User {
   first_name: string
   last_name: string
   roles: string[]
+  project?: string
 }
 
 export interface AuthState {

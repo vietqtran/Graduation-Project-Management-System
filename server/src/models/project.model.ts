@@ -1,10 +1,11 @@
-import mongoose, { Model, Schema } from 'mongoose'
+import mongoose, { Document, Model, Schema } from 'mongoose'
 
 import { ICampus } from './campus.model'
 import { IField } from './field.model'
 import { IHistory } from './history.model'
 import { IMajor } from './major.model'
 import { ITask } from './task.model'
+import { IUploadDocument } from './document.model'
 import { IUser } from './user.model'
 import { PROJECT_STATUS } from '@/constants/status'
 
@@ -19,6 +20,7 @@ export interface IProject extends Document {
   campus: ICampus['_id']
   mark: number
   histories: IHistory['_id'][]
+  documents: IUploadDocument['_id'][]
   //1: chủ đề của sinh viên, 2: chủ đề của giảng viên
   category: 1 | 2
   tasks: ITask['_id'][]
@@ -86,6 +88,12 @@ const ProjectSchema = new Schema<IProject>(
       {
         type: Schema.Types.ObjectId,
         ref: 'History'
+      }
+    ],
+    documents: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'UploadDocument'
       }
     ],
     category: {

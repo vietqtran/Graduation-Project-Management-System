@@ -55,6 +55,7 @@ class App {
   }
 
   private initializeRoutes(): void {
+    this.app.use('/api/public', routes.publicRoutes)
     this.app.use('/api/users', routes.userRoutes)
     this.app.use('/api/auth', routes.authRoutes)
     this.app.use(authMiddleware())
@@ -62,6 +63,8 @@ class App {
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
     this.app.use('/api/project', routes.projectRoutes)
+    this.app.use('/api/manage-users', routes.manageUserRoutes)
+    this.app.use('/api/documents', routes.documentRoutes)
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const error = new Error(`Cannot ${req.method} ${req.originalUrl}`)
       ;(error as any).statusCode = 404
