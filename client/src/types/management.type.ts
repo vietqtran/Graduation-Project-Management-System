@@ -29,5 +29,27 @@ interface Parameter {
   updated_at: string // ISO date string
 }
 
+interface Project {
+  name: string
+  _id: string
+}
+
+export interface Student {
+  _id: string
+  display_name: string
+  email: string
+  status: number
+  code?: string // optional, as not all objects include it
+  campus: string
+  field: string[]
+  major: string[]
+  project: Project
+  is_leader: boolean
+}
+
+export interface StudentsResponse {
+  list: Student[]
+  total: number
+}
 export type DeadlinesResponse = Deadline[]
 export type ParametersResponse = Parameter[]
