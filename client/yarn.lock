@@ -1160,8 +1160,6 @@
     aria-hidden "^1.2.4"
     react-remove-scroll "^2.6.2"
 
-<<<<<<< HEAD
-=======
 "@radix-ui/react-separator@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-separator/-/react-separator-1.1.2.tgz#24c5450db20f341f2b743ed4b07b907e18579216"
@@ -1169,7 +1167,6 @@
   dependencies:
     "@radix-ui/react-primitive" "2.0.2"
 
->>>>>>> e7969b12c3c385b84b644afd2b7bc9ddf9ddf32f
 "@radix-ui/react-slot@1.1.1", "@radix-ui/react-slot@^1.1.1":
   version "1.1.1"
   resolved "https://registry.npmjs.org/@radix-ui/react-slot/-/react-slot-1.1.1.tgz"
@@ -1177,8 +1174,6 @@
   dependencies:
     "@radix-ui/react-compose-refs" "1.1.1"
 
-<<<<<<< HEAD
-=======
 "@radix-ui/react-slot@1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-slot/-/react-slot-1.1.2.tgz#daffff7b2bfe99ade63b5168407680b93c00e1c6"
@@ -1186,7 +1181,6 @@
   dependencies:
     "@radix-ui/react-compose-refs" "1.1.1"
 
->>>>>>> e7969b12c3c385b84b644afd2b7bc9ddf9ddf32f
 "@radix-ui/react-tooltip@^1.1.6":
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-tooltip/-/react-tooltip-1.1.6.tgz#eab98e9a5c876ef0abfae3cfeee229870528ed06"
