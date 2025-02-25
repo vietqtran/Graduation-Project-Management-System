@@ -7,6 +7,7 @@ import { projectRoutes } from './project.route'
 import { publicRoutes } from './public.route'
 import { s3Routes } from './s3.route'
 import { userRoutes } from './user.route'
+import { ideaRoutes } from './idea.route'
 
 const routes = {
   authRoutes,
@@ -17,7 +18,8 @@ const routes = {
   s3Routes,
   manageUserRoutes,
   publicRoutes,
-  documentRoutes
+  documentRoutes,
+  ideaRoutes
 }
 
 export default routes
