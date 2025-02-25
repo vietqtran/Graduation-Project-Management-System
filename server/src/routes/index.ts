@@ -3,6 +3,7 @@ import { deadlineRoutes } from './deadline.route'
 import { documentRoutes } from './document.route'
 import { manageUserRoutes } from './manage-users.route'
 import { parameterRoutes } from './parameter.route'
+import { requestRoutes } from './request.route'
 import { projectRoutes } from './project.route'
 import { publicRoutes } from './public.route'
 import { s3Routes } from './s3.route'
@@ -13,6 +14,7 @@ const routes = {
   userRoutes,
   deadlineRoutes,
   parameterRoutes,
+  requestRoutes,
   projectRoutes,
   s3Routes,
   manageUserRoutes,
