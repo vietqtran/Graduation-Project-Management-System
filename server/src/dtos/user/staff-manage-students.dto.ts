@@ -1,4 +1,6 @@
+import { semesterRegex } from '@/constants/regex'
 import { USER_STATUS } from '@/constants/status'
+import { getCurrentSemester } from '@/helpers/date-helper'
 import { processSortObject, SortObject } from '@/helpers/sort-helper'
 import { Transform, Type } from 'class-transformer'
 import {
@@ -54,6 +56,11 @@ export class GetListStudentsDto {
   @IsOptional()
   @IsString({ message: 'Project name must be a string' })
   project_name?: string
+
+  @IsOptional()
+  @IsString({ message: 'Semester must be a string' })
+  @Matches(semesterRegex, { message: 'Invalid semester' }) //trường này nhập input nhé
+  planned_semester?: string = getCurrentSemester();
 
   @IsOptional()
   @Type(() => Number)
@@ -119,6 +126,11 @@ export class StaffUpdateStudentDto {
   @IsArray({ message: 'Major must be an array' })
   @IsMongoId({ each: true, message: 'Invalid Major ID format' })
   major: [string]
+
+  @IsOptional()
+  @IsString({ message: 'Semester must be a string' })
+  @Matches(semesterRegex, { message: 'Invalid semester' }) //trường này nhập input nhé
+  planned_semester: string = getCurrentSemester();
 
   //update project nào cho sinh viên thì ko ở màn này
 }
