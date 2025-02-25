@@ -10,7 +10,7 @@ const majors = [
 
 const MajorSelection = () => {
   return (
-    <div className="w-64 flex flex-col gap-2 p-4 border rounded-lg shadow-md">
+<div className="w-1/3 border rounded-lg p-2 self-start flex flex-col gap-2 p-4">
       <h2 className="text-lg font-semibold mb-2">Select Your Major</h2>
       {majors.map((major) => (
         <button

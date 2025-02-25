@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
 
 const TopicForm = () => {
   const form = useForm({
@@ -19,13 +18,13 @@ const TopicForm = () => {
       category: ""
     },
   });
- 
+
   return (
-    <div className="w-full h-screen flex items-center justify-center p-6">
-      <div className="max-w-4xl w-full bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center mb-4">Submit a New Topic</h2>
+    <div >
+      <div className="bg-white grid p-1 gap-4">
+        <h2 className="text-2xl font-bold text-center mt-12">Submit a New Topic</h2>
         <Form {...form}>
-          <form className="space-y-4">
+          <form className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="topicName"
@@ -47,7 +46,7 @@ const TopicForm = () => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Provide detailed description about the topic" {...field} />
+                    <Textarea placeholder="Provide detailed description about the topic" rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,35 +95,49 @@ const TopicForm = () => {
               )}
             />
 
+            {/* Sửa Select cho Duration */}
             <FormField
               control={form.control}
               name="duration"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Duration</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 6 weeks, 3 months, etc." {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6 weeks">6 weeks</SelectItem>
+                      <SelectItem value="3 months">3 months</SelectItem>
+                      <SelectItem value="6 months">6 months</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Sửa Select cho Category */}
             <FormField
               control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter topic category" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="science">Science</SelectItem>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <Button type="submit" className="w-full">Submit Topic</Button>
           </form>
         </Form>
       </div>
