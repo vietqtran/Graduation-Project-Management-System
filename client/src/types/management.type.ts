@@ -1,3 +1,6 @@
+import { Field } from './field.type'
+import { Major } from './major.type'
+
 interface User {
   _id: string
   email: string
@@ -41,8 +44,8 @@ export interface Student {
   status: number
   code?: string // optional, as not all objects include it
   campus: string
-  field: string[]
-  major: string[]
+  field: Field[]
+  major: Major[]
   project: Project
   is_leader: boolean
 }

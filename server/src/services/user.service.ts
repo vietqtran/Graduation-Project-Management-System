@@ -168,8 +168,8 @@ export class UserService {
           status: student.status,
           code: student.code,
           campus: student.campus ? student.campus.name : undefined, // ✅ Chỉ lấy tên campus
-          field: student.field?.map((f: any) => f.name) || [], // ✅ Lấy danh sách tên field (mảng)
-          major: student.major?.map((m: any) => m.name) || [],
+          field: student.field?.map((f: any) => f) || [], // ✅ Lấy danh sách tên field (mảng)
+          major: student.major?.map((m: any) => m) || [],
           project: { name: userProjectData.projectName, _id: userProjectData._id }, // ✅ Danh sách tên dự án mà student tham gia
           is_leader: userProjectData.isLeader // ✅ Đánh dấu student có phải leader không
         }
@@ -209,9 +209,9 @@ export class UserService {
         email: student.email,
         status: student.status,
         code: student.code,
-        campus: student.campus ? (student.campus as any).name : undefined,
-        field: student.field?.map((f: any) => f.name) || [],
-        major: student.major?.map((m: any) => m.name) || [],
+        campus: student.campus ? (student.campus as any)._id : undefined,
+        field: student.field?.map((f: any) => f) || [],
+        major: student.major?.map((m: any) => m) || [],
         project: project ? { name: project.name, _id: project._id } : null,
         is_leader: project ? (project.leader as string).toString() === _id : false
       }
@@ -295,7 +295,7 @@ export class UserService {
           code: teacher.code,
           roles: teacher.roles,
           campus: teacher.campus ? teacher.campus.name : undefined, // ✅ Chỉ lấy tên campus
-          major: teacher.major?.map((m: any) => m.name) || [],
+          major: teacher.major?.map((m: any) => m) || [],
           noProjects: projectCount
         }
       })
@@ -349,8 +349,8 @@ export class UserService {
         status: teacher.status,
         code: teacher.code,
         roles: teacher.roles,
-        campus: teacher.campus ? (teacher.campus as any).name : undefined,
-        major: teacher.major?.map((m: any) => m.name) || [],
+        campus: teacher.campus ? (teacher.campus as any)._id : undefined,
+        major: teacher.major?.map((m: any) => m) || [],
         noProjects: projects.length,
         projects: projects.map((project: any) => ({ _id: project._id, name: project.name }))
       }

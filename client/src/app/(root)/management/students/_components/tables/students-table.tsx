@@ -16,8 +16,21 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { FiArrowUp, FiArrowDown } from 'react-icons/fi'
 import { FaFilterCircleXmark, FaAngleRight } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import useMajor from '@/hooks/public/useMajor'
+import useField from '@/hooks/public/useField'
+import useCampus from '@/hooks/public/useCampus'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 
 const StudentsTable = () => {
+  const [isLoading, setIsLoading] = useState(true)
+  const { majors } = useMajor()
+  const { fields } = useField()
+  const { campuses } = useCampus()
   const [search, setSearch] = useState('')
   const { getStudents } = useManagement()
   const router = useRouter()
@@ -36,12 +49,17 @@ const StudentsTable = () => {
 
   // Modified fetchStudents to accept sort and page parameters.
   const fetchStudents = async (sortObj: Record<string, 1 | -1> = {}, pageParam: number) => {
-    const response = await getStudents({
-      page: pageParam,
-      limit,
-      sort: sortObj
-    })
-    setStudentsData(response)
+    setIsLoading(true)
+    try {
+      const response = await getStudents({
+        page: pageParam,
+        limit,
+        sort: sortObj
+      })
+      setStudentsData(response)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Fetch data on mount and whenever page or sort changes.
@@ -49,20 +67,46 @@ const StudentsTable = () => {
     fetchStudents(sort, page)
   }, [page, sort])
 
-  // Filter students based on search query across multiple fields.
+  const [filters, setFilters] = useState({
+    name: '',
+    email: '',
+    code: '',
+    project: '',
+    campus: '',
+    field: '',
+    isLeader: ''
+  })
+
+  // Modified filter logic to handle 'all' value
   const filteredStudents = useMemo(() => {
-    if (!search) return studentsData.list
-    const searchTerm = search.toLowerCase()
     return studentsData.list.filter((student) => {
-      return (
-        student.display_name.toLowerCase().includes(searchTerm) ||
-        student.email.toLowerCase().includes(searchTerm) ||
-        student.campus.toLowerCase().includes(searchTerm) ||
-        (student.code && student.code.toLowerCase().includes(searchTerm)) ||
-        student.project.name.toLowerCase().includes(searchTerm)
-      )
+      const nameMatch = student.display_name.toLowerCase().includes(filters.name.toLowerCase())
+      const emailMatch = student.email.toLowerCase().includes(filters.email.toLowerCase())
+      const codeMatch = student.code?.toLowerCase().includes(filters.code.toLowerCase()) ?? true
+      const projectMatch = student.project.name.toLowerCase().includes(filters.project.toLowerCase())
+      const campusMatch = !filters.campus || filters.campus === 'all' || student.campus === filters.campus
+      const fieldMatch = !filters.field || filters.field === 'all' || student.field.some((f) => f._id === filters.field)
+      const leaderMatch =
+        !filters.isLeader ||
+        filters.isLeader === 'all' ||
+        (filters.isLeader === 'true' ? student.is_leader : !student.is_leader)
+
+      return nameMatch && emailMatch && codeMatch && projectMatch && campusMatch && fieldMatch && leaderMatch
     })
-  }, [search, studentsData])
+  }, [filters, studentsData])
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      name: '',
+      email: '',
+      code: '',
+      project: '',
+      campus: '',
+      field: '',
+      isLeader: ''
+    })
+  }
 
   // Toggles sort order for the given field and resets to page 1.
   const toggleSort = (field: string) => {
@@ -80,8 +124,8 @@ const StudentsTable = () => {
   }
 
   // Placeholder functions for handling update and view actions.
-  const handleUpdate = (student: (typeof studentsData.list)[number]) => {
-    router.push(`/management/students/${student._id}/edit`)
+  const handleUpdate = (id: string) => {
+    router.push(`/management/students/${id}/edit`)
   }
 
   const handleView = (student: (typeof studentsData.list)[number]) => {
@@ -198,24 +242,168 @@ const StudentsTable = () => {
     return items
   }
 
-  return (
-    <div className='p-4'>
-      {/* Search Bar and Clear Sorting Button */}
-      <div className='flex items-center justify-between mb-4'>
-        <Input
-          type='text'
-          placeholder='Search students...'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className='w-full max-w-xs'
-        />
-        <Button onClick={handleClearSorting} disabled={Object.keys(sort).length === 0} size='sm'>
-          <FaFilterCircleXmark className='mr-2' />
-          Clear Sorting
-        </Button>
-      </div>
+  // Add TableSkeleton component
+  const TableSkeleton = () => (
+    <TableBody>
+      {[...Array(limit)].map((_, index) => (
+        <TableRow key={index}>
+          <TableCell>
+            <Skeleton className='h-4 w-[120px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[180px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[80px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[80px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[100px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[100px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[150px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-4 w-[40px]' />
+          </TableCell>
+          <TableCell>
+            <Skeleton className='h-8 w-8 rounded-full' />
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  )
 
-      {/* Data Table */}
+  return (
+    <div className='space-y-4 p-4'>
+      {/* Filters Section */}
+      <Card className='p-6'>
+        <div className='grid gap-6'>
+          <div className='flex justify-between items-center'>
+            <h3 className='text-lg font-medium'>Filters</h3>
+            <div className='space-x-2 flex align-center'>
+              <Button onClick={handleResetFilters} variant='outline' size='sm'>
+                Reset Filters
+              </Button>
+              <Button
+                onClick={handleClearSorting}
+                variant='outline'
+                size='sm'
+                disabled={Object.keys(sort).length === 0}
+              >
+                <FaFilterCircleXmark className='mr-2' />
+                Clear Sorting
+              </Button>
+            </div>
+          </div>
+
+          {/* Search Fields */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+            <div className='space-y-2'>
+              <Label>Name</Label>
+              <Input
+                placeholder='Search by name...'
+                value={filters.name}
+                onChange={(e) => setFilters((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Email</Label>
+              <Input
+                placeholder='Search by email...'
+                value={filters.email}
+                onChange={(e) => setFilters((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Student Code</Label>
+              <Input
+                placeholder='Search by code...'
+                value={filters.code}
+                onChange={(e) => setFilters((prev) => ({ ...prev, code: e.target.value }))}
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Project</Label>
+              <Input
+                placeholder='Search by project...'
+                value={filters.project}
+                onChange={(e) => setFilters((prev) => ({ ...prev, project: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {/* Selectors */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='space-y-2'>
+              <Label>Campus</Label>
+              <Select
+                value={filters.campus || 'all'}
+                onValueChange={(value) => setFilters((prev) => ({ ...prev, campus: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='All Campuses' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Campuses</SelectItem>
+                  {campuses?.map((campus) => (
+                    <SelectItem key={campus._id} value={campus._id}>
+                      {campus.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Field</Label>
+              <Select
+                value={filters.field || 'all'}
+                onValueChange={(value) => setFilters((prev) => ({ ...prev, field: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='All Fields' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Fields</SelectItem>
+                  {fields?.map((field) => (
+                    <SelectItem key={field._id} value={field._id}>
+                      {field.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Leader Status</Label>
+              <Select
+                value={filters.isLeader || 'all'}
+                onValueChange={(value) => setFilters((prev) => ({ ...prev, isLeader: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='All Status' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Status</SelectItem>
+                  <SelectItem value='true'>Leader</SelectItem>
+                  <SelectItem value='false'>Member</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Table Section */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -230,30 +418,37 @@ const StudentsTable = () => {
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {filteredStudents.map((student) => (
-            <TableRow key={student._id}>
-              <TableCell>{student.display_name}</TableCell>
-              <TableCell>{student.email}</TableCell>
-              <TableCell>{student.campus}</TableCell>
-              <TableCell>{student.code || '-'}</TableCell>
-              <TableCell>{student.field.join(', ') || '-'}</TableCell>
-              <TableCell>{student.major.join(', ') || '-'}</TableCell>
-              <TableCell>{student.project.name}</TableCell>
-              <TableCell>{student.is_leader ? 'Yes' : 'No'}</TableCell>
-              <TableCell>
-                <div className='flex space-x-2'>
-                  <Button variant='outline' size='sm' onClick={() => handleUpdate(student)}>
-                    Update
-                  </Button>
-                  <Button variant='outline' size='sm' onClick={() => handleView(student)}>
-                    View
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <TableBody>
+            {filteredStudents.map((student) => (
+              <TableRow key={student._id}>
+                <TableCell>{student.display_name}</TableCell>
+                <TableCell>{student.email}</TableCell>
+                <TableCell>{student.campus}</TableCell>
+                <TableCell>{student.code || '-'}</TableCell>
+                <TableCell>{student.field.map((f) => f.name).join(', ') || '-'}</TableCell>
+                <TableCell>{student.major.map((m) => m.name).join(', ') || '-'}</TableCell>
+                <TableCell>{student.project.name}</TableCell>
+                <TableCell>{student.is_leader ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='ghost' size='sm'>
+                        <MoreHorizontal className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleUpdate(student._id)}>Update</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleView(student)}>View</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        )}
       </Table>
 
       {/* Pagination Controls using Shadcn's Pagination component */}
