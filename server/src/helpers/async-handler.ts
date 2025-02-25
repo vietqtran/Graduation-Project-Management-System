@@ -2,7 +2,8 @@
  * operate like async/await
  * any error will next to error-handler function
  */
-import { Request, Response, NextFunction } from 'express'
+
+import { NextFunction, Request, Response } from 'express'
 
 // Wrapper function giúp loại bỏ try-catch
 export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {

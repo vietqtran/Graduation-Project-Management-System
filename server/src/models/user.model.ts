@@ -1,8 +1,11 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 
-import { USER_STATUS } from '@/constants/status'
-import { emailRegex } from '@/constants/regex'
 import { ICampus } from './campus.model'
+import { IField } from './field.model'
+import { IMajor } from './major.model'
+import { IProject } from './project.model'
+import { USER_STATUS } from '@/constants/status'
+import { emailRegex, semesterRegex } from '@/constants/regex'
 
 export interface IUser extends Document {
   email: string
@@ -11,10 +14,14 @@ export interface IUser extends Document {
   last_name: string
   display_name: string
   avatar: string
-  roles?: [string]
+  roles?: string[]
   status: number
   code: string
   campus: ICampus['_id']
+  field: IField['_id'][]
+  major: IMajor['_id'][]
+  project?: IProject['_id']
+  planned_semester: string
 }
 
 export const UserSchema = new Schema<IUser>(
@@ -70,6 +77,30 @@ export const UserSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: 'Campus'
       // required: [true, 'Campus is required']
+    },
+    field: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Field'
+        // required: [true, 'Field is required']
+      }
+    ],
+    major: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Major'
+        // required: [true, 'Major is required']
+      }
+    ],
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
+      require: false
+    },
+    planned_semester: {
+      type: String,
+      required: [true, 'Semester of Capstone Project is required'],
+      match: semesterRegex
     }
   },
   {

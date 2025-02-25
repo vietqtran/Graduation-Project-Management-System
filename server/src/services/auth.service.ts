@@ -3,8 +3,6 @@ import * as dotenv from 'dotenv'
 import * as jwt from 'jsonwebtoken'
 
 import AccountModel, { IAccount } from '@/models/account.model'
-import SessionModel, { ISession } from '@/models/session.model'
-import UserModel, { IUser } from '@/models/user.model'
 import {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -13,12 +11,14 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse
 } from '@simplewebauthn/server'
+import SessionModel, { ISession } from '@/models/session.model'
+import UserModel, { IUser } from '@/models/user.model'
+import mongoose, { Model } from 'mongoose'
 
 import { AuthenticatorTransportFuture } from '@simplewebauthn/types'
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
-import mongoose, { Model } from 'mongoose'
 import { SignInDto } from '@/dtos/auth/sign-in.dto'
 import { SignInGoogleDto } from '@/dtos/auth/sign-in-google.dto'
 import { SignUpDto } from '@/dtos/auth/sign-up.dto'
@@ -179,6 +179,7 @@ export class AuthService {
         throw new HttpException('User already existed', 400)
       }
 
+      const code = email.match(/@fpt.edu.vn$/) ? email.split('@')[0].slice(-8) : email.split('@')[0]
       const createdUser = await this.userModel.create(
         [
           {
@@ -187,7 +188,8 @@ export class AuthService {
             first_name,
             last_name,
             avatar: photoURL,
-            display_name: `${first_name} ${last_name}`
+            display_name: `${first_name} ${last_name}`,
+            code: code
           }
         ],
         { session }

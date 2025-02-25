@@ -1,4 +1,5 @@
 import DashboardIcon from '@/components/icons/DashboardIcon'
+import { HugeiconsDocumentAttachment } from '@/components/icons/DocumentIcon'
 import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
@@ -14,6 +15,11 @@ export const SIDEBAR_LINKS = [
     href: '/project',
     label: 'Project',
     icon: <ProjectIcon />
+  },
+  {
+    href: '/documents',
+    label: 'Documents',
+    icon: <HugeiconsDocumentAttachment />
   },
   {
     href: '/timetable',
