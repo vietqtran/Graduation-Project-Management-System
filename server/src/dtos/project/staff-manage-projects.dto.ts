@@ -1,7 +1,7 @@
 import { PROJECT_STATUS } from "@/constants/status";
 import { processSortObject, SortObject } from "@/helpers/sort-helper";
 import { Transform, Type } from "class-transformer";
-import { IsEnum, IsMongoId, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from "class-validator";
+import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from "class-validator";
 
 const validProjectFields = ['name', 'mark', 'slow_count', 'created_at'];
 
@@ -69,4 +69,10 @@ export class StaffGetListProjectsDto {
   @ValidateNested()
   @Transform(({ value }) => processSortObject(value, { created_at: -1 }, validProjectFields))
   sort?: SortObject;
+}
+
+export class StaffGetDetailProjectDto {
+  @IsNotEmpty({ message: 'Project ID is required' })
+  @IsMongoId({ message: 'Invalid project ID format' })
+  _id?: string;
 }

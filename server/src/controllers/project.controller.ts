@@ -26,6 +26,12 @@ export class ProjectController {
   staffGetListProjects = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const staffGetListProjectsDto: StaffGetListProjectsDto = req.body
     const projects = await this.projectService.staffGetListProjects(staffGetListProjectsDto)
-    ResponseHandler.sendSuccess(res, projects, 'Get list projects successfully')
+    ResponseHandler.sendSuccess(res, projects)
+  })
+
+  staffGetDetailProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffGetDetailProjectDto = req.body
+    const project = await this.projectService.staffGetDetailProject(staffGetDetailProjectDto)
+    ResponseHandler.sendSuccess(res, project)
   })
 }

@@ -27,6 +27,10 @@ export interface IProject extends Document {
   status: number
   stage: number
   slow_count: number
+  created_by: IUser['_id']
+  updated_by: IUser['_id']
+  created_at: Date
+  updated_at: Date
 }
 
 const ProjectSchema = new Schema<IProject>(
@@ -121,6 +125,16 @@ const ProjectSchema = new Schema<IProject>(
     slow_count: {
       type: Number,
       default: 0
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Project creator is required']
+    },
+    updated_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Project updater is required']
     }
   },
   {

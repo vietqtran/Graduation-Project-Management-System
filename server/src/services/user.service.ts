@@ -196,7 +196,7 @@ export class UserService {
         .populate({ path: 'campus', select: 'name' })
         .populate({ path: 'field', select: 'name' })
         .populate({ path: 'major', select: 'name' })
-        .select('display_name email status code campus field major roles planned_semester')
+        .select('display_name email status code campus field major roles planned_semester avatar')
         .lean()
         .session(session)
 
@@ -220,7 +220,8 @@ export class UserService {
         major: student.major?.map((m: any) => m.name) || [],
         project: project ? { name: project.name, _id: project._id } : null,
         planned_semester: student.planned_semester,
-        is_leader: project ? (project.leader as string).toString() === _id : false
+        is_leader: project ? (project.leader as string).toString() === _id : false,
+        avatar: student.avatar
       }
       return formattedStudent
     })
@@ -336,7 +337,7 @@ export class UserService {
         .findById(body._id)
         .populate({ path: 'campus', select: 'name' })
         .populate({ path: 'major', select: 'name' })
-        .select('display_name email status code campus major noProjects roles')
+        .select('display_name email status code campus major noProjects roles avatar')
         .lean()
         .session(session)
 
@@ -360,7 +361,8 @@ export class UserService {
         campus: teacher.campus ? (teacher.campus as any).name : undefined,
         major: teacher.major?.map((m: any) => m.name) || [],
         noProjects: projects.length,
-        projects: projects.map((project: any) => ({ _id: project._id, name: project.name }))
+        projects: projects.map((project: any) => ({ _id: project._id, name: project.name })),
+        avatar: teacher.avatar
       }
       return formattedTeacher
     })

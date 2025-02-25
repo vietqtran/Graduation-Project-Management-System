@@ -3,7 +3,9 @@ import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
-import { StaffGetListProjectsDto } from '@/dtos/project/staff-manage-projects.dto'
+import { StaffGetDetailProjectDto, StaffGetListProjectsDto } from '@/dtos/project/staff-manage-projects.dto'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
+import { create } from 'domain'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -98,17 +100,24 @@ export class ProjectService {
         .populate({ path: 'campus', select: 'name' })
         .populate({
           path: 'supervisor',
-          select: '_id display_name'
+          select: '_id display_name username email avatar'
         })
         .populate({
           path: 'members',
           select: '_id'
-        })       
+        }) 
+        .populate({
+          path: 'created_by',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'updated_by',
+          select: '_id display_name username email avatar'
+        })
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at')
-        .lean()
+        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by')
         .session(session)
 
       if (!projects) {
@@ -128,7 +137,11 @@ export class ProjectService {
         stage: project.stage,
         slow_count: project.slow_count,
         noMembers: project.members?.length,
-        supervisor: project.supervisor
+        supervisor: project.supervisor,
+        created_by: project.created_by,
+        updated_by: project.updated_by,
+        created_at: project.created_at,
+        updated_at: project.updated_at
       }))
 
       return {
@@ -136,6 +149,62 @@ export class ProjectService {
         total: formattedProjects.length
       }
           
+    })
+  }
+
+  async staffGetDetailProject(body: StaffGetDetailProjectDto) {
+    return runTransaction(async (session) => {
+      const { _id: projectId } = body
+      const project = await this.projectModel
+        .findById(projectId)
+        .populate({ path: 'major', select: '_id name' })
+        .populate({ path: 'field', select: '_id name' })
+        .populate({ path: 'campus', select: '_id name' })
+        .populate({
+          path: 'supervisor',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'members',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'created_by',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'updated_by',
+          select: '_id display_name username email avatar'
+        })
+        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by')
+        .session(session)
+
+      if (!project) {
+        throw new HttpException('Project not found', 404)
+      }
+
+      const formattedProject = {
+        _id: project._id,
+        name: project.name,
+        major: project.major,
+        field: project.field,
+        campus: project.campus,
+        mark: project.mark,
+        category: project.category,
+        status: project.status,
+        stage: project.stage,
+        slow_count: project.slow_count,
+        noMembers: project.members?.length,
+        supervisor: project.supervisor,
+        members: project.members,
+        created_by: project.created_by,
+        updated_by: project.updated_by,
+        created_at: project.created_at,
+        updated_at: project.updated_at
+
+      }
+
+      return formattedProject
     })
   }
 }
