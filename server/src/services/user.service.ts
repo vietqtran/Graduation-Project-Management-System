@@ -121,7 +121,7 @@ export class UserService {
             userProjectsMap.get(leaderId)!.isLeader = true
           }
         })
-      } 
+      }
       // else {
       //   projects.forEach((project: any) => {
       //     const projectName = project.name
@@ -143,7 +143,9 @@ export class UserService {
       //     }
       //   })
       // }
-      filter._id = is_leader ? { $in: Array.from(userProjectsMap.keys()) } : { $nin: Array.from(userProjectsMap.keys()) }
+      filter._id = is_leader
+        ? { $in: Array.from(userProjectsMap.keys()) }
+        : { $nin: Array.from(userProjectsMap.keys()) }
 
       console.log(filter)
 
