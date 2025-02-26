@@ -383,6 +383,212 @@ const useManagement = () => {
     }
   }
 
+  const getDetailsProjects = async ({ _id }: { _id: string }) => {
+    try {
+      const payload = {
+        _id
+      }
+      const response = await axios.post(
+        '/project/staff-get-detail-project',
+        { ...payload },
+        {
+          withCredentials: true
+        }
+      )
+
+      const { data } = response
+      if (data && data?.success === true) {
+        return data?.data
+      }
+      return null
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+      return null
+    }
+  }
+
+  const getListAvailableStudents = async ({ search }: { search?: string }) => {
+    try {
+      const payload = { search }
+      const response = await axios.post(
+        '/project/staff-get-list-available-students',
+        { ...payload },
+        {
+          withCredentials: true
+        }
+      )
+
+      const { data } = response
+      if (data && data?.success === true) {
+        return data?.data
+      }
+      return null
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+      return null
+    }
+  }
+
+  const getListAvailabbleSupervisors = async ({ search }: { search?: string }) => {
+    try {
+      const payload = { search }
+      const response = await axios.post(
+        '/project/staff-get-list-available-supervisors',
+        { ...payload },
+        {
+          withCredentials: true
+        }
+      )
+
+      const { data } = response
+      if (data && data?.success === true) {
+        return data?.data
+      }
+      return null
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+      return null
+    }
+  }
+
+  const getListProjects = async ({
+    name,
+    major,
+    field,
+    campus,
+    mark,
+    category,
+    status,
+    stage,
+    slow_count,
+    noMembers,
+    supervisorName,
+    semester,
+    page,
+    limit,
+    sort
+  }: {
+    name?: string
+    major?: string
+    field?: string
+    campus?: string
+    mark?: number
+    category?: 1 | 2
+    status?: number
+    stage?: number
+    slow_count?: number
+    noMembers?: number
+    supervisorName?: string
+    semester?: string // defaults to getCurrentSemester() if not provided
+    page?: number // defaults to 1 if not provided
+    limit?: number // defaults to 10 if not provided
+    sort?: Record<string, 1 | -1> // processed via processSortObject helper
+  }) => {
+    try {
+      const payload = {
+        name,
+        major,
+        field,
+        campus,
+        mark,
+        category,
+        status,
+        stage,
+        slow_count,
+        noMembers,
+        supervisorName,
+        semester,
+        page: page ?? 1,
+        limit: limit ?? 10,
+        sort
+      }
+      const response = await axios.post(
+        '/project/staff-get-list-projects',
+        { ...payload },
+        {
+          withCredentials: true
+        }
+      )
+
+      const { data } = response
+      if (data && data?.success === true) {
+        return data?.data
+      }
+      return null
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+      return null
+    }
+  }
+
+  const updateProject = async ({
+    _id,
+    name,
+    description,
+    major,
+    field,
+    campus,
+    mark,
+    category,
+    status,
+    stage,
+    slow_count,
+    members,
+    supervisor,
+    leader
+  }: {
+    _id: string
+    name: string
+    description?: string
+    major: string[]
+    field: string[]
+    campus: string
+    mark?: number
+    category: 1 | 2
+    status: number
+    stage: number
+    slow_count: number
+    members: string[]
+    supervisor: string[]
+    leader: string
+  }) => {
+    try {
+      const payload = {
+        _id,
+        name,
+        description,
+        major,
+        field,
+        campus,
+        mark,
+        category,
+        status,
+        stage,
+        slow_count,
+        members,
+        supervisor,
+        leader
+      }
+      const response = await axios.post(
+        '/project/staff-update-project',
+        { ...payload },
+        {
+          withCredentials: true
+        }
+      )
+
+      const { data } = response
+      if (data && data?.success === true) {
+        toast.success(data?.message ?? 'Project updated successfully')
+        return true
+      }
+      return null
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? 'An error occurred')
+      return null
+    }
+  }
+
   return {
     getDeadlines,
     updateDeadline,
@@ -395,7 +601,12 @@ const useManagement = () => {
     updateStudent,
     getTeachers,
     getTeacherDetails,
-    updateTeacher
+    updateTeacher,
+    getDetailsProjects,
+    getListAvailableStudents,
+    getListAvailabbleSupervisors,
+    getListProjects,
+    updateProject
   }
 }
 
