@@ -1,9 +1,8 @@
 import React from 'react'
 import StudentUpdatePage from '../../_components/screens/edit/student-update-page'
-import { Params } from 'next/dist/server/request/params'
 
-const EditStudent = ({ params }: { params: Params }) => {
-  const { id } = params
+const EditStudent = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params
   return <StudentUpdatePage id={id as string} />
 }
 
