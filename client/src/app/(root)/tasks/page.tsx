@@ -1,12 +1,14 @@
 'use client'
 
 import { DragDropContext, DropResult, Droppable } from '@hello-pangea/dnd'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import BoardHeader from './_components/layouts/BoardHeader'
 import BoardLayout from './_components/layouts/BoardLayout'
 import Column from './_components/ui/Column'
 import SimpleBar from 'simplebar-react'
+import instance from '@/utils/axios'
+import { useProject } from '@/hooks'
 
 interface Task {
   id: string
@@ -19,54 +21,28 @@ interface Column {
   tasks: Task[]
 }
 
-const initialColumns: Column[] = [
-  {
-    id: 'column_1',
-    title: 'Column 1',
-    tasks: Array.from({ length: 10 }, (_, i) => ({
-      id: `task_1_${i + 1}`,
-      title: `Task 1.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_2',
-    title: 'Column 2',
-    tasks: Array.from({ length: 12 }, (_, i) => ({
-      id: `task_2_${i + 1}`,
-      title: `Task 2.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_3',
-    title: 'Column 3',
-    tasks: Array.from({ length: 15 }, (_, i) => ({
-      id: `task_3_${i + 1}`,
-      title: `Task 3.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_4',
-    title: 'Column 4',
-    tasks: Array.from({ length: 11 }, (_, i) => ({
-      id: `task_4_${i + 1}`,
-      title: `Task 4.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_5',
-    title: 'Column 5',
-    tasks: Array.from({ length: 13 }, (_, i) => ({
-      id: `task_5_${i + 1}`,
-      title: `Task 5.${i + 1}`
-    }))
-  }
-]
-
 const Page = () => {
-  const [columns, setColumns] = useState<Column[]>(initialColumns)
+  const [columns, setColumns] = useState<Column[]>([])
+  const [loading, setLoading] = useState(true)
+  const { project } = useProject()
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source, type } = result
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const columnResponse = await instance(`/board/project/${project?._id}/columns`, { withCredentials: true })
+        const columnsData = columnResponse.data.data
+        setColumns(columnsData)
+      } catch (error) {
+        console.error('Error fetching columns:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [project])
+
+  const onDragEnd = async (result: DropResult) => {
+    const { destination, source, type, draggableId } = result
 
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
       return
@@ -74,59 +50,64 @@ const Page = () => {
 
     if (type === 'column') {
       const newColumns = Array.from(columns)
-      const [removed] = newColumns.splice(source.index, 1)
-      newColumns.splice(destination.index, 0, removed)
+      const [movedColumn] = newColumns.splice(source.index, 1)
+      newColumns.splice(destination.index, 0, movedColumn)
       setColumns(newColumns)
+
+      try {
+        await instance.patch(
+          `/api/columns/${draggableId}/move`,
+          { position: destination.index },
+          { withCredentials: true }
+        )
+      } catch (error) {
+        console.error('Error moving column:', error)
+        setColumns(columns)
+      }
       return
     }
 
-    const sourceColumn = columns.find((col: Column) => col.id === source.droppableId)
-    const destColumn = columns.find((col: Column) => col.id === destination.droppableId)
+    const sourceColumn = columns.find((col) => col.id === source.droppableId)
+    const destColumn = columns.find((col) => col.id === destination.droppableId)
 
     if (!sourceColumn || !destColumn) return
 
-    if (source.droppableId === destination.droppableId) {
-      const newTasks = Array.from(sourceColumn.tasks)
-      const [removed] = newTasks.splice(source.index, 1)
-      newTasks.splice(destination.index, 0, removed)
+    const sourceTasks = Array.from(sourceColumn.tasks)
+    const destTasks = source.droppableId === destination.droppableId ? sourceTasks : Array.from(destColumn.tasks)
+    const [movedTask] = sourceTasks.splice(source.index, 1)
+    destTasks.splice(destination.index, 0, movedTask)
 
-      const newColumns = columns.map((col: Column) => {
-        if (col.id === sourceColumn.id) {
-          return { ...col, tasks: newTasks }
+    const newColumns = columns.map((col) => {
+      if (col.id === sourceColumn.id) return { ...col, tasks: sourceTasks }
+      if (col.id === destColumn.id) return { ...col, tasks: destTasks }
+      return col
+    })
+    setColumns(newColumns)
+
+    try {
+      await instance.patch(
+        `/api/tasks/${draggableId}/move`,
+        {
+          destinationColumnId: destination.droppableId,
+          position: destination.index
+        },
+        {
+          withCredentials: true
         }
-        return col
-      })
-
-      setColumns(newColumns)
-    } else {
-      // Moving between columns
-      const sourceTasks = Array.from(sourceColumn.tasks)
-      const destTasks = Array.from(destColumn.tasks)
-      const [removed] = sourceTasks.splice(source.index, 1)
-      destTasks.splice(destination.index, 0, removed)
-
-      const newColumns = columns.map((col: Column) => {
-        if (col.id === sourceColumn.id) {
-          return { ...col, tasks: sourceTasks }
-        }
-        if (col.id === destColumn.id) {
-          return { ...col, tasks: destTasks }
-        }
-        return col
-      })
-
-      setColumns(newColumns)
+      )
+    } catch (error) {
+      console.error('Error moving task:', error)
+      setColumns(columns) // Revert on failure
     }
   }
+
+  if (loading) return <div>Loading...</div>
 
   return (
     <BoardLayout>
       <BoardHeader />
       <SimpleBar
-        style={{
-          maxHeight: 'calc(100vh - 112px)',
-          minHeight: 'calc(100vh - 112px)'
-        }}
+        style={{ maxHeight: 'calc(100vh - 112px)', minHeight: 'calc(100vh - 112px)' }}
         className='w-full z-0 select-none overflow-auto'
       >
         <DragDropContext onDragEnd={onDragEnd}>
@@ -136,7 +117,7 @@ const Page = () => {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex items-start justify-start size-full p-3`}
+                  className='flex items-start justify-start size-full p-3'
                 >
                   {columns.map((column, index) => (
                     <div key={column.id} className='relative'>
