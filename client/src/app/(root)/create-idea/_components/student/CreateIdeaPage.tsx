@@ -1,14 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import { LineMdLoadingLoop } from '@/components/icons/Loading'
 import CreateIdeaStudent from './CreateIdeaStudent'
 import React from 'react'
 import { useProject } from '@/hooks'
-import { useAppSelector } from '@/hooks'
 
 export default function CreateIdeaPage() {
-  const { user } = useAppSelector((state) => state.auth)
   const { project, isLoading } = useProject()
 
   if (isLoading) {
