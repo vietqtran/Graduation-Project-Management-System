@@ -66,4 +66,24 @@ export class ProjectController {
     ResponseHandler.sendSuccess(res, projects)
   })
 
+  updateTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const projectData = req.body
+    const tokenPayload = getUser(req)
+    const project = await this.projectService.updateTopic(id, projectData, tokenPayload)
+    ResponseHandler.sendSuccess(res, project, 'Update topic successfully')
+  })
+
+  getTopicDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const project = await this.projectService.getTopicDetail(id)
+    ResponseHandler.sendSuccess(res, project)
+  })
+
+  deleteTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    await this.projectService.deleteTopic(id)
+    ResponseHandler.sendSuccess(res, null, 'Delete topic successfully')
+  })
+
 }
