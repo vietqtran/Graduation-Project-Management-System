@@ -66,6 +66,7 @@ class App {
     this.app.use('/api/project', routes.projectRoutes)
     this.app.use('/api/manage-users', routes.manageUserRoutes)
     this.app.use('/api/documents', routes.documentRoutes)
+    this.app.use('/api/ideas', routes.ideaRoutes)
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const error = new Error(`Cannot ${req.method} ${req.originalUrl}`)
       ;(error as any).statusCode = 404

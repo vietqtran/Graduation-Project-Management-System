@@ -4,7 +4,6 @@ import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
-
 export const SIDEBAR_LINKS = [
   {
     href: '/',
@@ -35,7 +34,7 @@ export const SIDEBAR_LINKS = [
     href: '/tasks',
     label: 'Tasks',
     icon: <TaskIcon />
-  },
+  }
   // {
   //   href: '/idea/idea-list',
   //   label: 'Idea',
@@ -57,4 +56,3 @@ export const SIDEBAR_LINKS = [
   //   icon: <AssignTaskIcon />
   // }
 ]
- 
