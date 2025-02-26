@@ -1,4 +1,4 @@
-// TeacherDashboard.tsx
+'use client'
 import React from 'react'
 import StatusBar from './StatusBar'
 import StatusTable from './StatusTable'
