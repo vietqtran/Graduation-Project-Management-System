@@ -20,7 +20,6 @@ export default function CreateIdea() {
     campus: ''
   })
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
   const [errors, setErrors] = useState<Error>({})
 
   const [majors, setMajors] = useState<Major[]>([])
@@ -97,17 +96,14 @@ export default function CreateIdea() {
     // Nếu có lỗi, hiển thị thông báo và không gửi dữ liệu
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
-      setMessage('Please fill in all required fields')
       return
     }
 
     if (!user) {
-      setMessage('You need to login to create idea')
       return
     }
 
     setLoading(true)
-    setMessage('')
     try {
       const ideaData = {
         name: formData.name,
@@ -120,12 +116,10 @@ export default function CreateIdea() {
       }
       const res = await axios.post('http://localhost:8080/api/ideas/create-idea', ideaData, { withCredentials: true })
       console.log('Create idea response:', res.data)
-      setMessage('Project created successfully!')
       setFormData({ name: '', description: '', majors: [], fields: [], campus: '' })
       setErrors({}) // Xóa lỗi sau khi submit thành công
       setShowSuccessModal(true) // Show the success modal
     } catch (err) {
-      setMessage('Something went wrong')
       console.error('Error creating idea:', err)
     } finally {
       setLoading(false)
