@@ -128,13 +128,11 @@ const ProjectSchema = new Schema<IProject>(
     },
     created_by: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Project creator is required']
+      ref: 'User'
     },
     updated_by: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Project updater is required']
+      ref: 'User'
     }
   },
   {

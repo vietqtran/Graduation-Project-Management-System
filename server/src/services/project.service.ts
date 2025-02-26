@@ -3,15 +3,24 @@ import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
-import { StaffGetDetailProjectDto, StaffGetListProjectsDto } from '@/dtos/project/staff-manage-projects.dto'
+import { StaffGetDetailProjectDto, StaffGetListProjectsDto, StaffUpdateProjectDto } from '@/dtos/project/staff-manage-projects.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { create } from 'domain'
+import { deserialize } from 'v8'
+import { getSemesterDates, getSemesterFromDate } from '@/helpers/date-helper'
+import UserModel, { IUser } from '@/models/user.model'
+import ParameterModel, { IParameter } from '@/models/parameter.model'
+import { convertType } from '@/helpers/convert-type-helper'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
+  private readonly userModel: Model<IUser>
+  private readonly parameterModel: Model<IParameter>
 
   constructor() {
     this.projectModel = ProjectModel
+    this.userModel = UserModel
+    this.parameterModel = ParameterModel
   }
 
   async create(projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count'>) {
@@ -77,7 +86,9 @@ export class ProjectService {
 
   async staffGetListProjects(body: StaffGetListProjectsDto) {
     return runTransaction(async (session) => {
-      const { name, major, field, campus, mark, category, status, stage, slow_count, noMembers, supervisor, page, limit, sort } = body;
+      const { name, major, field, campus, mark, category, status, stage, slow_count, noMembers, supervisor, semester, page, limit, sort } = body;
+
+      const {startDate, endDate} = getSemesterDates(semester)
 
       const filter: any = {}
 
@@ -92,6 +103,9 @@ export class ProjectService {
       if (slow_count) filter.slow_count = slow_count
       if (noMembers) filter.members = { $size: noMembers }
       if (supervisor) filter.supervisor = { $in: [supervisor] }
+      filter.created_at = { $gte: startDate, $lt: endDate }
+
+      console.log(filter)
 
       const projects = await this.projectModel
         .find(filter)
@@ -165,6 +179,10 @@ export class ProjectService {
           select: '_id display_name username email avatar'
         })
         .populate({
+          path: 'leader',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
           path: 'members',
           select: '_id display_name username email avatar'
         })
@@ -176,7 +194,7 @@ export class ProjectService {
           path: 'updated_by',
           select: '_id display_name username email avatar'
         })
-        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by')
+        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by description leader')
         .session(session)
 
       if (!project) {
@@ -197,6 +215,9 @@ export class ProjectService {
         noMembers: project.members?.length,
         supervisor: project.supervisor,
         members: project.members,
+        description: project.description,
+        leader: project.leader,
+        semester: project.created_at ? getSemesterFromDate(project.created_at) : null,
         created_by: project.created_by,
         updated_by: project.updated_by,
         created_at: project.created_at,
@@ -205,6 +226,71 @@ export class ProjectService {
       }
 
       return formattedProject
+    })
+  }
+
+
+  async staffUpdateProject(body: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
+    const { _id: projectId, ...data } = body
+    return runTransaction(async (session) => {
+      //member project này không được trùng member project khác
+      const projects = await this.projectModel.find({ members: { $in: data.members } }).session(session)
+
+      if (projects.length > 0) {
+        const duplicateMember = projects[0].members.find(member => data.members.includes(member as string))
+        throw new HttpException(`Member ${duplicateMember} are already in another project`, 400)
+      }
+
+      const maxGroupsPerTeacher = await this.parameterModel.findOne({ param_name: 'MaxGroupsPerTeacher' }).session(session)
+      if (!maxGroupsPerTeacher) {
+        throw new HttpException('Parameter MaxGroupsPerTeacher not found', 404)
+        // maxGroupsPerTeacher = { param_value: 5, param_type: 'number' }
+      }
+
+      const maxGroupsPerTeacherValue = convertType(maxGroupsPerTeacher?.param_value, maxGroupsPerTeacher?.param_type)
+      //supervisor project này phải có số project <= 5
+      if (data.supervisor) {
+        data.supervisor.forEach(async (supervisorId: string) => {
+          const projects = await this.projectModel.find({ supervisor: supervisorId }).session(session)
+          if (projects.length >= maxGroupsPerTeacherValue) {
+            throw new HttpException(`Supervisor ${projects.find(s => s.supervisor.includes(supervisorId))?.name} already has more than ${maxGroupsPerTeacherValue} projects`, 400)
+          }
+        })
+      }
+        
+
+      const project = await this.projectModel
+        .findById(projectId)
+        .session(session)
+      if (!project) {
+        throw new HttpException('Project not found', 404)
+      }
+
+      project.name = data.name
+      project.major = data.major
+      project.field = data.field
+      project.campus = data.campus
+      if (data.mark)project.mark = data.mark
+      project.category = data.category
+      project.status = data.status
+      project.stage = data.stage
+      project.slow_count = data.slow_count
+
+      
+      
+
+      
+
+      project.members = data.members
+      project.supervisor = data.supervisor
+      project.leader = data.leader
+      project.updated_by = tokenPayload._id
+      project.updated_at = new Date()
+
+      if (data.description) project.description = data.description
+
+      await project.save({session})
+
     })
   }
 }
