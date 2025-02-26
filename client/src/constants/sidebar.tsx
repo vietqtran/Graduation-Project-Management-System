@@ -2,7 +2,6 @@ import DashboardIcon from '@/components/icons/DashboardIcon'
 import { HugeiconsDocumentAttachment } from '@/components/icons/DocumentIcon'
 import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
-import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
 
@@ -37,11 +36,11 @@ export const SIDEBAR_LINKS = [
     label: 'Tasks',
     icon: <TaskIcon />
   },
-  {
-    href: '/idea/idea-list',
-    label: 'Idea',
-    icon: <IdeaIcon />
-  },
+  // {
+  //   href: '/idea/idea-list',
+  //   label: 'Idea',
+  //   icon: <IdeaIcon />
+  // },
   // {
   //   href: '/submit-topic',
   //   label: 'Submit Topic',
