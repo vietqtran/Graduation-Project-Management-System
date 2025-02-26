@@ -10,23 +10,23 @@ interface FilterBarProps {
   onSearch: (keyword: string) => void
   onFilterChange: (filterData: {
     status?: string
-    taskType?: string
+    requestType?: string
     dateRange?: { start: string; end: string }
   }) => void
   onClearFilter: () => void
-  onAddTask: () => void
+  onAddRequest: () => void
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, onAddTask }) => {
+const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, onAddRequest }) => {
   const [searchValue, setSearchValue] = useState('')
   const [status, setStatus] = useState('all')
-  const [taskType, setTaskType] = useState('all')
+  const [requestType, setRequestType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
 
   const handleFilterChange = () => {
     onFilterChange({
       status: status === 'all' ? undefined : status,
-      taskType: taskType === 'all' ? undefined : taskType,
+      requestType: requestType === 'all' ? undefined : requestType,
       dateRange: dateRange.start && dateRange.end ? dateRange : undefined
     })
   }
@@ -34,7 +34,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, on
   const handleClear = () => {
     setSearchValue('')
     setStatus('all')
-    setTaskType('all')
+    setRequestType('all')
     setDateRange({ start: '', end: '' })
     onClearFilter()
   }
@@ -61,13 +61,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, on
           </SelectContent>
         </Select>
 
-        <Select value={taskType} onValueChange={setTaskType}>
+        <Select value={requestType} onValueChange={setRequestType}>
           <SelectTrigger>
-            <span>{taskType === 'all' ? 'All Task Types' : taskType}</span>
+            <span>{requestType === 'all' ? 'All Task Types' : requestType}</span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>All Task Types</SelectItem>
-            <SelectItem value='standard'>Standard Task</SelectItem>
+            <SelectItem value='all'>All Request Types</SelectItem>
+            <SelectItem value='standard'>Standard Request</SelectItem>
             <SelectItem value='video-game'>Video Games</SelectItem>
           </SelectContent>
         </Select>
@@ -107,8 +107,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, on
           <Label className='text-center rounded-full border-2 border-orange-500 p-2'>Group 5 | Marketing</Label>
         </div>
 
-        <Button variant='secondary' size='sm' onClick={onAddTask}>
-          Add Task
+        <Button variant='secondary' size='sm' onClick={onAddRequest}>
+          Add Request
         </Button>
       </div>
     </div>
