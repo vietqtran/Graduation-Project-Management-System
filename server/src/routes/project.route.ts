@@ -28,5 +28,6 @@ router.post(
 )
 
 router.post('/create-project-as-topic', projectController.createProjectAsTopic)
+router.get('/get-project-with-null-status', projectController.getProjectsWithNullStatus)
 
 export { router as projectRoutes }

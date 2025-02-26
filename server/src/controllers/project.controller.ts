@@ -61,4 +61,9 @@ export class ProjectController {
     ResponseHandler.sendSuccess(res, project, 'Create project as topic successfully')
   })
 
+  getProjectsWithNullStatus = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const projects = await this.projectService.getProjectsWithNullStatus()
+    ResponseHandler.sendSuccess(res, projects)
+  })
+
 }

@@ -389,6 +389,26 @@ export class ProjectService {
   })
 }
 
+async getProjectsWithNullStatus() {
+  return runTransaction(async (session) => {
+    const projects = await this.projectModel
+      .find({ status: null })  // Lọc các dự án có status là null
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate('members')
+      .session(session)
+      .exec()
+
+    if (!projects || projects.length === 0) {
+      throw new HttpException('No projects found with null status', 404)
+    }
+
+    return projects
+  })
+}
 }
 
 export default new ProjectService()
