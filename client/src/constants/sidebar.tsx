@@ -61,11 +61,6 @@ export const SIDEBAR_LINKS = [
     icon: <AssignTaskIcon />
   },
   {
-    href: '/management/students',
-    label: 'Student Management',
-    icon: <Users />
-  },
-  {
     href: '/management/teachers',
     label: 'Teachers Management',
     icon: <Users />
@@ -75,9 +70,4 @@ export const SIDEBAR_LINKS = [
     label: 'Student Management',
     icon: <Users />
   },
-  {
-    href: '/management/teachers',
-    label: 'Teachers Management',
-    icon: <Users />
-  }
 ]
