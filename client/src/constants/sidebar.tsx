@@ -4,6 +4,7 @@ import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
+import { Users } from 'lucide-react'
 import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
 import TeamIcon from '@/components/icons/TeamIcon'
 import MyRequestIcon from '@/components/icons/MyRequestIcon'
@@ -39,6 +40,16 @@ export const SIDEBAR_LINKS = [
     href: '/tasks',
     label: 'Tasks',
     icon: <TaskIcon />
+  },
+  {
+    href: '/management/students',
+    label: 'Student Management',
+    icon: <Users />
+  },
+  {
+    href: '/management/teachers',
+    label: 'Teachers Management',
+    icon: <Users />
   },
   {
     href: '/create-idea',
