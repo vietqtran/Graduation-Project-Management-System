@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { IdeaController } from "@/controllers/idea.controller";
+import { Router } from 'express'
+import { IdeaController } from '@/controllers/idea.controller'
 
-const router = Router();
+const router = Router()
 
-const ideaController = new IdeaController();
-router.post("/create-idea", ideaController.createIdea); 
+const ideaController = new IdeaController()
+router.post('/create-idea', ideaController.createIdea)
 
-export { router as ideaRoutes };
+export { router as ideaRoutes }

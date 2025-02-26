@@ -22,4 +22,4 @@ router.delete('/columns/:columnId', (req, res, next) => columnController.deleteC
 router.post('/columns/:columnId/move', (req, res, next) => columnController.moveColumn(req, res, next))
 router.patch('/columns/:columnId/archive', (req, res, next) => columnController.archiveColumn(req, res, next))
 
-export default router
+export { router as taskRoutes }
