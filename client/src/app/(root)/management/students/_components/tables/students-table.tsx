@@ -31,7 +31,6 @@ const StudentsTable = () => {
   const { majors } = useMajor()
   const { fields } = useField()
   const { campuses } = useCampus()
-  const [search, setSearch] = useState('')
   const { getStudents } = useManagement()
   const router = useRouter()
   const [studentsData, setStudentsData] = useState<StudentsResponse>({
@@ -74,6 +73,7 @@ const StudentsTable = () => {
     project: '',
     campus: '',
     field: '',
+    major: '', // Add major to filters
     isLeader: ''
   })
 
@@ -83,15 +83,18 @@ const StudentsTable = () => {
       const nameMatch = student.display_name.toLowerCase().includes(filters.name.toLowerCase())
       const emailMatch = student.email.toLowerCase().includes(filters.email.toLowerCase())
       const codeMatch = student.code?.toLowerCase().includes(filters.code.toLowerCase()) ?? true
-      const projectMatch = student.project.name.toLowerCase().includes(filters.project.toLowerCase())
+      const projectMatch = student.project.name?.toLowerCase().includes(filters.project.toLowerCase()) ?? true
       const campusMatch = !filters.campus || filters.campus === 'all' || student.campus === filters.campus
       const fieldMatch = !filters.field || filters.field === 'all' || student.field.some((f) => f._id === filters.field)
+      const majorMatch = !filters.major || filters.major === 'all' || student.major.some((m) => m._id === filters.major)
       const leaderMatch =
         !filters.isLeader ||
         filters.isLeader === 'all' ||
         (filters.isLeader === 'true' ? student.is_leader : !student.is_leader)
 
-      return nameMatch && emailMatch && codeMatch && projectMatch && campusMatch && fieldMatch && leaderMatch
+      return (
+        nameMatch && emailMatch && codeMatch && projectMatch && campusMatch && fieldMatch && majorMatch && leaderMatch
+      )
     })
   }, [filters, studentsData])
 
@@ -104,6 +107,7 @@ const StudentsTable = () => {
       project: '',
       campus: '',
       field: '',
+      major: '',
       isLeader: ''
     })
   }
@@ -342,7 +346,7 @@ const StudentsTable = () => {
           </div>
 
           {/* Selectors */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
             <div className='space-y-2'>
               <Label>Campus</Label>
               <Select
@@ -377,6 +381,26 @@ const StudentsTable = () => {
                   {fields?.map((field) => (
                     <SelectItem key={field._id} value={field._id}>
                       {field.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-2'>
+              <Label>Major</Label>
+              <Select
+                value={filters.major || 'all'}
+                onValueChange={(value) => setFilters((prev) => ({ ...prev, major: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='All Majors' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All Majors</SelectItem>
+                  {majors?.map((major) => (
+                    <SelectItem key={major._id} value={major._id}>
+                      {major.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -430,7 +454,7 @@ const StudentsTable = () => {
                 <TableCell>{student.code || '-'}</TableCell>
                 <TableCell>{student.field.map((f) => f.name).join(', ') || '-'}</TableCell>
                 <TableCell>{student.major.map((m) => m.name).join(', ') || '-'}</TableCell>
-                <TableCell>{student.project.name}</TableCell>
+                <TableCell>{student.project.name || '-'}</TableCell>
                 <TableCell>{student.is_leader ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   <DropdownMenu>

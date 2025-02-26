@@ -20,7 +20,7 @@ export default function CreateIdea() {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [errors, setErrors] = useState<Error>({}) 
+  const [errors, setErrors] = useState<Error>({})
 
   const [majors, setMajors] = useState<Major[]>([])
   const [fields, setFields] = useState<Field[]>([])
