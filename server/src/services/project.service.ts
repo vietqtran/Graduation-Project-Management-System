@@ -3,7 +3,11 @@ import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
-import { StaffGetDetailProjectDto, StaffGetListProjectsDto, StaffUpdateProjectDto } from '@/dtos/project/staff-manage-projects.dto'
+import {
+  StaffGetDetailProjectDto,
+  StaffGetListProjectsDto,
+  StaffUpdateProjectDto
+} from '@/dtos/project/staff-manage-projects.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { create } from 'domain'
 import { deserialize } from 'v8'
@@ -86,9 +90,25 @@ export class ProjectService {
 
   async staffGetListProjects(body: StaffGetListProjectsDto) {
     return runTransaction(async (session) => {
-      const { name, major, field, campus, mark, category, status, stage, slow_count, noMembers, supervisor, semester, page, limit, sort } = body;
+      const {
+        name,
+        major,
+        field,
+        campus,
+        mark,
+        category,
+        status,
+        stage,
+        slow_count,
+        noMembers,
+        supervisor,
+        semester,
+        page,
+        limit,
+        sort
+      } = body
 
-      const {startDate, endDate} = getSemesterDates(semester)
+      const { startDate, endDate } = getSemesterDates(semester)
 
       const filter: any = {}
 
@@ -105,8 +125,6 @@ export class ProjectService {
       if (supervisor) filter.supervisor = { $in: [supervisor] }
       filter.created_at = { $gte: startDate, $lt: endDate }
 
-      console.log(filter)
-
       const projects = await this.projectModel
         .find(filter)
         .populate({ path: 'major', select: 'name' })
@@ -119,7 +137,7 @@ export class ProjectService {
         .populate({
           path: 'members',
           select: '_id'
-        }) 
+        })
         .populate({
           path: 'created_by',
           select: '_id display_name username email avatar'
@@ -131,12 +149,13 @@ export class ProjectService {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by')
+        .select(
+          'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by'
+        )
         .session(session)
 
       if (!projects) {
         throw new HttpException('Error at getting projects', 400)
-        
       }
 
       const formattedProjects = projects.map((project) => ({
@@ -162,7 +181,6 @@ export class ProjectService {
         list: formattedProjects,
         total: formattedProjects.length
       }
-          
     })
   }
 
@@ -194,7 +212,9 @@ export class ProjectService {
           path: 'updated_by',
           select: '_id display_name username email avatar'
         })
-        .select('name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by description leader')
+        .select(
+          'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by description leader'
+        )
         .session(session)
 
       if (!project) {
@@ -222,13 +242,11 @@ export class ProjectService {
         updated_by: project.updated_by,
         created_at: project.created_at,
         updated_at: project.updated_at
-
       }
 
       return formattedProject
     })
   }
-
 
   async staffUpdateProject(body: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
     const { _id: projectId, ...data } = body
@@ -237,11 +255,13 @@ export class ProjectService {
       const projects = await this.projectModel.find({ members: { $in: data.members } }).session(session)
 
       if (projects.length > 0) {
-        const duplicateMember = projects[0].members.find(member => data.members.includes(member as string))
+        const duplicateMember = projects[0].members.find((member) => data.members.includes(member as string))
         throw new HttpException(`Member ${duplicateMember} are already in another project`, 400)
       }
 
-      const maxGroupsPerTeacher = await this.parameterModel.findOne({ param_name: 'MaxGroupsPerTeacher' }).session(session)
+      const maxGroupsPerTeacher = await this.parameterModel
+        .findOne({ param_name: 'MaxGroupsPerTeacher' })
+        .session(session)
       if (!maxGroupsPerTeacher) {
         throw new HttpException('Parameter MaxGroupsPerTeacher not found', 404)
         // maxGroupsPerTeacher = { param_value: 5, param_type: 'number' }
@@ -253,15 +273,15 @@ export class ProjectService {
         data.supervisor.forEach(async (supervisorId: string) => {
           const projects = await this.projectModel.find({ supervisor: supervisorId }).session(session)
           if (projects.length >= maxGroupsPerTeacherValue) {
-            throw new HttpException(`Supervisor ${projects.find(s => s.supervisor.includes(supervisorId))?.name} already has more than ${maxGroupsPerTeacherValue} projects`, 400)
+            throw new HttpException(
+              `Supervisor ${projects.find((s) => s.supervisor.includes(supervisorId))?.name} already has more than ${maxGroupsPerTeacherValue} projects`,
+              400
+            )
           }
         })
       }
-        
 
-      const project = await this.projectModel
-        .findById(projectId)
-        .session(session)
+      const project = await this.projectModel.findById(projectId).session(session)
       if (!project) {
         throw new HttpException('Project not found', 404)
       }
@@ -270,16 +290,11 @@ export class ProjectService {
       project.major = data.major
       project.field = data.field
       project.campus = data.campus
-      if (data.mark)project.mark = data.mark
+      if (data.mark) project.mark = data.mark
       project.category = data.category
       project.status = data.status
       project.stage = data.stage
       project.slow_count = data.slow_count
-
-      
-      
-
-      
 
       project.members = data.members
       project.supervisor = data.supervisor
@@ -289,8 +304,7 @@ export class ProjectService {
 
       if (data.description) project.description = data.description
 
-      await project.save({session})
-
+      await project.save({ session })
     })
   }
 }
