@@ -32,5 +32,14 @@ export class IdeaController {
       next(error)
     }
   })
-  
+  deleteIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projectId = req.query.projectId as string
+      await this.ideaService.deleteIdea(projectId)
+      ResponseHandler.sendSuccess(res, null, 'Idea deleted successfully')
+    } catch (error) {
+      console.error('Error in deleteIdea controller:', error)
+      next(error)
+    }
+  })
 }

@@ -89,4 +89,9 @@ export class IdeaService {
       }
     })
   }
+  async deleteIdea(projectId: string) {
+    return runTransaction(async (session) => {
+      await this.projectModel.deleteOne({ _id: projectId }).session(session).exec()
+    })
+  }
 }
