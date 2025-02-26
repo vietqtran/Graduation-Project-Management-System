@@ -16,7 +16,7 @@ const TeacherDashboard: React.FC = () => {
 
   return (
     <div className="p-6">
-     <StatusBar  />
+     <StatusBar setIsFilterOpen={() => {}} />
       <StatusTable tasks={tasks} />
     </div>
   );
