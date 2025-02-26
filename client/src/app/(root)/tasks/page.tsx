@@ -1,121 +1,112 @@
 'use client'
 
-import { DragDropContext, DropResult, Droppable } from '@hello-pangea/dnd'
-import React, { useState } from 'react'
+import type { Column, Task } from '@/types/task.type'
+import { DragDropContext, type DropResult, Droppable } from '@hello-pangea/dnd'
+import { useEffect, useState } from 'react'
 
 import BoardHeader from './_components/layouts/BoardHeader'
 import BoardLayout from './_components/layouts/BoardLayout'
-import Column from './_components/ui/Column'
+import ColumnComponent from './_components/ui/Column'
 import SimpleBar from 'simplebar-react'
+import instance from '@/utils/axios'
+import { useProject } from '@/hooks'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
-interface Task {
-  id: string
-  title: string
-}
+const BoardPage = () => {
+  const { project } = useProject()
+  const [columns, setColumns] = useState<Column[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
 
-interface Column {
-  id: string
-  title: string
-  tasks: Task[]
-}
+  useEffect(() => {
+    fetchColumns()
+    fetchTasks()
+  }, [project?._id])
 
-const initialColumns: Column[] = [
-  {
-    id: 'column_1',
-    title: 'Column 1',
-    tasks: Array.from({ length: 10 }, (_, i) => ({
-      id: `task_1_${i + 1}`,
-      title: `Task 1.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_2',
-    title: 'Column 2',
-    tasks: Array.from({ length: 12 }, (_, i) => ({
-      id: `task_2_${i + 1}`,
-      title: `Task 2.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_3',
-    title: 'Column 3',
-    tasks: Array.from({ length: 15 }, (_, i) => ({
-      id: `task_3_${i + 1}`,
-      title: `Task 3.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_4',
-    title: 'Column 4',
-    tasks: Array.from({ length: 11 }, (_, i) => ({
-      id: `task_4_${i + 1}`,
-      title: `Task 4.${i + 1}`
-    }))
-  },
-  {
-    id: 'column_5',
-    title: 'Column 5',
-    tasks: Array.from({ length: 13 }, (_, i) => ({
-      id: `task_5_${i + 1}`,
-      title: `Task 5.${i + 1}`
-    }))
+  const fetchColumns = async () => {
+    if (project?._id) {
+      const res = await instance.get(`/board/project/${project?._id}/columns`, { withCredentials: true })
+      setColumns(res.data.data.filter((col: Column) => !col.is_archived))
+    }
   }
-]
 
-const Page = () => {
-  const [columns, setColumns] = useState<Column[]>(initialColumns)
+  const fetchTasks = async () => {
+    if (project?._id) {
+      const res = await instance.get(`/board/project/${project?._id}/tasks`, { withCredentials: true })
+      setTasks(res.data.data.filter((task: Task) => !task.is_archived))
+    }
+  }
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source, type } = result
+  const handleAddColumn = async () => {
+    if (!project?._id) return
+
+    await instance.post(
+      `/board/project/${project._id}/columns`,
+      {
+        title: 'New Column',
+        project: project._id
+      },
+      { withCredentials: true }
+    )
+    fetchColumns()
+  }
+
+  const onDragEnd = async (result: DropResult) => {
+    const { destination, source, type, draggableId } = result
 
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
       return
     }
 
     if (type === 'column') {
-      const newColumns = Array.from(columns)
-      const [removed] = newColumns.splice(source.index, 1)
-      newColumns.splice(destination.index, 0, removed)
+      const newColumns = [...columns]
+      const [movedColumn] = newColumns.splice(source.index, 1)
+      newColumns.splice(destination.index, 0, movedColumn)
+
       setColumns(newColumns)
+
+      try {
+        await instance.post(
+          `/board/columns/${draggableId}/move`,
+          { position: destination.index },
+          { withCredentials: true }
+        )
+      } catch (error) {
+        const originalColumns = [...columns]
+        setColumns(originalColumns)
+        console.error('Failed to move column:', error)
+      }
       return
     }
 
-    const sourceColumn = columns.find((col: Column) => col.id === source.droppableId)
-    const destColumn = columns.find((col: Column) => col.id === destination.droppableId)
+    const sourceColumn = columns.find((col) => col._id === source.droppableId)
+    const destColumn = columns.find((col) => col._id === destination.droppableId)
 
     if (!sourceColumn || !destColumn) return
 
-    if (source.droppableId === destination.droppableId) {
-      const newTasks = Array.from(sourceColumn.tasks)
-      const [removed] = newTasks.splice(source.index, 1)
-      newTasks.splice(destination.index, 0, removed)
+    const movedTask = tasks.find((task) => task._id === draggableId)
+    if (!movedTask) return
 
-      const newColumns = columns.map((col: Column) => {
-        if (col.id === sourceColumn.id) {
-          return { ...col, tasks: newTasks }
-        }
-        return col
-      })
+    const newTasks = [...tasks]
+    const updatedTask = { ...movedTask, column: destColumn }
+    const taskIndex = newTasks.findIndex((task) => task._id === draggableId)
+    newTasks[taskIndex] = updatedTask
 
-      setColumns(newColumns)
-    } else {
-      // Moving between columns
-      const sourceTasks = Array.from(sourceColumn.tasks)
-      const destTasks = Array.from(destColumn.tasks)
-      const [removed] = sourceTasks.splice(source.index, 1)
-      destTasks.splice(destination.index, 0, removed)
+    setTasks(newTasks)
 
-      const newColumns = columns.map((col: Column) => {
-        if (col.id === sourceColumn.id) {
-          return { ...col, tasks: sourceTasks }
-        }
-        if (col.id === destColumn.id) {
-          return { ...col, tasks: destTasks }
-        }
-        return col
-      })
-
-      setColumns(newColumns)
+    try {
+      await instance.post(
+        `/board/tasks/${draggableId}/move`,
+        {
+          destinationColumnId: destination.droppableId,
+          position: destination.index
+        },
+        { withCredentials: true }
+      )
+    } catch (error) {
+      const originalTasks = [...tasks]
+      setTasks(originalTasks)
+      console.error('Failed to move task:', error)
     }
   }
 
@@ -136,14 +127,29 @@ const Page = () => {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex items-start justify-start size-full p-3`}
+                  className='flex items-start justify-start size-full p-3'
                 >
                   {columns.map((column, index) => (
-                    <div key={column.id} className='relative'>
-                      <Column column={column} tasks={column.tasks} index={index} />
-                    </div>
+                    <ColumnComponent
+                      key={column._id}
+                      column={column}
+                      tasks={tasks.filter((task) => task.column._id === column._id)}
+                      index={index}
+                      onUpdate={fetchColumns}
+                      onTaskUpdate={fetchTasks}
+                    />
                   ))}
                   {provided.placeholder}
+                  <div className='flex-shrink-0 min-w-72 h-fit'>
+                    <Button
+                      onClick={handleAddColumn}
+                      variant='outline'
+                      className='w-full h-12 border-2 border-dashed hover:border-solid hover:border-primary'
+                    >
+                      <Plus className='mr-2 h-4 w-4' />
+                      Add Column
+                    </Button>
+                  </div>
                 </div>
               )}
             </Droppable>
@@ -154,4 +160,4 @@ const Page = () => {
   )
 }
 
-export default Page
+export default BoardPage
