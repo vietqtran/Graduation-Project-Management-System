@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import React from "react";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import React from 'react'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
 interface Task {
-  id: number;
-  status: string;
-  amount: number;
-  customer: string;
-  site: string;
-  date: string;
-  scheduled: string;
-  assignedTo: string;
+  id: number
+  status: string
+  amount: number
+  customer: string
+  site: string
+  date: string
+  scheduled: string
+  assignedTo: string
 }
 
 interface TaskTableProps {
-  tasks: Task[];
+  tasks: Task[]
 }
 
 const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
@@ -46,7 +46,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
         ))}
       </TableBody>
     </Table>
-  );
-};
+  )
+}
 
-export default TaskTable;
+export default TaskTable

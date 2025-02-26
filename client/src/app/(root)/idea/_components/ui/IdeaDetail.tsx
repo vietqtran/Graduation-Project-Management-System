@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import * as React from 'react'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
 const DetailIdea: React.FC = () => {
   const ideaDetails = [
@@ -15,12 +15,23 @@ const DetailIdea: React.FC = () => {
     { label: 'Market Size', value: '$10B' },
     { label: 'Team Members', value: '5' },
     { label: 'Timeline', value: '6 months' },
-    { label: 'Key Challenges', value: 'Market adoption & funding' },
-  ];
+    { label: 'Key Challenges', value: 'Market adoption & funding' }
+  ]
 
   return (
-    <div style={{ maxWidth: '800px', margin: 'auto', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '10px', boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' }}>
-      <h2 style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', color: '#007bff', marginBottom: '20px' }}>Detail Idea</h2>
+    <div
+      style={{
+        maxWidth: '800px',
+        margin: 'auto',
+        padding: '20px',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '10px',
+        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
+      }}
+    >
+      <h2 style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', color: '#007bff', marginBottom: '20px' }}>
+        Detail Idea
+      </h2>
       <Table>
         <TableHeader>
           <TableRow>
@@ -38,7 +49,7 @@ const DetailIdea: React.FC = () => {
         </TableBody>
       </Table>
     </div>
-  );
-};
+  )
+}
 
-export default DetailIdea;
+export default DetailIdea
