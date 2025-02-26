@@ -11,8 +11,8 @@ export default function CreateIdea() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    majors: [] as string[],  // Chứa mảng các major đã chọn
-    fields: [] as string[],  // Chứa mảng các field đã chọn
+    majors: [] as string[], // Chứa mảng các major đã chọn
+    fields: [] as string[], // Chứa mảng các field đã chọn
     campus: ''
   })
   const [loading, setLoading] = useState(false)
@@ -57,26 +57,27 @@ export default function CreateIdea() {
 
   // Handle input change for fields and majors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-  
+    const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
     if (type === 'checkbox' && (name === 'fields' || name === 'majors')) {
-      const values = formData[name] as string[];
-      if ((e.target as HTMLInputElement).checked) {  // checked chỉ có trên HTMLInputElement (checkbox)
+      const values = formData[name] as string[]
+      if ((e.target as HTMLInputElement).checked) {
+        // checked chỉ có trên HTMLInputElement (checkbox)
         setFormData({
           ...formData,
           [name]: [...values, value]
-        });
+        })
       } else {
         setFormData({
           ...formData,
           [name]: values.filter((item) => item !== value)
-        });
+        })
       }
     } else {
       // Xử lý input và textarea
-      setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: value })
     }
-  };
+  }
   // Handle form submission
   const handleSubmit = async () => {
     if (!user) {
@@ -88,18 +89,20 @@ export default function CreateIdea() {
       const ideaData = {
         name: formData.name,
         description: formData.description,
-        majors: formData.majors, 
-        fields: formData.fields, 
+        majors: formData.majors,
+        fields: formData.fields,
         campus: formData.campus,
         member: [user?._id],
         leader: user?._id
       }
       const res = await axios.post('http://localhost:8080/api/ideas/create-idea', ideaData, { withCredentials: true })
+      console.log('Create idea response:', res.data)
       setMessage('Project created successfully!')
       setFormData({ name: '', description: '', majors: [], fields: [], campus: '' })
-      // window.location.href = `/idea/${res.data.data._id}`
+      // window.location.href = `/idea/${res.data.data._id}`  
     } catch (err) {
       setMessage('Something went wrong')
+      console.error('Error creating idea:', err)
     } finally {
       setLoading(false)
     }
