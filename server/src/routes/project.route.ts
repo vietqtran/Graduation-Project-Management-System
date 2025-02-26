@@ -27,4 +27,6 @@ router.post(
   projectController.staffGetListAvailableStudents
 )
 
+router.post('/create-project-as-topic', projectController.createProjectAsTopic)
+
 export { router as projectRoutes }

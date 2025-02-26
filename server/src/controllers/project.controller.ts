@@ -54,4 +54,11 @@ export class ProjectController {
     const students = await this.projectService.staffGetListAvailableStudents(staffGetListAvailableStudentsDto)
     ResponseHandler.sendSuccess(res, students)
   })
+
+  createProjectAsTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const projectData = req.body
+    const project = await this.projectService.createProjectAsTopic(projectData)
+    ResponseHandler.sendSuccess(res, project, 'Create project as topic successfully')
+  })
+
 }

@@ -361,6 +361,34 @@ export class ProjectService {
       return supervisors
     })
   }
+
+  async createProjectAsTopic(
+  projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status'>
+) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel.create(
+      {
+        ...projectData,
+        histories: [], // Mảng lịch sử rỗng
+        tasks: [], // Mảng task rỗng
+        mark: null, // Điểm mặc định là null
+        slow_count: 0, // Số lần chậm tiến độ mặc định là 0
+        status: null, // Trạng thái mặc định là null
+        category: 1, // Giả định đây là dự án của sinh viên (category: 1)
+        leader: projectData.leader, // Lấy giá trị `leader` từ dữ liệu gửi lên
+        stage: 1 // Giai đoạn mặc định là 1
+      },
+      { session }
+    )
+
+    if (!project) {
+      throw new HttpException('Error at creating project as topic', 400)
+    }
+
+    return project
+  })
+}
+
 }
 
 export default new ProjectService()
