@@ -20,7 +20,7 @@ export class UploadDocumentController {
     const documentData = req.body
 
     if (!documentData.user || !documentData.project_id) {
-      throw new HttpException( 'User and project ID are required', 400)
+      throw new HttpException('User and project ID are required', 400)
     }
 
     const document = await this.documentService.createDocument(documentData)
@@ -34,7 +34,7 @@ export class UploadDocumentController {
     const { id } = req.params
 
     if (!Types.ObjectId.isValid(id)) {
-      throw new HttpException( 'Invalid document ID', 400)
+      throw new HttpException('Invalid document ID', 400)
     }
 
     const document = await this.documentService.getDocumentById(id)
@@ -108,7 +108,7 @@ export class UploadDocumentController {
   deleteMultipleDocuments = asyncHandler(async (req: Request, res: Response) => {
     const { ids } = req.body
 
-    if (!Array.isArray(ids) || !ids.every(id => Types.ObjectId.isValid(id))) {
+    if (!Array.isArray(ids) || !ids.every((id) => Types.ObjectId.isValid(id))) {
       throw new HttpException('Invalid document IDs', 400)
     }
 
