@@ -10,35 +10,35 @@ const validProjectFields = ['name', 'mark', 'slow_count', 'created_at'];
 export class StaffGetListProjectsDto {
   @IsOptional()
   @IsString({ message: 'Project name must be a string' })
-  name?: string;
+  name?: string
 
   @IsOptional()
   @IsMongoId({ message: 'Invalid major ID format' })
-  major?: string;
+  major?: string
 
   @IsOptional()
   @IsMongoId({ message: 'Invalid field ID format' })
-  field?: string;
+  field?: string
 
   @IsOptional()
   @IsMongoId({ message: 'Invalid campus ID format' })
-  campus?: string;
+  campus?: string
 
   @IsOptional()
   @IsNumber({}, { message: 'Mark must be a number' })
-  mark?: number;
+  mark?: number
 
   @IsOptional()
   @IsEnum([1, 2], { message: 'Category must be either 1 (student topic) or 2 (lecturer topic)' })
-  category?: 1 | 2;
+  category?: 1 | 2
 
   @IsOptional()
   @IsEnum(PROJECT_STATUS, { message: 'Invalid project status' })
-  status?: number;
+  status?: number
 
   @IsOptional()
   @IsNumber({}, { message: 'Stage must be a number' })
-  stage?: number;
+  stage?: number
 
   @IsOptional()
   @IsNumber({}, { message: 'Slow count must be a number' })

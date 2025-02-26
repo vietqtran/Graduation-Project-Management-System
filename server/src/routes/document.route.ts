@@ -13,4 +13,4 @@ router.delete('/:id', documentController.deleteDocument)
 router.post('/delete-multiple', documentController.deleteMultipleDocuments)
 router.delete('/project/:projectId', documentController.deleteDocumentsByProjectId)
 
-export {router as documentRoutes}
+export { router as documentRoutes }

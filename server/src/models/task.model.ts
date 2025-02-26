@@ -2,21 +2,43 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 import { IResource } from './resource.model'
 import { IUser } from './user.model'
 import { CommentSchema, IComment } from './comment.model'
+import { IUploadDocument } from './document.model'
+import { IProject } from './project.model'
+import { IColumn } from './column.model'
 
 export interface ITask extends Document {
   name: string
-  description: string
-  assignees: IUser['_id']
-  type: string
-  start_date: Date
-  due_date: Date
+  description?: string
+  assignees: IUser['_id'][]
+  type: 'milestone' | 'task'
+  start_date?: Date
+  due_date?: Date
+  due_time?: string
   created_by: IUser['_id']
-  labels: string[]
+  labels: {
+    text: string
+    color: string
+  }[]
   is_completed: boolean
-  status: string
-  comments: IComment
+  status: 'todo' | 'in-progress' | 'review' | 'done'
+  comments: IComment[]
   resources: IResource['_id'][]
-  column_id: string
+  documents: IUploadDocument['_id'][]
+  project: IProject['_id']
+  column: IColumn['_id']
+  position: number
+  checklist: {
+    title: string
+    items: {
+      text: string
+      is_completed: boolean
+      created_at: Date
+    }[]
+  }[]
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  cover_image?: string
+  watched_by: IUser['_id'][]
+  is_archived: boolean
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -31,13 +53,12 @@ const TaskSchema = new Schema<ITask>(
     description: {
       type: String,
       trim: true,
-      maxlength: [1000, 'Description cannot exceed 1000 characters']
+      maxlength: [5000, 'Description cannot exceed 5000 characters']
     },
     assignees: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'At least one assignee is required']
+        ref: 'User'
       }
     ],
     type: {
@@ -46,12 +67,13 @@ const TaskSchema = new Schema<ITask>(
         values: ['milestone', 'task'],
         message: '{VALUE} is not a valid task type'
       },
-      required: [true, 'Task type is required']
+      required: [true, 'Task type is required'],
+      default: 'task'
     },
     start_date: {
       type: Date,
       validate: {
-        validator: function (value) {
+        validator: function (this: ITask, value: Date) {
           return !this.due_date || value <= this.due_date
         },
         message: 'Start date must be before or equal to due date'
@@ -60,10 +82,19 @@ const TaskSchema = new Schema<ITask>(
     due_date: {
       type: Date,
       validate: {
-        validator: function (value) {
+        validator: function (this: ITask, value: Date) {
           return !this.start_date || value >= this.start_date
         },
         message: 'Due date must be after or equal to start date'
+      }
+    },
+    due_time: {
+      type: String,
+      validate: {
+        validator: function (value: string) {
+          return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)
+        },
+        message: 'Time must be in format HH:MM'
       }
     },
     created_by: {
@@ -71,11 +102,22 @@ const TaskSchema = new Schema<ITask>(
       ref: 'User',
       required: [true, 'Task creator is required']
     },
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
+      required: [true, 'Project reference is required']
+    },
     labels: [
       {
-        type: String,
-        trim: true,
-        maxlength: [20, 'Label cannot exceed 20 characters']
+        text: {
+          type: String,
+          trim: true,
+          maxlength: [20, 'Label text cannot exceed 20 characters']
+        },
+        color: {
+          type: String,
+          default: '#3498db'
+        }
       }
     ],
     is_completed: {
@@ -84,28 +126,81 @@ const TaskSchema = new Schema<ITask>(
     },
     status: {
       type: String,
-      required: [true, 'Status is required'],
       enum: {
         values: ['todo', 'in-progress', 'review', 'done'],
         message: '{VALUE} is not a valid status'
       },
       default: 'todo'
     },
-    comments: [
+    documents: [
       {
-        type: CommentSchema,
-        default: []
+        type: Schema.Types.ObjectId,
+        ref: 'UploadDocument'
       }
     ],
+    comments: [CommentSchema],
     resources: [
       {
         type: Schema.Types.ObjectId,
         ref: 'Resource'
       }
     ],
-    column_id: {
+    column: {
+      type: Schema.Types.ObjectId,
+      ref: 'Column',
+      required: [true, 'Column reference is required']
+    },
+    position: {
+      type: Number,
+      required: [true, 'Position within column is required'],
+      default: 0
+    },
+    checklist: [
+      {
+        title: {
+          type: String,
+          required: [true, 'Checklist title is required'],
+          trim: true
+        },
+        items: [
+          {
+            text: {
+              type: String,
+              required: [true, 'Checklist item text is required'],
+              trim: true
+            },
+            is_completed: {
+              type: Boolean,
+              default: false
+            },
+            created_at: {
+              type: Date,
+              default: Date.now
+            }
+          }
+        ]
+      }
+    ],
+    priority: {
       type: String,
-      required: [true, 'Column ID is required']
+      enum: {
+        values: ['low', 'medium', 'high', 'urgent'],
+        message: '{VALUE} is not a valid priority level'
+      },
+      default: 'medium'
+    },
+    cover_image: {
+      type: String
+    },
+    watched_by: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
+    is_archived: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -117,5 +212,9 @@ const TaskSchema = new Schema<ITask>(
   }
 )
 
-const TaskModel: Model<ITask> = mongoose.model<ITask>('Task', TaskSchema)
-export default TaskModel
+TaskSchema.index({ project: 1, column: 1 })
+TaskSchema.index({ position: 1 })
+
+export const TaskModel: Model<ITask> = mongoose.model<ITask>('Task', TaskSchema)
+
+export default { TaskModel }
