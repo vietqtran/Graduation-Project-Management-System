@@ -42,4 +42,16 @@ export class ProjectController {
     await this.projectService.staffUpdateProject(staffUpdateProjectDto, tokenPayload)
     ResponseHandler.sendSuccess(res, null, 'Update project successfully')
   })
+
+  staffGetListAvailableSupervisors = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffGetListAvailableSupervisorsDto = req.body
+    const supervisors = await this.projectService.staffGetListAvailableSupervisors(staffGetListAvailableSupervisorsDto)
+    ResponseHandler.sendSuccess(res, supervisors)
+  })
+
+  staffGetListAvailableStudents = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffGetListAvailableStudentsDto = req.body
+    const students = await this.projectService.staffGetListAvailableStudents(staffGetListAvailableStudentsDto)
+    ResponseHandler.sendSuccess(res, students)
+  })
 }
