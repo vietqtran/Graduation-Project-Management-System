@@ -1,4 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+  };
+}
 import { RequestService } from '@/services/request.service';
 import { HttpException } from '@/shared/exceptions/http.exception';
 import { ResponseHandler } from '@/middlewares/response-handler.middleware';
@@ -46,6 +52,21 @@ export class RequestController {
         throw new HttpException('Request not found', 404);
       }
       ResponseHandler.sendSuccess(res, request, 'Request denied successfully');
+    } catch (error) {
+      ResponseHandler.sendError(res, error);
+      next(error);
+    }
+  }
+
+  async createRequest(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new HttpException('User not authenticated', 401);
+      }
+      const { id } = req.user;
+      const createRequestDto = req.body;
+      const request = await this.requestService.createRequest(id, createRequestDto);
+      ResponseHandler.sendSuccess(res, request, 'Request created successfully');
     } catch (error) {
       ResponseHandler.sendError(res, error);
       next(error);
