@@ -80,6 +80,7 @@ export class UserService {
         field,
         major,
         project_name,
+        planned_semester,
         is_leader,
         page = 1,
         limit = 10,
@@ -95,6 +96,7 @@ export class UserService {
       if (campus) filter.campus = campus
       if (field) filter.field = { $in: [field] }
       if (major) filter.major = { $in: [major] }
+      if (planned_semester) filter.planned_semester = planned_semester
 
       const userProjectsMap = new Map<string, { _id: string; isLeader: boolean; projectName: string }>()
 
@@ -119,28 +121,31 @@ export class UserService {
             userProjectsMap.get(leaderId)!.isLeader = true
           }
         })
-      } else {
-        projects.forEach((project: any) => {
-          const projectName = project.name
+      } 
+      // else {
+      //   projects.forEach((project: any) => {
+      //     const projectName = project.name
 
-          project.members.forEach((memberId: string) => {
-            if (!userProjectsMap.has(memberId)) {
-              userProjectsMap.set(memberId.toString(), { _id: project._id.toString(), isLeader: false, projectName })
-            }
-            // Không ghi đè nếu người này đã thuộc một dự án khác
-            // nhưng vẫn đảm bảo giữ nguyên projectName của lần đầu tiên
-          })
+      //     project.members.forEach((memberId: string) => {
+      //       if (!userProjectsMap.has(memberId)) {
+      //         userProjectsMap.set(memberId.toString(), { _id: project._id.toString(), isLeader: false, projectName })
+      //       }
+      //       // Không ghi đè nếu người này đã thuộc một dự án khác
+      //       // nhưng vẫn đảm bảo giữ nguyên projectName của lần đầu tiên
+      //     })
 
-          const leaderId = project.leader.toString()
-          if (!userProjectsMap.has(leaderId)) {
-            userProjectsMap.set(leaderId, { _id: project._id.toString(), isLeader: true, projectName })
-          } else {
-            const userData = userProjectsMap.get(leaderId)!
-            userData.isLeader = true // 🔥 Cập nhật leader thành true nếu chưa có
-          }
-        })
-      }
-      filter._id = { $in: Array.from(userProjectsMap.keys()) }
+      //     const leaderId = project.leader.toString()
+      //     if (!userProjectsMap.has(leaderId)) {
+      //       userProjectsMap.set(leaderId, { _id: project._id.toString(), isLeader: true, projectName })
+      //     } else {
+      //       const userData = userProjectsMap.get(leaderId)!
+      //       userData.isLeader = true // 🔥 Cập nhật leader thành true nếu chưa có
+      //     }
+      //   })
+      // }
+      filter._id = is_leader ? { $in: Array.from(userProjectsMap.keys()) } : { $nin: Array.from(userProjectsMap.keys()) }
+
+      console.log(filter)
 
       const students = await this.userModel
         .find(filter)
@@ -150,7 +155,7 @@ export class UserService {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('display_name email status code campus field major') // Chỉ trả về các trường cần thiết
+        .select('display_name email status code campus field major planned_semester') // Chỉ trả về các trường cần thiết
         .lean()
         .session(session)
 
@@ -167,11 +172,12 @@ export class UserService {
           email: student.email,
           status: student.status,
           code: student.code,
-          campus: student.campus ? student.campus.name : undefined, // ✅ Chỉ lấy tên campus
-          field: student.field?.map((f: any) => f.name) || [], // ✅ Lấy danh sách tên field (mảng)
+          campus: student.campus ? student.campus.name : undefined, // Chỉ lấy tên campus
+          field: student.field?.map((f: any) => f.name) || [], // Lấy danh sách tên field (mảng)
           major: student.major?.map((m: any) => m.name) || [],
-          project: { name: userProjectData.projectName, _id: userProjectData._id }, // ✅ Danh sách tên dự án mà student tham gia
-          is_leader: userProjectData.isLeader // ✅ Đánh dấu student có phải leader không
+          project: { name: userProjectData.projectName, _id: userProjectData._id }, //Danh sách tên dự án mà student tham gia
+          planned_semester: student.planned_semester,
+          is_leader: userProjectData.isLeader //Đánh dấu student có phải leader không
         }
       })
 
@@ -190,7 +196,7 @@ export class UserService {
         .populate({ path: 'campus', select: 'name' })
         .populate({ path: 'field', select: 'name' })
         .populate({ path: 'major', select: 'name' })
-        .select('display_name email status code campus field major roles')
+        .select('display_name email status code campus field major roles planned_semester')
         .lean()
         .session(session)
 
@@ -213,6 +219,7 @@ export class UserService {
         field: student.field?.map((f: any) => f.name) || [],
         major: student.major?.map((m: any) => m.name) || [],
         project: project ? { name: project.name, _id: project._id } : null,
+        planned_semester: student.planned_semester,
         is_leader: project ? (project.leader as string).toString() === _id : false
       }
       return formattedStudent
@@ -221,7 +228,7 @@ export class UserService {
 
   async staffUpdateStudent(body: StaffUpdateStudentDto, user: TokenPayload) {
     return runTransaction(async (session) => {
-      const { _id, display_name, email, status, code, campus, field, major } = body
+      const { _id, display_name, email, status, code, campus, field, major, planned_semester } = body
 
       const student = await this.userModel.findById(_id).session(session)
 
@@ -236,6 +243,7 @@ export class UserService {
       student.campus = campus
       student.field = Array.isArray(field) ? field : [field]
       student.major = major
+      student.planned_semester = planned_semester
 
       await student.save({ session })
     })
