@@ -1,3 +1,6 @@
+import { Field } from './field.type'
+import { Major } from './major.type'
+
 interface User {
   _id: string
   email: string
@@ -29,5 +32,46 @@ interface Parameter {
   updated_at: string // ISO date string
 }
 
+interface Project {
+  name: string
+  _id: string
+}
+
+export interface Student {
+  _id: string
+  url: string
+  display_name: string
+  email: string
+  status: number
+  code?: string // optional, as not all objects include it
+  campus: string
+  field: Field[]
+  major: Major[]
+  project: Project
+  is_leader: boolean
+}
+
+export interface Teacher {
+  _id: string
+  url: string
+  display_name: string
+  email: string
+  status: number
+  code?: string
+  roles: ('lecturer' | 'supervisor')[]
+  campus: string
+  major: string[]
+  noProjects: number
+}
+
+export interface StudentsResponse {
+  list: Student[]
+  total: number
+}
+
+export interface TeachersResponse {
+  list: Teacher[]
+  total: number
+}
 export type DeadlinesResponse = Deadline[]
 export type ParametersResponse = Parameter[]
