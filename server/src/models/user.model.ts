@@ -5,7 +5,7 @@ import { IField } from './field.model'
 import { IMajor } from './major.model'
 import { IProject } from './project.model'
 import { USER_STATUS } from '@/constants/status'
-import { emailRegex } from '@/constants/regex'
+import { emailRegex, semesterRegex } from '@/constants/regex'
 
 export interface IUser extends Document {
   email: string
@@ -21,6 +21,7 @@ export interface IUser extends Document {
   field: IField['_id'][]
   major: IMajor['_id'][]
   project?: IProject['_id']
+  planned_semester: string
 }
 
 export const UserSchema = new Schema<IUser>(
@@ -95,6 +96,11 @@ export const UserSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: 'Project',
       require: false
+    },
+    planned_semester: {
+      type: String,
+      required: [true, 'Semester of Capstone Project is required'],
+      match: semesterRegex
     }
   },
   {

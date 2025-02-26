@@ -62,6 +62,7 @@ class App {
     this.app.use('/api/upload', routes.s3Routes)
     this.app.use('/api/deadline', routes.deadlineRoutes)
     this.app.use('/api/parameter', routes.parameterRoutes)
+    this.app.use('/api/request', routes.requestRoutes)
     this.app.use('/api/project', routes.projectRoutes)
     this.app.use('/api/manage-users', routes.manageUserRoutes)
     this.app.use('/api/documents', routes.documentRoutes)
