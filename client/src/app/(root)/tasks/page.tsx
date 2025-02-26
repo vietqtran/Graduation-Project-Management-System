@@ -1,8 +1,8 @@
 'use client'
 
-import { Column, Task } from '@/types/task.type'
-import { DragDropContext, DropResult, Droppable } from '@hello-pangea/dnd'
-import React, { useEffect, useState } from 'react'
+import type { Column, Task } from '@/types/task.type'
+import { DragDropContext, type DropResult, Droppable } from '@hello-pangea/dnd'
+import { useEffect, useState } from 'react'
 
 import BoardHeader from './_components/layouts/BoardHeader'
 import BoardLayout from './_components/layouts/BoardLayout'
@@ -10,6 +10,8 @@ import ColumnComponent from './_components/ui/Column'
 import SimpleBar from 'simplebar-react'
 import instance from '@/utils/axios'
 import { useProject } from '@/hooks'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 const BoardPage = () => {
   const { project } = useProject()
@@ -19,7 +21,7 @@ const BoardPage = () => {
   useEffect(() => {
     fetchColumns()
     fetchTasks()
-  }, [project])
+  }, [project?._id])
 
   const fetchColumns = async () => {
     if (project?._id) {
@@ -35,6 +37,20 @@ const BoardPage = () => {
     }
   }
 
+  const handleAddColumn = async () => {
+    if (!project?._id) return
+
+    await instance.post(
+      `/board/project/${project._id}/columns`,
+      {
+        title: 'New Column',
+        project: project._id
+      },
+      { withCredentials: true }
+    )
+    fetchColumns()
+  }
+
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, type, draggableId } = result
 
@@ -47,12 +63,19 @@ const BoardPage = () => {
       const [movedColumn] = newColumns.splice(source.index, 1)
       newColumns.splice(destination.index, 0, movedColumn)
 
-      await instance.put(
-        `/board/columns/${draggableId}/move`,
-        { position: destination.index },
-        { withCredentials: true }
-      )
       setColumns(newColumns)
+
+      try {
+        await instance.post(
+          `/board/columns/${draggableId}/move`,
+          { position: destination.index },
+          { withCredentials: true }
+        )
+      } catch (error) {
+        const originalColumns = [...columns]
+        setColumns(originalColumns)
+        console.error('Failed to move column:', error)
+      }
       return
     }
 
@@ -64,16 +87,27 @@ const BoardPage = () => {
     const movedTask = tasks.find((task) => task._id === draggableId)
     if (!movedTask) return
 
-    await instance.put(
-      `/board/tasks/${draggableId}/move`,
-      {
-        destinationColumnId: destination.droppableId,
-        position: destination.index
-      },
-      { withCredentials: true }
-    )
+    const newTasks = [...tasks]
+    const updatedTask = { ...movedTask, column: destColumn }
+    const taskIndex = newTasks.findIndex((task) => task._id === draggableId)
+    newTasks[taskIndex] = updatedTask
 
-    fetchTasks()
+    setTasks(newTasks)
+
+    try {
+      await instance.post(
+        `/board/tasks/${draggableId}/move`,
+        {
+          destinationColumnId: destination.droppableId,
+          position: destination.index
+        },
+        { withCredentials: true }
+      )
+    } catch (error) {
+      const originalTasks = [...tasks]
+      setTasks(originalTasks)
+      console.error('Failed to move task:', error)
+    }
   }
 
   return (
@@ -99,13 +133,23 @@ const BoardPage = () => {
                     <ColumnComponent
                       key={column._id}
                       column={column}
-                      tasks={tasks.filter((task) => task.column === column._id)}
+                      tasks={tasks.filter((task) => task.column._id === column._id)}
                       index={index}
                       onUpdate={fetchColumns}
                       onTaskUpdate={fetchTasks}
                     />
                   ))}
                   {provided.placeholder}
+                  <div className='flex-shrink-0 min-w-72 h-fit'>
+                    <Button
+                      onClick={handleAddColumn}
+                      variant='outline'
+                      className='w-full h-12 border-2 border-dashed hover:border-solid hover:border-primary'
+                    >
+                      <Plus className='mr-2 h-4 w-4' />
+                      Add Column
+                    </Button>
+                  </div>
                 </div>
               )}
             </Droppable>

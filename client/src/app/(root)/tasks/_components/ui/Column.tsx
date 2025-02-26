@@ -2,12 +2,14 @@
 
 import { Column, Task } from '@/types/task.type'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
+import React, { memo, useCallback } from 'react'
 
 import AddTask from './AddTask'
-import React from 'react'
+import { Input } from '@/components/ui/input'
 import SimpleBar from 'simplebar-react'
 import TaskComponent from './Task'
 import instance from '@/utils/axios'
+import useClickOutside from '@/hooks/useClickOutside'
 
 interface ColumnProps {
   column: Column
@@ -18,10 +20,20 @@ interface ColumnProps {
 }
 
 const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate, onTaskUpdate }) => {
-  const handleUpdateTitle = async (newTitle: string) => {
-    await instance.put(`/board/columns/${column._id}`, { title: newTitle }, { withCredentials: true })
-    onUpdate()
-  }
+  const [title, setTitle] = React.useState(column.title)
+  const [isEditing, setIsEditing] = React.useState(false)
+  const handleUpdateTitle = useCallback(
+    async (newTitle: string) => {
+      if (!newTitle) return
+      await instance.patch(`/board/columns/${column._id}`, { title: newTitle }, { withCredentials: true })
+      onUpdate()
+      setTimeout(() => {
+        setIsEditing(false)
+      }, 200)
+    },
+    [column.title]
+  )
+  const ref = useClickOutside<HTMLDivElement>(() => handleUpdateTitle(title))
 
   return (
     <Draggable draggableId={column._id} index={index}>
@@ -39,13 +51,24 @@ const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate
         >
           <div
             {...provided.dragHandleProps}
-            className='w-full flex-shrink-0 p-3 flex items-center gap-2 justify-between'
+            className='w-full flex-shrink-0 flex items-center gap-2 justify-between'
+            ref={ref}
           >
-            <input
-              value={column.title}
-              onChange={(e) => handleUpdateTitle(e.target.value)}
-              className='font-semibold text-sm bg-transparent border-none outline-none w-full'
-            />
+            {isEditing ? (
+              <Input
+                autoFocus
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className='font-semibold flex-1 outline-offset-0 !ring-0 text-sm bg-transparent border-none outline-none w-full'
+              />
+            ) : (
+              <div
+                className='px-3 py-2 font-semibold whitespace-nowrap truncate line-clamp-1 text-sm bg-transparent border-none outline-none w-full'
+                onClick={() => setIsEditing(true)}
+              >
+                <p className='max-w-full truncate'>{column.title}</p>
+              </div>
+            )}
           </div>
           <Droppable droppableId={column._id} type='task'>
             {(provided) => (
@@ -72,4 +95,4 @@ const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate
   )
 }
 
-export default ColumnComponent
+export default memo(ColumnComponent)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { memo, useState } from 'react'
 import { Task, TaskLabel } from '@/types/task.type'
 
 import AvatarGroup from '@/components/ui/avatar-group'
@@ -81,4 +81,4 @@ const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate }) => {
   )
 }
 
-export default TaskComponent
+export default memo(TaskComponent)
