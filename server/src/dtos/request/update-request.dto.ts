@@ -1,32 +1,32 @@
-import { IsString, IsOptional, IsEnum, IsMongoId } from 'class-validator';
-import { RequestStatus } from '@/constants/request-status.enum';
-import { IUser } from '@/models/user.model'; // Import IUser if necessary
+import { IsString, IsOptional, IsEnum, IsMongoId } from 'class-validator'
+import { RequestStatus } from '@/constants/request-status.enum'
+import { IUser } from '@/models/user.model' // Import IUser if necessary
 
 export class UpdateRequestDto {
   @IsString()
   @IsOptional()
-  title?: string;  
+  title?: string
 
   @IsString()
   @IsOptional()
-  remark?: string; 
+  remark?: string
 
   @IsString()
   @IsOptional()
-  type?: string;  
+  type?: string
 
   @IsEnum(RequestStatus)
   @IsOptional()
-  status?: RequestStatus;  
+  status?: RequestStatus
 
   @IsMongoId()
   @IsOptional()
-  approve_user?: IUser['_id'];  
+  approve_user?: IUser['_id']
   @IsMongoId()
   @IsOptional()
-  to_user?: IUser['_id']; 
+  to_user?: IUser['_id']
 
   @IsMongoId()
   @IsOptional()
-  from_user?: IUser['_id'];  
+  from_user?: IUser['_id']
 }

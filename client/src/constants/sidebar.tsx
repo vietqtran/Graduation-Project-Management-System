@@ -8,7 +8,7 @@ import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
 import SubmitTopicIcon from '@/components/icons/SubmitTopicIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
-
+import { Users } from 'lucide-react'
 export const SIDEBAR_LINKS = [
   {
     href: '/',
@@ -59,5 +59,14 @@ export const SIDEBAR_LINKS = [
     href: '/assign-tasks',
     label: 'Assign Tasks',
     icon: <AssignTaskIcon />
+  }
+    href: '/management/students',
+    label: 'Student Management',
+    icon: <Users />
+  },
+  {
+    href: '/management/teachers',
+    label: 'Teachers Management',
+    icon: <Users />
   }
 ]

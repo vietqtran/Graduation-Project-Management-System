@@ -1,15 +1,15 @@
-import { CreateDocumentDto, UpdateDocumentDto } from "@/dtos/project/document.dto"
-import ProjectModel, { IProject } from "@/models/project.model"
-import UploadDocument, { IUploadDocument } from "@/models/document.model"
+import { CreateDocumentDto, UpdateDocumentDto } from '@/dtos/project/document.dto'
+import ProjectModel, { IProject } from '@/models/project.model'
+import UploadDocument, { IUploadDocument } from '@/models/document.model'
 
-import { HttpException } from "@/shared/exceptions/http.exception"
-import { Model } from "mongoose"
-import { runTransaction } from "@/helpers/transaction-helper"
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { Model } from 'mongoose'
+import { runTransaction } from '@/helpers/transaction-helper'
 
 export class UploadDocumentService {
   private readonly uploadDocumentModel: Model<IUploadDocument>
   private readonly projectModel: Model<IProject>
-  
+
   constructor() {
     this.uploadDocumentModel = UploadDocument
     this.projectModel = ProjectModel
@@ -18,16 +18,13 @@ export class UploadDocumentService {
    * Create a new document
    */
   async createDocument(documentData: CreateDocumentDto): Promise<IUploadDocument> {
-    return runTransaction(async (session) => { 
+    return runTransaction(async (session) => {
       try {
         const document = new this.uploadDocumentModel(documentData)
         const savedDocument = await document.save()
-        
-        await this.projectModel.findByIdAndUpdate(
-          documentData.project_id,
-          { $push: { documents: savedDocument._id } }
-        )
-        
+
+        await this.projectModel.findByIdAndUpdate(documentData.project_id, { $push: { documents: savedDocument._id } })
+
         return savedDocument
       } catch (error) {
         throw new HttpException('Failed to create document', 400)
@@ -42,19 +39,19 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       try {
         const document = await UploadDocument.findById(id)
-        .populate('user', 'username email display_name')
-        .populate('project_id', 'name')
-        
+          .populate('user', 'username email display_name')
+          .populate('project_id', 'name')
+
         if (!document) {
-          throw new HttpException( 'Document not found', 404)
+          throw new HttpException('Document not found', 404)
         }
-        
+
         return document
-    } catch (error) {
-      if (error instanceof HttpException) throw error
-      throw new HttpException( 'Failed to get document', 400)
-    }
-  })
+      } catch (error) {
+        if (error instanceof HttpException) throw error
+        throw new HttpException('Failed to get document', 400)
+      }
+    })
   }
 
   /**
@@ -68,20 +65,20 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       try {
         const skip = (page - 1) * limit
-        
+
         const [documents, total] = await Promise.all([
           UploadDocument.find({ user: userId })
-          .populate('user', 'username email display_name')
-          .populate('project_id', 'name')
-          .skip(skip)
-          .limit(limit)
-          .sort({ created_at: -1 }),
+            .populate('user', 'username email display_name')
+            .populate('project_id', 'name')
+            .skip(skip)
+            .limit(limit)
+            .sort({ created_at: -1 }),
           UploadDocument.countDocuments({ user: userId })
         ])
-        
+
         return { documents, total }
       } catch (error) {
-        throw new HttpException( 'Failed to get user documents', 400)
+        throw new HttpException('Failed to get user documents', 400)
       }
     })
   }
@@ -97,50 +94,44 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       try {
         const skip = (page - 1) * limit
-        
+
         const [documents, total] = await Promise.all([
           UploadDocument.find({ project_id: projectId })
-          .populate('user', 'username email display_name avatar display_name')
-          .populate('project_id', 'name')
-          .skip(skip)
-          .limit(limit)
-          .sort({ created_at: -1 }),
+            .populate('user', 'username email display_name avatar display_name')
+            .populate('project_id', 'name')
+            .skip(skip)
+            .limit(limit)
+            .sort({ created_at: -1 }),
           UploadDocument.countDocuments({ project_id: projectId })
         ])
 
-      return { documents, total }
-    } catch (error) {
-      throw new HttpException('Failed to get project documents', 400)
-    }
-  })
+        return { documents, total }
+      } catch (error) {
+        throw new HttpException('Failed to get project documents', 400)
+      }
+    })
   }
 
   /**
    * Update document by ID
    */
-  async updateDocument(
-    id: string,
-    updateData: UpdateDocumentDto
-  ): Promise<IUploadDocument | null> {
+  async updateDocument(id: string, updateData: UpdateDocumentDto): Promise<IUploadDocument | null> {
     return runTransaction(async (session) => {
       try {
-        const document = await UploadDocument.findByIdAndUpdate(
-          id,
-          { $set: updateData },
-          { new: true }
-        ).populate('user', 'username email display_name')
-        .populate('project_id', 'name')
+        const document = await UploadDocument.findByIdAndUpdate(id, { $set: updateData }, { new: true })
+          .populate('user', 'username email display_name')
+          .populate('project_id', 'name')
 
         if (!document) {
           throw new HttpException('Document not found', 404)
         }
-        
-      return document
-    } catch (error) {
-      if (error instanceof HttpException) throw error
-      throw new HttpException( 'Failed to update document', 400)
-    }
-  })
+
+        return document
+      } catch (error) {
+        if (error instanceof HttpException) throw error
+        throw new HttpException('Failed to update document', 400)
+      }
+    })
   }
 
   /**
@@ -150,15 +141,15 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       try {
         const document = await UploadDocument.findByIdAndDelete(id)
-        
+
         if (!document) {
-        throw new HttpException( 'Document not found', 404)
+          throw new HttpException('Document not found', 404)
+        }
+      } catch (error) {
+        if (error instanceof HttpException) throw error
+        throw new HttpException('Failed to delete document', 400)
       }
-    } catch (error) {
-      if (error instanceof HttpException) throw error
-      throw new HttpException('Failed to delete document', 400)
-    }
-  })
+    })
   }
 
   /**
@@ -180,7 +171,7 @@ export class UploadDocumentService {
       try {
         await UploadDocument.deleteMany({ project_id: projectId })
       } catch (error) {
-        throw new HttpException( 'Failed to delete project documents', 400)
+        throw new HttpException('Failed to delete project documents', 400)
       }
     })
   }
