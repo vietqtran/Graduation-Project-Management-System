@@ -39,6 +39,7 @@ interface Project {
 
 export interface Student {
   _id: string
+  url: string
   display_name: string
   email: string
   status: number
@@ -50,8 +51,26 @@ export interface Student {
   is_leader: boolean
 }
 
+export interface Teacher {
+  _id: string
+  url: string
+  display_name: string
+  email: string
+  status: number
+  code?: string
+  roles: ('lecturer' | 'supervisor')[]
+  campus: string
+  major: string[]
+  noProjects: number
+}
+
 export interface StudentsResponse {
   list: Student[]
+  total: number
+}
+
+export interface TeachersResponse {
+  list: Teacher[]
   total: number
 }
 export type DeadlinesResponse = Deadline[]

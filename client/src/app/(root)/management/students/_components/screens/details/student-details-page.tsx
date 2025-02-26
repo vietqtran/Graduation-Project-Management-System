@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { FiArrowLeft } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 const StudentDetailsPage = ({ id }: { id: string | string[] | undefined }) => {
   const { getStudentDetails } = useManagement()
@@ -39,7 +40,20 @@ const StudentDetailsPage = ({ id }: { id: string | string[] | undefined }) => {
       ) : (
         <Card className='w-full mx-auto shadow-lg'>
           <CardHeader>
-            <CardTitle className='text-2xl font-bold'>{studentDetails.display_name}</CardTitle>
+            <CardHeader>
+              <div className='flex items-center space-x-4'>
+                <div className='relative w-24 h-24 rounded-full overflow-hidden bg-gray-100'>
+                  {studentDetails.url ? (
+                    <Image src={studentDetails.url} alt={studentDetails.display_name} fill className='object-cover' />
+                  ) : (
+                    <div className='w-full h-full flex items-center justify-center text-gray-400 text-2xl'>
+                      {studentDetails.display_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <CardTitle className='text-2xl font-bold'>{studentDetails.display_name}</CardTitle>
+              </div>
+            </CardHeader>{' '}
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
