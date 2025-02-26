@@ -3,6 +3,8 @@ import { NextFunction, Request, Response } from 'express'
 import { ProjectService } from '@/services/project.service'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { asyncHandler } from '@/helpers/async-handler'
+import { StaffGetListProjectsDto } from '@/dtos/project/staff-manage-projects.dto'
+import { getUser } from '@/helpers/auth-helper'
 
 export class ProjectController {
   private readonly projectService: ProjectService
@@ -20,5 +22,24 @@ export class ProjectController {
       ResponseHandler.sendError(res, error)
       next(error)
     }
+  })
+
+  staffGetListProjects = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffGetListProjectsDto: StaffGetListProjectsDto = req.body
+    const projects = await this.projectService.staffGetListProjects(staffGetListProjectsDto)
+    ResponseHandler.sendSuccess(res, projects)
+  })
+
+  staffGetDetailProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffGetDetailProjectDto = req.body
+    const project = await this.projectService.staffGetDetailProject(staffGetDetailProjectDto)
+    ResponseHandler.sendSuccess(res, project)
+  })
+
+  staffUpdateProject = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const staffUpdateProjectDto = req.body
+    const tokenPayload = getUser(req)
+    await this.projectService.staffUpdateProject(staffUpdateProjectDto, tokenPayload)
+    ResponseHandler.sendSuccess(res, null, 'Update project successfully')
   })
 }
