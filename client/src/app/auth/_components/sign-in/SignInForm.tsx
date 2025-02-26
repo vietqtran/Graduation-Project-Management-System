@@ -18,13 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 const formSchema = z.object({
   email: z.string().min(1, 'Email is required.').email('Invalid email.').max(255, 'Email is too long.'),
-  password: z
-    .string()
-    .min(1, 'Password is required.')
-    .min(8, 'Password is too short. Minimum length is 8 characters.')
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, {
-      message: 'Password must contain at least one letter and one number.'
-    })
+  password: z.string().min(1, 'Password is required.').min(6, 'Password is too short. Minimum length is 6 characters.')
 })
 
 const SignInForm = () => {
