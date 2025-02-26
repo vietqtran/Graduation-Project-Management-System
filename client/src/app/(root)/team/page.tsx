@@ -1,8 +1,9 @@
 import React from 'react'
 
 import { Button } from '@/components/ui/button'
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+
 export default function StudentTeamPage() {
   return (
     <div className='p-6 max-w-6xl mx-auto'>
@@ -10,7 +11,10 @@ export default function StudentTeamPage() {
       <Card className='mt-4'>
         <CardContent className='p-6'>
           <div className='flex items-center gap-4'>
-            <Avatar className='w-16 h-16'>{/* <AvatarImage src="/avatar.png" alt="Group Icon" /> */}</Avatar>
+            <Avatar className='w-16 h-16'>
+              <AvatarImage src='' alt='Group Icon' />
+              <AvatarFallback>G</AvatarFallback>
+            </Avatar>
             <div>
               <h3 className='text-xl font-semibold'>Online Japanese Learning System</h3>
               <p className='text-sm text-gray-500'>Created at: 7/20/2023 4:53:04 PM</p>
@@ -40,7 +44,10 @@ export default function StudentTeamPage() {
             <p className='font-bold'>Members</p>
             <p>Total: 5 members</p>
             <div className='mt-2 flex items-center gap-3'>
-              <Avatar className='w-12 h-12'>{/* <AvatarImage src="/avatar.png" alt="User Avatar" /> */}</Avatar>
+              <Avatar className='w-12 h-12'>
+                <AvatarImage src='' alt='User Avatar' />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
               <div>
                 <p className='font-semibold'>thail23@fpt.edu.vn</p>
                 <p className='text-sm text-gray-500'>thail23</p>
@@ -59,24 +66,4 @@ export default function StudentTeamPage() {
       </Card>
     </div>
   )
-}
-{
-  /* <div className="mt-6">
-          <p className="text-gray-600 font-medium">Members</p>
-          <div className="flex items-center space-x-4 border p-3 rounded-md mt-2">
-            <img
-              src="https://via.placeholder.com/40"
-              alt="avatar"
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <p className="font-semibold">huyenntnhs150125@fpt.edu.vn</p>
-              <p className="text-xs text-gray-500">huyenntnhs150125</p>
-            </div>
-            <span className="text-sm text-gray-600 ml-auto">Owner | Leader</span>
-            <button className="text-gray-500 hover:text-gray-700">
-              ⋮
-            </button>
-          </div>
-        </div> */
 }

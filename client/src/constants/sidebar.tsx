@@ -4,6 +4,11 @@ import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
+import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
+import TeamIcon from '@/components/icons/TeamIcon'
+import MyRequestIcon from '@/components/icons/MyRequestIcon'
+import ListIdeaSupervisorIcon from '@/components/icons/ListIdeaSupervisorIcon'
+import ListSupervisorIcon from '@/components/icons/ListSupervisorIcon'
 export const SIDEBAR_LINKS = [
   {
     href: '/',
@@ -34,6 +39,31 @@ export const SIDEBAR_LINKS = [
     href: '/tasks',
     label: 'Tasks',
     icon: <TaskIcon />
+  },
+  {
+    href: '/create-idea',
+    label: 'Create Idea',
+    icon: <CreateIdeaIcon />
+  },
+  {
+    href: '/team',
+    label: 'Team',
+    icon: <TeamIcon />
+  },
+  {
+    href: '/my-request',
+    label: 'My Request',
+    icon: <MyRequestIcon />
+  },
+  {
+    href: '/list-idea-supervisor',
+    label: 'List Idea Supervisor',
+    icon: <ListIdeaSupervisorIcon />
+  },
+  {
+    href: '/list-supervisor',
+    label: 'List Supervisor',
+    icon: <ListSupervisorIcon />
   }
   // {
   //   href: '/idea/idea-list',
