@@ -1,42 +1,29 @@
 import React, { useState } from 'react'
+import { Task, TaskLabel } from '@/types/task.type'
 
+import AvatarGroup from '@/components/ui/avatar-group'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Draggable } from '@hello-pangea/dnd'
-import { Input } from '@/components/ui/input'
-import instance from '@/utils/axios'
-import { toast } from 'sonner'
+import FileIcon from '@/components/icons/FileIcon'
+import { User } from '@/types/user.type'
+import axios from 'axios'
 
-interface Props {
-  task: { id: string; title: string }
+interface TaskProps {
+  task: Task
   index: number
+  onUpdate: () => void
 }
 
-const Task = ({ task, index }: Props) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [title, setTitle] = useState(task.title)
+const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate }) => {
+  const [name, setName] = useState(task.name)
 
   const handleUpdate = async () => {
-    try {
-      await instance.patch(`/api/tasks/${task.id}`, { title }, { withCredentials: true })
-      setIsEditing(false)
-    } catch (error) {
-      console.error('Error updating task:', error)
-      setTitle(task.title)
-    }
-  }
-
-  const handleDelete = async () => {
-    try {
-      await instance.delete(`/api/tasks/${task.id}`, { withCredentials: true })
-      toast.success('Task deleted successfully')
-    } catch (error) {
-      console.error('Error deleting task:', error)
-    }
+    await axios.put(`/api/tasks/${task._id}`, { name })
+    onUpdate()
   }
 
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task._id} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -54,31 +41,38 @@ const Task = ({ task, index }: Props) => {
         >
           <div className='flex flex-col'>
             <div className='p-2'>
-              {isEditing ? (
-                <div className='flex gap-2'>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} className='text-sm' />
-                  <Button onClick={handleUpdate} size='sm'>
-                    Save
-                  </Button>
-                  <Button onClick={() => setIsEditing(false)} size='sm' variant='outline'>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <span className='text-sm cursor-pointer' onClick={() => setIsEditing(true)}>
-                  {title}
-                </span>
-              )}
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleUpdate}
+                className='text-sm bg-transparent border-none outline-none w-full'
+              />
               <div className='flex items-center justify-start gap-2 flex-wrap'>
-                <Badge variant='secondary' className='bg-green-500 text-white'>
-                  Label
-                </Badge>
+                {task.labels.map((label: TaskLabel, idx) => (
+                  <Badge key={idx} variant='secondary' style={{ backgroundColor: label.color }}>
+                    {label.text}
+                  </Badge>
+                ))}
               </div>
             </div>
-            <div className='p-2 border-t flex justify-between'>
-              <Button onClick={handleDelete} variant='destructive' size='sm'>
-                Delete
-              </Button>
+            <div className='gap-1 flex flex-col p-2 border-t'>
+              <div className='flex flex-wrap justify-start items-center gap-y-1 gap-x-2'>
+                {task.documents.length > 0 && (
+                  <div className='flex gap-1 items-center'>
+                    <FileIcon />
+                    <span className='text-sm'>{task.documents.length}</span>
+                  </div>
+                )}
+              </div>
+              <div className='flex justify-end'>
+                <AvatarGroup
+                  className='size-6'
+                  avatars={task.assignees.map((assignee: User) => ({
+                    src: assignee.avatar ?? 'https://i.pravatar.cc/300',
+                    alt: assignee.username
+                  }))}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -87,4 +81,4 @@ const Task = ({ task, index }: Props) => {
   )
 }
 
-export default Task
+export default TaskComponent

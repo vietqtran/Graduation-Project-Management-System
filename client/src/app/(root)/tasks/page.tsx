@@ -1,45 +1,39 @@
 'use client'
 
+import { Column, Task } from '@/types/task.type'
 import { DragDropContext, DropResult, Droppable } from '@hello-pangea/dnd'
 import React, { useEffect, useState } from 'react'
 
 import BoardHeader from './_components/layouts/BoardHeader'
 import BoardLayout from './_components/layouts/BoardLayout'
-import Column from './_components/ui/Column'
+import ColumnComponent from './_components/ui/Column'
 import SimpleBar from 'simplebar-react'
 import instance from '@/utils/axios'
 import { useProject } from '@/hooks'
 
-interface Task {
-  id: string
-  title: string
-}
-
-interface Column {
-  id: string
-  title: string
-  tasks: Task[]
-}
-
-const Page = () => {
-  const [columns, setColumns] = useState<Column[]>([])
-  const [loading, setLoading] = useState(true)
+const BoardPage = () => {
   const { project } = useProject()
+  const [columns, setColumns] = useState<Column[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const columnResponse = await instance(`/board/project/${project?._id}/columns`, { withCredentials: true })
-        const columnsData = columnResponse.data.data
-        setColumns(columnsData)
-      } catch (error) {
-        console.error('Error fetching columns:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
+    fetchColumns()
+    fetchTasks()
   }, [project])
+
+  const fetchColumns = async () => {
+    if (project?._id) {
+      const res = await instance.get(`/board/project/${project?._id}/columns`, { withCredentials: true })
+      setColumns(res.data.data.filter((col: Column) => !col.is_archived))
+    }
+  }
+
+  const fetchTasks = async () => {
+    if (project?._id) {
+      const res = await instance.get(`/board/project/${project?._id}/tasks`, { withCredentials: true })
+      setTasks(res.data.data.filter((task: Task) => !task.is_archived))
+    }
+  }
 
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, type, draggableId } = result
@@ -49,65 +43,47 @@ const Page = () => {
     }
 
     if (type === 'column') {
-      const newColumns = Array.from(columns)
+      const newColumns = [...columns]
       const [movedColumn] = newColumns.splice(source.index, 1)
       newColumns.splice(destination.index, 0, movedColumn)
-      setColumns(newColumns)
 
-      try {
-        await instance.patch(
-          `/api/columns/${draggableId}/move`,
-          { position: destination.index },
-          { withCredentials: true }
-        )
-      } catch (error) {
-        console.error('Error moving column:', error)
-        setColumns(columns)
-      }
+      await instance.put(
+        `/board/columns/${draggableId}/move`,
+        { position: destination.index },
+        { withCredentials: true }
+      )
+      setColumns(newColumns)
       return
     }
 
-    const sourceColumn = columns.find((col) => col.id === source.droppableId)
-    const destColumn = columns.find((col) => col.id === destination.droppableId)
+    const sourceColumn = columns.find((col) => col._id === source.droppableId)
+    const destColumn = columns.find((col) => col._id === destination.droppableId)
 
     if (!sourceColumn || !destColumn) return
 
-    const sourceTasks = Array.from(sourceColumn.tasks)
-    const destTasks = source.droppableId === destination.droppableId ? sourceTasks : Array.from(destColumn.tasks)
-    const [movedTask] = sourceTasks.splice(source.index, 1)
-    destTasks.splice(destination.index, 0, movedTask)
+    const movedTask = tasks.find((task) => task._id === draggableId)
+    if (!movedTask) return
 
-    const newColumns = columns.map((col) => {
-      if (col.id === sourceColumn.id) return { ...col, tasks: sourceTasks }
-      if (col.id === destColumn.id) return { ...col, tasks: destTasks }
-      return col
-    })
-    setColumns(newColumns)
+    await instance.put(
+      `/board/tasks/${draggableId}/move`,
+      {
+        destinationColumnId: destination.droppableId,
+        position: destination.index
+      },
+      { withCredentials: true }
+    )
 
-    try {
-      await instance.patch(
-        `/api/tasks/${draggableId}/move`,
-        {
-          destinationColumnId: destination.droppableId,
-          position: destination.index
-        },
-        {
-          withCredentials: true
-        }
-      )
-    } catch (error) {
-      console.error('Error moving task:', error)
-      setColumns(columns) // Revert on failure
-    }
+    fetchTasks()
   }
-
-  if (loading) return <div>Loading...</div>
 
   return (
     <BoardLayout>
       <BoardHeader />
       <SimpleBar
-        style={{ maxHeight: 'calc(100vh - 112px)', minHeight: 'calc(100vh - 112px)' }}
+        style={{
+          maxHeight: 'calc(100vh - 112px)',
+          minHeight: 'calc(100vh - 112px)'
+        }}
         className='w-full z-0 select-none overflow-auto'
       >
         <DragDropContext onDragEnd={onDragEnd}>
@@ -120,9 +96,14 @@ const Page = () => {
                   className='flex items-start justify-start size-full p-3'
                 >
                   {columns.map((column, index) => (
-                    <div key={column.id} className='relative'>
-                      <Column column={column} tasks={column.tasks} index={index} />
-                    </div>
+                    <ColumnComponent
+                      key={column._id}
+                      column={column}
+                      tasks={tasks.filter((task) => task.column === column._id)}
+                      index={index}
+                      onUpdate={fetchColumns}
+                      onTaskUpdate={fetchTasks}
+                    />
                   ))}
                   {provided.placeholder}
                 </div>
@@ -135,4 +116,4 @@ const Page = () => {
   )
 }
 
-export default Page
+export default BoardPage

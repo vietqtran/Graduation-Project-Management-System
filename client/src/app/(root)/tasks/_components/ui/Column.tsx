@@ -1,56 +1,38 @@
-import { Draggable, Droppable } from '@hello-pangea/dnd'
-import React, { useState } from 'react'
+// src/components/ui/Column.tsx
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Column, Task } from '@/types/task.type'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
+
+import AddTask from './AddTask'
+import React from 'react'
 import SimpleBar from 'simplebar-react'
-import Task from './Task'
+import TaskComponent from './Task'
 import instance from '@/utils/axios'
 
-type Props = {
-  column: { id: string; title: string }
-  tasks: { id: string; title: string }[]
+interface ColumnProps {
+  column: Column
+  tasks: Task[]
   index: number
+  onUpdate: () => void
+  onTaskUpdate: () => void
 }
 
-const Column = ({ column, tasks, index }: Props) => {
-  const [newTaskTitle, setNewTaskTitle] = useState('')
-  const [columnTitle, setColumnTitle] = useState(column.title)
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
-
-  const handleAddTask = async () => {
-    if (!newTaskTitle.trim()) return
-    try {
-      // const response = await axios.post('/api/tasks', {
-      //   title: newTaskTitle,
-      //   columnId: column.id,
-      //   projectId: 'project1'
-      // })
-      // const newTask = response.data.data
-      // const updatedTasks = [...tasks, newTask]
-      setNewTaskTitle('')
-    } catch (error) {
-      console.error('Error adding task:', error)
-    }
-  }
-
-  const handleUpdateTitle = async () => {
-    try {
-      await instance.patch(`/api/columns/${column.id}`, { title: columnTitle }, { withCredentials: true })
-      setIsEditingTitle(false)
-    } catch (error) {
-      console.error('Error updating column title:', error)
-      setColumnTitle(column.title) // Revert on failure
-    }
+const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate, onTaskUpdate }) => {
+  const handleUpdateTitle = async (newTitle: string) => {
+    await instance.put(`/board/columns/${column._id}`, { title: newTitle }, { withCredentials: true })
+    onUpdate()
   }
 
   return (
-    <Draggable draggableId={column.id} index={index}>
+    <Draggable draggableId={column._id} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          style={{ position: 'relative', ...provided.draggableProps.style }}
+          style={{
+            position: 'relative',
+            ...provided.draggableProps.style
+          }}
           className={`min-w-72 max-h-[calc(100vh-140px)] h-full flex flex-col rounded-lg shadow-md mr-3 border bg-neutral-200 ${
             snapshot.isDragging ? 'ring-2 ring-blue-500' : ''
           }`}
@@ -59,21 +41,13 @@ const Column = ({ column, tasks, index }: Props) => {
             {...provided.dragHandleProps}
             className='w-full flex-shrink-0 p-3 flex items-center gap-2 justify-between'
           >
-            {isEditingTitle ? (
-              <div className='flex gap-2'>
-                <Input value={columnTitle} onChange={(e) => setColumnTitle(e.target.value)} className='text-sm' />
-                <Button onClick={handleUpdateTitle} size='sm'>
-                  Save
-                </Button>
-              </div>
-            ) : (
-              <span className='font-semibold text-sm cursor-pointer' onClick={() => setIsEditingTitle(true)}>
-                {columnTitle}
-              </span>
-            )}
+            <input
+              value={column.title}
+              onChange={(e) => handleUpdateTitle(e.target.value)}
+              className='font-semibold text-sm bg-transparent border-none outline-none w-full'
+            />
           </div>
-
-          <Droppable droppableId={column.id} type='task'>
+          <Droppable droppableId={column._id} type='task'>
             {(provided) => (
               <SimpleBar className='flex flex-col w-full flex-1 overflow-y-auto z-0'>
                 <div
@@ -83,7 +57,7 @@ const Column = ({ column, tasks, index }: Props) => {
                 >
                   <div className='px-2 gap-1.5 flex flex-col min-h-[5px]'>
                     {tasks.map((task, index) => (
-                      <Task key={task.id} task={task} index={index} />
+                      <TaskComponent key={task._id} task={task} index={index} onUpdate={onTaskUpdate} />
                     ))}
                     {provided.placeholder}
                   </div>
@@ -91,21 +65,11 @@ const Column = ({ column, tasks, index }: Props) => {
               </SimpleBar>
             )}
           </Droppable>
-          <div className='p-2'>
-            <Input
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder='Add a task'
-              onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-            />
-            <Button onClick={handleAddTask} className='mt-2 w-full'>
-              Add Task
-            </Button>
-          </div>
+          <AddTask columnId={column._id} projectId={column.project} onTaskAdded={onTaskUpdate} />
         </div>
       )}
     </Draggable>
   )
 }
 
-export default Column
+export default ColumnComponent
