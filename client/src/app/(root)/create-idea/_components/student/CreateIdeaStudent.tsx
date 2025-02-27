@@ -6,6 +6,7 @@ import { Field } from '@/types/field.type'
 import { Major } from '@/types/major.type'
 import { Campus } from '@/types/campus.type'
 import { useRouter } from '@/hooks/useRouter'
+import instance from '@/utils/axios'
 interface Error {
   [key: string]: string | undefined
 }
@@ -32,7 +33,7 @@ export default function CreateIdea() {
     async function fetchData() {
       try {
         // Lấy dữ liệu majors
-        const majorResponse = await axios.get('http://localhost:8080/api/public/majors', { withCredentials: true })
+        const majorResponse = await instance.get('/public/majors', { withCredentials: true })
         if (Array.isArray(majorResponse.data.data)) {
           setMajors(majorResponse.data.data)
         } else {
@@ -40,7 +41,7 @@ export default function CreateIdea() {
         }
 
         // Lấy dữ liệu fields
-        const fieldResponse = await axios.get('http://localhost:8080/api/public/fields')
+        const fieldResponse = await instance.get('/public/fields')
         if (Array.isArray(fieldResponse.data.data)) {
           setFields(fieldResponse.data.data)
         } else {
@@ -48,7 +49,7 @@ export default function CreateIdea() {
         }
 
         // Lấy dữ liệu campuses
-        const campusResponse = await axios.get('http://localhost:8080/api/public/campuses')
+        const campusResponse = await instance.get('/public/campuses')
         if (Array.isArray(campusResponse.data.data)) {
           setCampuses(campusResponse.data.data)
         } else {
@@ -114,7 +115,7 @@ export default function CreateIdea() {
         members: [user?._id],
         leader: user?._id
       }
-      const res = await axios.post('http://localhost:8080/api/ideas/create-idea', ideaData, { withCredentials: true })
+      const res = await instance.post('/ideas/create-idea', ideaData, { withCredentials: true })
       console.log('Create idea response:', res.data)
       setFormData({ name: '', description: '', majors: [], fields: [], campus: '' })
       setErrors({}) // Xóa lỗi sau khi submit thành công
