@@ -1,7 +1,11 @@
+import AssignTaskIcon from '@/components/icons/AssignTaskIcon'
 import DashboardIcon from '@/components/icons/DashboardIcon'
 import { HugeiconsDocumentAttachment } from '@/components/icons/DocumentIcon'
+import ManageGroupsIcon from '@/components/icons/ManageGroupsIcon'
 import MessageIcon from '@/components/icons/MessageIcon'
 import ProjectIcon from '@/components/icons/ProjectIcon'
+import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
+import SubmitTopicIcon from '@/components/icons/SubmitTopicIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
 import { Users } from 'lucide-react'
@@ -42,6 +46,31 @@ export const SIDEBAR_LINKS = [
     icon: <TaskIcon />
   },
   {
+    href: '/idea/idea-list',
+    label: 'Idea',
+    icon: <IdeaIcon />
+  },
+  {
+    href: '/topic',
+    label: 'Submit Topic',
+    icon: <SubmitTopicIcon />
+  },
+  {
+    href: '/groups',
+    label: 'Manage Groups',
+    icon: <ManageGroupsIcon />
+  },
+  {
+    href: '/assign-requests',
+    label: 'Assign Request',
+    icon: <AssignTaskIcon />
+  },
+  {
+    href: '/management/deadlines',
+    label: 'Deadlines Management',
+    icon: <Users />
+  },
+  {
     href: '/management/students',
     label: 'Student Management',
     icon: <Users />
@@ -49,6 +78,11 @@ export const SIDEBAR_LINKS = [
   {
     href: '/management/teachers',
     label: 'Teachers Management',
+    icon: <Users />
+  },
+  {
+    href: '/management/projects',
+    label: 'Projects Management',
     icon: <Users />
   },
   {
@@ -75,25 +109,5 @@ export const SIDEBAR_LINKS = [
     href: '/list-supervisor',
     label: 'List Supervisor',
     icon: <ListSupervisorIcon />
-  }
-  // {
-  //   href: '/idea/idea-list',
-  //   label: 'Idea',
-  //   icon: <IdeaIcon />
-  // },
-  // {
-  //   href: '/submit-topic',
-  //   label: 'Submit Topic',
-  //   icon: <SubmitTopicIcon />
-  // },
-  // {
-  //   href: '/groups',
-  //   label: 'Manage Groups',
-  //   icon: <ManageGroupsIcon />
-  // },
-  // {
-  //   href: '/assign-tasks',
-  //   label: 'Assign Tasks',
-  //   icon: <AssignTaskIcon />
-  // }
+  },
 ]

@@ -5,16 +5,19 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
 import {
   StaffGetDetailProjectDto,
+  staffGetListAvailableStudentsDto,
+  staffGetListAvailableSupervisorsDto,
   StaffGetListProjectsDto,
   StaffUpdateProjectDto
 } from '@/dtos/project/staff-manage-projects.dto'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { create } from 'domain'
 import { deserialize } from 'v8'
-import { getSemesterDates, getSemesterFromDate } from '@/helpers/date-helper'
+import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/helpers/date-helper'
 import UserModel, { IUser } from '@/models/user.model'
 import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { convertType } from '@/helpers/convert-type-helper'
+import { USER_STATUS } from '@/constants/status'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -101,7 +104,7 @@ export class ProjectService {
         stage,
         slow_count,
         noMembers,
-        supervisor,
+        supervisorName,
         semester,
         page,
         limit,
@@ -122,7 +125,12 @@ export class ProjectService {
       if (stage) filter.stage = stage
       if (slow_count) filter.slow_count = slow_count
       if (noMembers) filter.members = { $size: noMembers }
-      if (supervisor) filter.supervisor = { $in: [supervisor] }
+      if (supervisorName) {
+        const supervisor = await this.userModel
+          .find({ display_name: { $regex: supervisorName, $options: 'i' } })
+          .session(session)
+        filter.supervisor = { $in: supervisor.map((s) => s._id) }
+      }
       filter.created_at = { $gte: startDate, $lt: endDate }
 
       const projects = await this.projectModel
@@ -251,40 +259,52 @@ export class ProjectService {
   async staffUpdateProject(body: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
     const { _id: projectId, ...data } = body
     return runTransaction(async (session) => {
-      //member project này không được trùng member project khác
-      const projects = await this.projectModel.find({ members: { $in: data.members } }).session(session)
-
-      if (projects.length > 0) {
-        const duplicateMember = projects[0].members.find((member) => data.members.includes(member as string))
-        throw new HttpException(`Member ${duplicateMember} are already in another project`, 400)
-      }
-
-      const maxGroupsPerTeacher = await this.parameterModel
-        .findOne({ param_name: 'MaxGroupsPerTeacher' })
-        .session(session)
-      if (!maxGroupsPerTeacher) {
-        throw new HttpException('Parameter MaxGroupsPerTeacher not found', 404)
-        // maxGroupsPerTeacher = { param_value: 5, param_type: 'number' }
-      }
-
-      const maxGroupsPerTeacherValue = convertType(maxGroupsPerTeacher?.param_value, maxGroupsPerTeacher?.param_type)
-      //supervisor project này phải có số project <= 5
-      if (data.supervisor) {
-        data.supervisor.forEach(async (supervisorId: string) => {
-          const projects = await this.projectModel.find({ supervisor: supervisorId }).session(session)
-          if (projects.length >= maxGroupsPerTeacherValue) {
-            throw new HttpException(
-              `Supervisor ${projects.find((s) => s.supervisor.includes(supervisorId))?.name} already has more than ${maxGroupsPerTeacherValue} projects`,
-              400
-            )
-          }
-        })
-      }
-
       const project = await this.projectModel.findById(projectId).session(session)
       if (!project) {
         throw new HttpException('Project not found', 404)
       }
+
+      //member project này không được trùng member project khác
+      // const availableStudents = (await this.staffGetListAvailableStudents({ search: '' }))
+      // const availableStudentsIds = availableStudents.map((s) => s._id)
+      // const newMembers = data.members.filter(m => project?.members.map((m: any) => m._id).includes(m)).filter((memberId) => !availableStudentsIds.includes(memberId));
+      // if (newMembers.length > 0) {
+      //   const memberNames = newMembers.map((memberId) => availableStudents.find((s) => s._id === memberId)?.display_name);
+      //   throw new HttpException(`Members ${memberNames.join(', ')} are not available`, 404);
+      // }
+
+      // const availableSupervisors = (await this.staffGetListAvailableSupervisors({ search: '' }))
+      // const availableSupervisorsIds = availableSupervisors.map((s) => s._id)
+      // if (data.supervisor) {
+      //   for (const supervisorId of data.supervisor) {
+      //     if (!availableSupervisorsIds.includes(supervisorId)) {
+      //       const supervisorName = (await UserModel.findById(supervisorId))?.display_name
+      //       throw new HttpException(`Supervisor ${supervisorName} is not available`, 404)
+      //     }
+      //   }
+      // }
+
+      // const maxGroupsPerTeacher = await this.parameterModel
+      //   .findOne({ param_name: 'MaxGroupsPerTeacher' })
+      //   .session(session)
+      // if (!maxGroupsPerTeacher) {
+      //   throw new HttpException('Parameter MaxGroupsPerTeacher not found', 404)
+      //   // maxGroupsPerTeacher = { param_value: 5, param_type: 'number' }
+      // }
+
+      // const maxGroupsPerTeacherValue = convertType(maxGroupsPerTeacher?.param_value, maxGroupsPerTeacher?.param_type)
+      // //supervisor project này phải có số project <= 5
+      // if (data.supervisor) {
+      //   data.supervisor.forEach(async (supervisorId: string) => {
+      //     const projects = await this.projectModel.find({ supervisor: supervisorId }).session(session)
+      //     if (projects.length >= maxGroupsPerTeacherValue) {
+      //       throw new HttpException(
+      //         `Supervisor ${projects.find((s) => s.supervisor.includes(supervisorId))?.name} already has more than ${maxGroupsPerTeacherValue} projects`,
+      //         400
+      //       )
+      //     }
+      //   })
+      // }
 
       project.name = data.name
       project.major = data.major
@@ -307,6 +327,176 @@ export class ProjectService {
       await project.save({ session })
     })
   }
+
+  async staffGetListAvailableStudents(body: staffGetListAvailableStudentsDto) {
+    const { search = '' } = body
+    const currentSemester = getCurrentSemester()
+    return runTransaction(async (session) => {
+      const students = await this.userModel
+        .find({
+          roles: 'student',
+          planned_semester: currentSemester,
+          status: USER_STATUS.UN_GROUPED,
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+        })
+        .select('display_name username email avatar')
+        .session(session)
+
+      return students
+    })
+  }
+
+  async staffGetListAvailableSupervisors(body: staffGetListAvailableSupervisorsDto) {
+    const { search = '' } = body
+    return runTransaction(async (session) => {
+      const supervisors = await this.userModel
+        .find({
+          roles: 'supervisor',
+          status: USER_STATUS.AVAILABLE,
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+        })
+        .select('display_name username email avatar')
+        .session(session)
+
+      return supervisors
+    })
+  }
+
+  async createProjectAsTopic(
+  projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status'>
+) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel.create(
+      {
+        ...projectData,
+        histories: [], // Mảng lịch sử rỗng
+        tasks: [], // Mảng task rỗng
+        mark: null, // Điểm mặc định là null
+        slow_count: 0, // Số lần chậm tiến độ mặc định là 0
+        status: null, // Trạng thái mặc định là null
+        category: 1, // Giả định đây là dự án của sinh viên (category: 1)
+        leader: projectData.leader, // Lấy giá trị `leader` từ dữ liệu gửi lên
+        stage: 1 // Giai đoạn mặc định là 1
+      },
+      { session }
+    )
+
+    if (!project) {
+      throw new HttpException('Error at creating project as topic', 400)
+    }
+
+    return project
+  })
+}
+
+async getProjectsWithNullStatus() {
+  return runTransaction(async (session) => {
+    const projects = await this.projectModel
+      .find({ status: null })  // Lọc các dự án có status là null
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate('members')
+      .session(session)
+      .exec()
+
+    if (!projects || projects.length === 0) {
+      throw new HttpException('No projects found with null status', 404)
+    }
+
+    return projects
+  })
+}
+
+async deleteTopic(projectId: string) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOneAndDelete({ _id: projectId, status: null })
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    return { message: 'Project deleted successfully' }
+  })
+}
+
+async updateTopic(projectId: string, updateData: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOne({ _id: projectId, status: null })
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    project.name = updateData.name
+    project.major = updateData.major
+    project.field = updateData.field
+    project.campus = updateData.campus
+    project.category = updateData.category
+    project.status = updateData.status
+    project.stage = updateData.stage
+    project.slow_count = updateData.slow_count
+    project.members = updateData.members
+    project.supervisor = updateData.supervisor
+    project.leader = updateData.leader
+    project.description = updateData.description ?? ''
+    project.updated_by = tokenPayload._id
+    project.updated_at = new Date()
+
+    await project.save({ session })
+    return { message: 'Project updated successfully' }
+  })
+}
+
+async getTopicDetail(projectId: string) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOne({ _id: projectId, status: null })
+      .populate({ path: 'major', select: '_id name' })
+      .populate({ path: 'field', select: '_id name' })
+      .populate({ path: 'campus', select: '_id name' })
+      .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
+      .populate({ path: 'leader', select: '_id display_name username email avatar' })
+      .populate({ path: 'members', select: '_id display_name username email avatar' })
+      .populate({ path: 'created_by', select: '_id display_name username email avatar' })
+      .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
+      .select('name major field campus mark category status stage slow_count members supervisor leader created_by updated_by description created_at updated_at')
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    return {
+      _id: project._id,
+      name: project.name,
+      major: project.major,
+      field: project.field,
+      campus: project.campus,
+      mark: project.mark,
+      category: project.category,
+      status: project.status,
+      stage: project.stage,
+      slow_count: project.slow_count,
+      members: project.members,
+      supervisor: project.supervisor,
+      leader: project.leader,
+      description: project.description,
+      created_by: project.created_by,
+      updated_by: project.updated_by,
+      created_at: project.created_at,
+      updated_at: project.updated_at
+    }
+  })
+}
+
+
 }
 
 export default new ProjectService()

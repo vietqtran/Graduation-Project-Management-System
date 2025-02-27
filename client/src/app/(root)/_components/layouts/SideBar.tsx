@@ -33,7 +33,7 @@ const SideBar = () => {
             />
           </Button>
         </div>
-        <div className=' size-full max-h-screen flex flex-col'>
+        <div className='size-full max-h-screen flex flex-col'>
           <div className={`h-16 aspect-square px-1 ${isExpanse ? 'grid place-items-center' : ''}`}>
             <Image
               className={`h-full object-contain ${!isExpanse ? 'block' : 'hidden'}`}
@@ -50,7 +50,7 @@ const SideBar = () => {
               src={'/images/fpt-uni.png'}
             />
           </div>
-          <div className={`flex flex-col flex-1 justify-between ${isExpanse ? 'pt-10' : 'pt-0'}`}>
+          <div className={`flex flex-col flex-1 overflow-y-auto max-h-screen ${isExpanse ? 'pt-10' : 'pt-0'}`}>
             <div className='p-2 w-full flex gap-1 flex-col'>
               {SIDEBAR_LINKS.map((s) => {
                 return (

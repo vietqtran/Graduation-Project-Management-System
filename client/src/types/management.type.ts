@@ -6,6 +6,7 @@ interface User {
   email: string
   username: string
   display_name: string
+  avatar?: string
 }
 
 // Deadline type definition
@@ -32,11 +33,6 @@ interface Parameter {
   updated_at: string // ISO date string
 }
 
-interface Project {
-  name: string
-  _id: string
-}
-
 export interface Student {
   _id: string
   url: string
@@ -47,7 +43,10 @@ export interface Student {
   campus: string
   field: Field[]
   major: Major[]
-  project: Project
+  project: {
+    name: string
+    _id: string
+  }
   is_leader: boolean
 }
 
@@ -62,6 +61,44 @@ export interface Teacher {
   campus: string
   major: string[]
   noProjects: number
+}
+
+export interface Supervisor {
+  _id: string
+  display_name: string
+  email: string
+  username: string
+  avatar: string
+}
+
+export interface Project {
+  _id: string
+  name: string
+  major: {
+    _id: string
+    name: string
+  }[]
+  field: {
+    _id: string
+    name: string
+  }[]
+  campus?: string
+  mark: number | null
+  category: 1 | 2
+  status?: number | null
+  stage: number
+  slow_count: number
+  noMembers: number
+  supervisor: Supervisor[] | null
+  created_by?: User
+  updated_by?: User
+  created_at: string
+  updated_at?: string
+}
+
+export interface ProjectsResponse {
+  list: Project[]
+  total: number
 }
 
 export interface StudentsResponse {

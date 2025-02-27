@@ -65,8 +65,9 @@ export class StaffGetListProjectsDto {
   noMembers?: number
 
   @IsOptional()
-  @IsMongoId({ message: 'Invalid supervior ID format' })
-  supervisor?: string
+  // @IsMongoId({ message: 'Invalid supervior ID format' })
+  @IsString({ message: 'Supervisor name must be a string' })
+  supervisorName?: string
 
   @IsOptional()
   @IsString({ message: 'Semester must be a string' })
@@ -96,7 +97,7 @@ export class StaffGetListProjectsDto {
 export class StaffGetDetailProjectDto {
   @IsNotEmpty({ message: 'Project ID is required' })
   @IsMongoId({ message: 'Invalid project ID format' })
-  _id?: string
+  _id: string
 }
 
 export class StaffUpdateProjectDto {
@@ -156,4 +157,16 @@ export class StaffUpdateProjectDto {
   @IsNotEmpty({ message: 'Leader is required' })
   @IsMongoId({ message: 'Invalid Leader ID format' })
   leader: string
+}
+
+export class staffGetListAvailableStudentsDto {
+  @IsOptional()
+  @IsString({ message: 'Semester must be a string' })
+  search?: string
+}
+
+export class staffGetListAvailableSupervisorsDto {
+  @IsOptional()
+  @IsString({ message: 'Semester must be a string' })
+  search?: string
 }
