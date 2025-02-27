@@ -61,7 +61,7 @@ export const SIDEBAR_LINKS = [
     icon: <ManageGroupsIcon />
   },
   {
-    href: '/assign-request',
+    href: '/assign-requests',
     label: 'Assign Request',
     icon: <AssignTaskIcon />
   },
@@ -110,9 +110,4 @@ export const SIDEBAR_LINKS = [
     label: 'List Supervisor',
     icon: <ListSupervisorIcon />
   },
-  {
-    href: '/management/projects',
-    label: 'Projects Management',
-    icon: <Users />
-  }
 ]
