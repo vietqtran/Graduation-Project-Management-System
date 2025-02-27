@@ -81,6 +81,11 @@ export const SIDEBAR_LINKS = [
     icon: <Users />
   },
   {
+    href: '/management/projects',
+    label: 'Projects Management',
+    icon: <Users />
+  },
+  {
     href: '/create-idea',
     label: 'Create Idea',
     icon: <CreateIdeaIcon />
