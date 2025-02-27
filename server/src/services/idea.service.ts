@@ -6,10 +6,10 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
 
 export class IdeaService {
-  private readonly IdeaService: Model<IProject>
+  private readonly projectModel: Model<IProject>
 
   constructor() {
-    this.IdeaService = ProjectModel
+    this.projectModel = ProjectModel
   }
 
   async createIdea(ideaData: CreateIdeaDto): Promise<IProject> {
@@ -21,7 +21,7 @@ export class IdeaService {
       throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
 
-    const existingIdea = await this.IdeaService.findOne({
+    const existingIdea = await this.projectModel.findOne({
       members: { $in: [ideaData.leader] } // Kiểm tra xem userId có nằm trong mảng members không
     })
 
@@ -33,7 +33,7 @@ export class IdeaService {
     }
 
     return runTransaction(async (session) => {
-      const idea = new this.IdeaService({
+      const idea = new this.projectModel({
         ...ideaData,
         histories: [],
         tasks: [],
