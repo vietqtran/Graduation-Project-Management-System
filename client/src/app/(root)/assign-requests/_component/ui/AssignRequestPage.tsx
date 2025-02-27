@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react'
 import FilterBar from './FilterBar'
-import TaskTable from './TaskTable'
+import RequestTable from './RequestTable'
 import Pagination from './Pagination'
 
-// Dữ liệu mẫu cho tasks
-const sampleTasks = [
+// Dữ liệu mẫu cho requests
+const sampleRequests = [
   {
     id: 1,
     status: 'Pending',
@@ -79,10 +79,10 @@ const sampleTasks = [
   }
 ]
 
-const TasksPage: React.FC = () => {
-  const [tasks] = useState(sampleTasks)
+const RequestsPage: React.FC = () => {
+  const [requests] = useState(sampleRequests)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages] = useState(5) // ví dụ cứng, có thể tính toán dựa vào length của tasks
+  const [totalPages] = useState(5) // ví dụ cứng, có thể tính toán dựa vào length của requests
 
   const handleSearch = (keyword: string) => {
     // Logic tìm kiếm
@@ -103,9 +103,9 @@ const TasksPage: React.FC = () => {
     console.log('Clear filter')
   }
 
-  const handleAddTask = () => {
-    // Logic mở modal hoặc form để thêm task
-    console.log('Add task clicked')
+  const handleAddRequest = () => {
+    // Logic mở modal hoặc form để thêm request
+    console.log('Add request clicked')
   }
 
   const handlePageChange = (page: number) => {
@@ -120,14 +120,14 @@ const TasksPage: React.FC = () => {
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
         onClearFilter={handleClearFilter}
-        onAddTask={handleAddTask}
+        onAddRequest={handleAddRequest}
       />
 
-      <TaskTable tasks={tasks} />
+      <RequestTable requests={requests} />
 
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   )
 }
 
-export default TasksPage // Đổi tên component từ JobsPage thành TasksPage
+export default RequestsPage // Đổi tên component từ JobsPage thành RequestsPage

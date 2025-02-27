@@ -361,6 +361,142 @@ export class ProjectService {
       return supervisors
     })
   }
+
+  async createProjectAsTopic(
+  projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status'>
+) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel.create(
+      {
+        ...projectData,
+        histories: [], // Mảng lịch sử rỗng
+        tasks: [], // Mảng task rỗng
+        mark: null, // Điểm mặc định là null
+        slow_count: 0, // Số lần chậm tiến độ mặc định là 0
+        status: null, // Trạng thái mặc định là null
+        category: 1, // Giả định đây là dự án của sinh viên (category: 1)
+        leader: projectData.leader, // Lấy giá trị `leader` từ dữ liệu gửi lên
+        stage: 1 // Giai đoạn mặc định là 1
+      },
+      { session }
+    )
+
+    if (!project) {
+      throw new HttpException('Error at creating project as topic', 400)
+    }
+
+    return project
+  })
+}
+
+async getProjectsWithNullStatus() {
+  return runTransaction(async (session) => {
+    const projects = await this.projectModel
+      .find({ status: null })  // Lọc các dự án có status là null
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate('members')
+      .session(session)
+      .exec()
+
+    if (!projects || projects.length === 0) {
+      throw new HttpException('No projects found with null status', 404)
+    }
+
+    return projects
+  })
+}
+
+async deleteTopic(projectId: string) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOneAndDelete({ _id: projectId, status: null })
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    return { message: 'Project deleted successfully' }
+  })
+}
+
+async updateTopic(projectId: string, updateData: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOne({ _id: projectId, status: null })
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    project.name = updateData.name
+    project.major = updateData.major
+    project.field = updateData.field
+    project.campus = updateData.campus
+    project.category = updateData.category
+    project.status = updateData.status
+    project.stage = updateData.stage
+    project.slow_count = updateData.slow_count
+    project.members = updateData.members
+    project.supervisor = updateData.supervisor
+    project.leader = updateData.leader
+    project.description = updateData.description ?? ''
+    project.updated_by = tokenPayload._id
+    project.updated_at = new Date()
+
+    await project.save({ session })
+    return { message: 'Project updated successfully' }
+  })
+}
+
+async getTopicDetail(projectId: string) {
+  return runTransaction(async (session) => {
+    const project = await this.projectModel
+      .findOne({ _id: projectId, status: null })
+      .populate({ path: 'major', select: '_id name' })
+      .populate({ path: 'field', select: '_id name' })
+      .populate({ path: 'campus', select: '_id name' })
+      .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
+      .populate({ path: 'leader', select: '_id display_name username email avatar' })
+      .populate({ path: 'members', select: '_id display_name username email avatar' })
+      .populate({ path: 'created_by', select: '_id display_name username email avatar' })
+      .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
+      .select('name major field campus mark category status stage slow_count members supervisor leader created_by updated_by description created_at updated_at')
+      .session(session)
+
+    if (!project) {
+      throw new HttpException('Project not found or project has a status other than null', 404)
+    }
+
+    return {
+      _id: project._id,
+      name: project.name,
+      major: project.major,
+      field: project.field,
+      campus: project.campus,
+      mark: project.mark,
+      category: project.category,
+      status: project.status,
+      stage: project.stage,
+      slow_count: project.slow_count,
+      members: project.members,
+      supervisor: project.supervisor,
+      leader: project.leader,
+      description: project.description,
+      created_by: project.created_by,
+      updated_by: project.updated_by,
+      created_at: project.created_at,
+      updated_at: project.updated_at
+    }
+  })
+}
+
+
 }
 
 export default new ProjectService()

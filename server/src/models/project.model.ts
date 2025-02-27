@@ -57,7 +57,7 @@ const ProjectSchema = new Schema<IProject>(
     leader: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Leader is required']
+      required: [false, 'Leader is required']
     },
     supervisor: [
       {
