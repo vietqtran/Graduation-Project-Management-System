@@ -33,7 +33,7 @@ class App {
   private initializeMiddlewares(): void {
     this.app.use(
       cors({
-        origin: "*",
+        origin: process.env.CLIENT_URL,
         credentials: true
       })
     )
