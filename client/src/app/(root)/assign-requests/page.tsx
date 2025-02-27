@@ -1,10 +1,10 @@
 import React from 'react'
-import TasksPage from './_component/ui/AssignTaskPage'
+import RequestPage from './_component/ui/AssignRequestPage'
 
 const page = () => {
   return (
     <div className='flex h-full gap-4 p-4'>
-      <TasksPage />
+      <RequestPage />
     </div>
   )
 }

@@ -56,8 +56,8 @@ export const SIDEBAR_LINKS = [
     icon: <ManageGroupsIcon />
   },
   {
-    href: '/assign-tasks',
-    label: 'Assign Tasks',
+    href: '/assign-request',
+    label: 'Assign Request',
     icon: <AssignTaskIcon />
   },
   {

@@ -3,7 +3,7 @@
 import React from 'react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
-interface Task {
+interface Request {
   id: number
   status: string
   amount: number
@@ -14,11 +14,11 @@ interface Task {
   assignedTo: string
 }
 
-interface TaskTableProps {
-  tasks: Task[]
+interface RequestTableProps {
+  requests: Request[]
 }
 
-const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
+const RequestTable: React.FC<RequestTableProps> = ({ requests }) => {
   return (
     <Table>
       <TableHeader>
@@ -33,15 +33,15 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {tasks.map((task) => (
-          <TableRow key={task.id}>
-            <TableCell>{task.status}</TableCell>
-            <TableCell>${task.amount}</TableCell>
-            <TableCell>{task.customer}</TableCell>
-            <TableCell>{task.site}</TableCell>
-            <TableCell>{task.date}</TableCell>
-            <TableCell>{task.scheduled}</TableCell>
-            <TableCell>{task.assignedTo}</TableCell>
+        {requests.map((request) => (
+          <TableRow key={request.id}>
+            <TableCell>{request.status}</TableCell>
+            <TableCell>${request.amount}</TableCell>
+            <TableCell>{request.customer}</TableCell>
+            <TableCell>{request.site}</TableCell>
+            <TableCell>{request.date}</TableCell>
+            <TableCell>{request.scheduled}</TableCell>
+            <TableCell>{request.assignedTo}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -49,4 +49,4 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks }) => {
   )
 }
 
-export default TaskTable
+export default RequestTable
