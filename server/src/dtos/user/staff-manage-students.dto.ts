@@ -60,7 +60,7 @@ export class GetListStudentsDto {
   @IsOptional()
   @IsString({ message: 'Semester must be a string' })
   @Matches(semesterRegex, { message: 'Invalid semester' }) //trường này nhập input nhé
-  planned_semester?: string = getCurrentSemester();
+  planned_semester?: string = getCurrentSemester()
 
   @IsOptional()
   @Type(() => Number)
@@ -130,7 +130,7 @@ export class StaffUpdateStudentDto {
   @IsOptional()
   @IsString({ message: 'Semester must be a string' })
   @Matches(semesterRegex, { message: 'Invalid semester' }) //trường này nhập input nhé
-  planned_semester: string = getCurrentSemester();
+  planned_semester: string = getCurrentSemester()
 
   //update project nào cho sinh viên thì ko ở màn này
 }

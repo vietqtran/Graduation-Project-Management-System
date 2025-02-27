@@ -1,20 +1,29 @@
+import React, { memo, useState } from 'react'
+import { Task, TaskLabel } from '@/types/task.type'
+
 import AvatarGroup from '@/components/ui/avatar-group'
 import { Badge } from '@/components/ui/badge'
 import { Draggable } from '@hello-pangea/dnd'
 import FileIcon from '@/components/icons/FileIcon'
-import React from 'react'
+import { User } from '@/types/user.type'
+import axios from 'axios'
 
-interface Props {
-  task: {
-    id: string
-    title: string
-  }
+interface TaskProps {
+  task: Task
   index: number
+  onUpdate: () => void
 }
 
-const Task = ({ task, index }: Props) => {
+const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate }) => {
+  const [name, setName] = useState(task.name)
+
+  const handleUpdate = async () => {
+    await axios.put(`/api/tasks/${task._id}`, { name })
+    onUpdate()
+  }
+
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task._id} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -24,45 +33,44 @@ const Task = ({ task, index }: Props) => {
             ...provided.draggableProps.style,
             rotate: snapshot.isDragging ? '3deg' : '0deg'
           }}
-          className={`bg-background shadow-md border rounded-lg select-none
-          ${snapshot.isDragging ? 'shadow-xl rotate-3 cursor-grabbing bg-white ring-2 ring-blue-500 z-[9999]' : 'cursor-grab hover:bg-neutral-50'}
-          transition-colors duration-200`}
+          className={`bg-background shadow-md border rounded-lg select-none ${
+            snapshot.isDragging
+              ? 'shadow-xl rotate-3 cursor-grabbing bg-white ring-2 ring-blue-500 z-[9999]'
+              : 'cursor-grab hover:bg-neutral-50'
+          } transition-colors duration-200`}
         >
           <div className='flex flex-col'>
             <div className='p-2'>
-              <span className='text-sm'>{task.title}</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleUpdate}
+                className='text-sm bg-transparent border-none outline-none w-full'
+              />
               <div className='flex items-center justify-start gap-2 flex-wrap'>
-                <Badge variant={'secondary'} className='bg-green-500 text-white'>
-                  Label
-                </Badge>
-                <Badge variant={'secondary'} className='bg-green-500 text-white'>
-                  Label
-                </Badge>
-                <Badge variant={'secondary'} className='bg-green-500 text-white'>
-                  Label
-                </Badge>
+                {task.labels.map((label: TaskLabel, idx) => (
+                  <Badge key={idx} variant='secondary' style={{ backgroundColor: label.color }}>
+                    {label.text}
+                  </Badge>
+                ))}
               </div>
             </div>
             <div className='gap-1 flex flex-col p-2 border-t'>
               <div className='flex flex-wrap justify-start items-center gap-y-1 gap-x-2'>
-                <div className='flex gap-1 items-center'>
-                  <FileIcon />
-                  <span className='text-sm'>10</span>
-                </div>
+                {task.documents.length > 0 && (
+                  <div className='flex gap-1 items-center'>
+                    <FileIcon />
+                    <span className='text-sm'>{task.documents.length}</span>
+                  </div>
+                )}
               </div>
               <div className='flex justify-end'>
                 <AvatarGroup
                   className='size-6'
-                  avatars={[
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-                    { src: 'https://i.pravatar.cc/300', alt: 'avatar' }
-                  ]}
+                  avatars={task.assignees.map((assignee: User) => ({
+                    src: assignee.avatar ?? 'https://i.pravatar.cc/300',
+                    alt: assignee.username
+                  }))}
                 />
               </div>
             </div>
@@ -73,4 +81,4 @@ const Task = ({ task, index }: Props) => {
   )
 }
 
-export default Task
+export default memo(TaskComponent)

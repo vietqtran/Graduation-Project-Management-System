@@ -1,75 +1,75 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express'
 
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: string;
-  };
+    id: string
+  }
 }
-import { RequestService } from '@/services/request.service';
-import { HttpException } from '@/shared/exceptions/http.exception';
-import { ResponseHandler } from '@/middlewares/response-handler.middleware';
-import { ApproveRequestDto } from '@/dtos/request/approve-request.dto';
-import { DenyRequestDto } from '@/dtos/request/deny-request.dto';
+import { RequestService } from '@/services/request.service'
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { ResponseHandler } from '@/middlewares/response-handler.middleware'
+import { ApproveRequestDto } from '@/dtos/request/approve-request.dto'
+import { DenyRequestDto } from '@/dtos/request/deny-request.dto'
 
 export class RequestController {
-  private readonly requestService: RequestService;
+  private readonly requestService: RequestService
 
   constructor() {
-    this.requestService = new RequestService();
+    this.requestService = new RequestService()
   }
 
   async getAllRequests(req: Request, res: Response, next: NextFunction) {
     try {
-      const requests = await this.requestService.getAllRequests();
-      ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully');
+      const requests = await this.requestService.getAllRequests()
+      ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully')
     } catch (error) {
-      ResponseHandler.sendError(res, error);
-      next(error);
+      ResponseHandler.sendError(res, error)
+      next(error)
     }
   }
 
   async approveRequest(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-      const approveRequestDto: ApproveRequestDto = req.body;
-      const request = await this.requestService.updateRequest(id, 'approved', approveRequestDto);
+      const { id } = req.params
+      const approveRequestDto: ApproveRequestDto = req.body
+      const request = await this.requestService.updateRequest(id, 'approved', approveRequestDto)
       if (!request) {
-        throw new HttpException('Request not found', 404);
+        throw new HttpException('Request not found', 404)
       }
-      ResponseHandler.sendSuccess(res, request, 'Request approved successfully');
+      ResponseHandler.sendSuccess(res, request, 'Request approved successfully')
     } catch (error) {
-      ResponseHandler.sendError(res, error);
-      next(error);
+      ResponseHandler.sendError(res, error)
+      next(error)
     }
   }
 
   async denyRequest(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-      const denyRequestDto: DenyRequestDto = req.body;
-      const request = await this.requestService.updateRequest(id, 'rejected', denyRequestDto);
+      const { id } = req.params
+      const denyRequestDto: DenyRequestDto = req.body
+      const request = await this.requestService.updateRequest(id, 'rejected', denyRequestDto)
       if (!request) {
-        throw new HttpException('Request not found', 404);
+        throw new HttpException('Request not found', 404)
       }
-      ResponseHandler.sendSuccess(res, request, 'Request denied successfully');
+      ResponseHandler.sendSuccess(res, request, 'Request denied successfully')
     } catch (error) {
-      ResponseHandler.sendError(res, error);
-      next(error);
+      ResponseHandler.sendError(res, error)
+      next(error)
     }
   }
 
   async createRequest(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) {
-        throw new HttpException('User not authenticated', 401);
+        throw new HttpException('User not authenticated', 401)
       }
-      const { id } = req.user;
-      const createRequestDto = req.body;
-      const request = await this.requestService.createRequest(id, createRequestDto);
-      ResponseHandler.sendSuccess(res, request, 'Request created successfully');
+      const { id } = req.user
+      const createRequestDto = req.body
+      const request = await this.requestService.createRequest(id, createRequestDto)
+      ResponseHandler.sendSuccess(res, request, 'Request created successfully')
     } catch (error) {
-      ResponseHandler.sendError(res, error);
-      next(error);
+      ResponseHandler.sendError(res, error)
+      next(error)
     }
   }
 }

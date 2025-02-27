@@ -2,6 +2,6 @@ export interface Campus {
   _id: string
   name: string
   description?: string
-  created_at: Date
-  updated_at: Date
+  created_at?: Date
+  updated_at?: Date
 }
