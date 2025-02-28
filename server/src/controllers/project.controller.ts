@@ -85,5 +85,4 @@ export class ProjectController {
     await this.projectService.deleteTopic(id)
     ResponseHandler.sendSuccess(res, null, 'Delete topic successfully')
   })
-
 }

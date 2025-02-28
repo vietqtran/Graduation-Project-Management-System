@@ -21,5 +21,4 @@ export class TeacherCreateProjectAsTopicDto {
   @IsNotEmpty({ message: 'Status is required' })
   @IsEnum(PROJECT_STATUS, { message: 'Invalid project status' })
   status: number
-
 }
