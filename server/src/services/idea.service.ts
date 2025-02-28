@@ -38,7 +38,7 @@ export class IdeaService {
         histories: [],
         tasks: [],
         slow_count: 0,
-        supervisor: null,
+        supervisor: [],
         category: 1
       })
 
