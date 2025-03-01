@@ -27,4 +27,10 @@ router.post(
   projectController.staffGetListAvailableStudents
 )
 
+router.post('/create-project-as-topic', projectController.createProjectAsTopic)
+router.get('/get-project-with-null-status', projectController.getProjectsWithNullStatus)
+router.get('/get-topic-detail', projectController.getTopicDetail)
+router.post('/update-topic', projectController.updateTopic)
+router.delete('/delete-topic', projectController.deleteTopic)
+
 export { router as projectRoutes }

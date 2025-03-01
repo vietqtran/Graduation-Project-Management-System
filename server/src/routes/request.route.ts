@@ -1,6 +1,5 @@
-import { Router } from 'express'
 import { RequestController } from '@/controllers/request.controller'
-import { asyncHandler } from '@/helpers/async-handler'
+import { Router } from 'express'
 
 const router = Router()
 const requestController = new RequestController()
