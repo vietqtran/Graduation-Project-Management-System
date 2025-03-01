@@ -1,4 +1,4 @@
-import { FilterQuery, Model, UpdateQuery } from 'mongoose'
+import { FilterQuery, Model, mongo, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
@@ -369,14 +369,13 @@ export class ProjectService {
     const project = await this.projectModel.create(
       {
         ...projectData,
-        histories: [], // Mảng lịch sử rỗng
-        tasks: [], // Mảng task rỗng
-        mark: null, // Điểm mặc định là null
-        slow_count: 0, // Số lần chậm tiến độ mặc định là 0
-        status: null, // Trạng thái mặc định là null
-        category: 1, // Giả định đây là dự án của sinh viên (category: 1)
-        leader: projectData.leader, // Lấy giá trị `leader` từ dữ liệu gửi lên
-        stage: 1 // Giai đoạn mặc định là 1
+        histories: [],  
+        tasks: [],  
+        mark: null,  
+        slow_count: 0,  
+        status: null,  
+        category: 1,  
+        stage: 1  
       },
       { session }
     )
