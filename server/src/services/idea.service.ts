@@ -1,15 +1,19 @@
 import { FilterQuery, Model, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
+import UserModel, { IUser } from '@/models/user.model'  
 import { CreateIdeaDto } from '@/dtos/idea/create-idea.dto'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { runTransaction } from '@/helpers/transaction-helper'
+import { USER_STATUS } from '@/constants/status'
 
 export class IdeaService {
   private readonly projectModel: Model<IProject>
+  private readonly userModel: Model<IUser>
 
   constructor() {
     this.projectModel = ProjectModel
+    this.userModel = UserModel
   }
 
   async createIdea(ideaData: CreateIdeaDto): Promise<IProject> {
@@ -43,7 +47,11 @@ export class IdeaService {
       })
 
       await idea.save({ session })
-
+      await this.userModel.updateOne(
+        { _id: ideaData.leader },
+        { $set: { status: USER_STATUS.ACTIVATED } },
+        { session }
+      )
       return idea
     })
   }
