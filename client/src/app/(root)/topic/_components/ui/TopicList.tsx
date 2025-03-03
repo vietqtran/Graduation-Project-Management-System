@@ -16,6 +16,7 @@ interface TopicListProps {
   searchTerm: string;
   sortOrder: string;
   filterField: string;
+  refresh: boolean;
 }
 
 const parseDescription = (desc: string) => {
@@ -40,7 +41,7 @@ const parseDescription = (desc: string) => {
   }
 }
 
-const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sortOrder, filterField }) => {
+const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sortOrder, filterField, refresh }) => {
   const [topics, setTopics] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(true)
@@ -65,7 +66,7 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
     }
 
     fetchTopics()
-  }, [])
+  }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
 
   // **Lọc topics theo `selectedMajorId`, `searchTerm`, và `filterField`**
   let filteredTopics = selectedMajorId ? topics.filter(topic => topic.majorId === selectedMajorId) : topics

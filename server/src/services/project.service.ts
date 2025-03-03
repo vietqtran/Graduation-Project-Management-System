@@ -364,21 +364,36 @@ export class ProjectService {
     })
   }
 
-  async createProjectAsTopic(
-  projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status'>
+async createProjectAsTopic(
+  projectData: Omit<
+    IProject,
+    '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'
+  >
 ) {
   return runTransaction(async (session) => {
+    // Tạo project với các giá trị mặc định
     const project = await this.projectModel.create(
-      {
-        ...projectData,
-        histories: [],  
-        tasks: [],  
-        mark: null,  
-        slow_count: 0,  
-        status: null,  
-        category: 1,  
-        stage: 1  
-      },
+      [
+        {
+          name: projectData.name, // Bắt buộc
+          description: projectData.description || '', // Có thể trống
+          major: projectData.major, // Bắt buộc
+          field: projectData.field, // Bắt buộc
+          campus: projectData.campus, // Bắt buộc
+          category: projectData.category, // Bắt buộc
+          supervisor: projectData.supervisor || [], // Có thể trống
+          members: [], // Bắt buộc: Đặt rỗng vì member = 0
+          documents: projectData.documents || [], // Có thể trống
+          histories: [], // Mặc định rỗng
+          tasks: [], // Mặc định rỗng
+          mark: null, // Mặc định
+          slow_count: 0, // Mặc định
+          status: null, // Mặc định
+          stage: 1, // Mặc định
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ],
       { session }
     )
 
@@ -389,6 +404,7 @@ export class ProjectService {
     return project
   })
 }
+
 
 async getProjectsWithNullStatus() {
   return runTransaction(async (session) => {

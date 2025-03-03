@@ -7,20 +7,17 @@ import TopicList from './TopicList'
 import TopicSearchBar from './TopicSearchBar'
 import TopicForm from './TopicForm'
 import { Button } from '@/components/ui/button'
-
-interface Message {
-  type: 'success' | 'error';
-  text: string;
-}
-
+import instance from '@/utils/axios'
+import { toast } from 'sonner'
+ 
 const TopicPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<Message | null>(null)
   const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
   const [filterField, setFilterField] = useState('all')
+  const [refresh, setRefresh] = useState(false)
 
   const handleSearch = (search: string, sort: string, filter: string) => {
     setSearchTerm(search)
@@ -28,48 +25,34 @@ const TopicPage = () => {
     setFilterField(filter)
   }
 
-  const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
-    setLoading(true)
-    setMessage(null)
+const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
+  setLoading(true)
 
-    try {
-      const response = await fetch(`http://localhost:8080/api/project/create-project-as-topic`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      credentials: "include" 
-      })
+  try {
+    const response = await instance.post('/project/create-project-as-topic', data, {
+      withCredentials: true,
+    })
 
-      const result = await response.json()
-      console.log('Server response:', result); 
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Topic submitted successfully!' })
-        setIsDrawerOpen(false) // Đóng form sau khi submit thành công
-      } else {
-        setMessage({ type: 'error', text: result.message || 'Something went wrong' })
-      }
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to submit the topic.' })
-    } finally {
-      setLoading(false)
-    }
+    console.log('Server response:', response.data)
+     toast.success('Topic submitted successfully!')
+    setIsDrawerOpen(false)  
+    setRefresh(!refresh)
+  } catch (error) {
+    console.error('Error submitting topic:', error)
+    toast.error('Failed to submit topic!')
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <div>
       <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} onSearch={handleSearch} />
       <div className='flex gap-6 mt-4'>
         <MajorSelection onMajorSelect={setSelectedMajorId} />
-        <TopicList selectedMajorId={selectedMajorId} searchTerm={searchTerm} sortOrder={sortOrder} filterField={filterField} />
+        <TopicList refresh={refresh} selectedMajorId={selectedMajorId} searchTerm={searchTerm} sortOrder={sortOrder} filterField={filterField} />
       </div>
-
-      {/* Hiển thị thông báo */}
-      {message && (
-        <div className={`p-2 rounded-md ${message.type === 'success' ? 'bg-green-200' : 'bg-red-200'}`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Drawer using Radix UI */}
       <Dialog.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
