@@ -33,4 +33,5 @@ router.get('/get-topic-detail', projectController.getTopicDetail)
 router.post('/update-topic', projectController.updateTopic)
 router.delete('/delete-topic', projectController.deleteTopic)
 
+router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
 export { router as projectRoutes }

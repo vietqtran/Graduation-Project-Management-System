@@ -18,6 +18,8 @@ import UserModel, { IUser } from '@/models/user.model'
 import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { convertType } from '@/helpers/convert-type-helper'
 import { USER_STATUS } from '@/constants/status'
+import { Types } from 'mongoose'
+
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -494,6 +496,47 @@ async getTopicDetail(projectId: string) {
     }
   })
 }
+
+
+async getProjectsBySupervisor(supervisorId: string) {
+  return runTransaction(async (session) => {
+    console.log('🔍 Supervisor ID:', supervisorId);
+
+    // Kiểm tra và chuyển supervisorId thành ObjectId
+    if (!Types.ObjectId.isValid(supervisorId)) {
+      throw new HttpException(`Invalid Supervisor ID format: ${supervisorId}`, 400);
+    }
+    const objectId = new Types.ObjectId(supervisorId); // Chuyển thành ObjectId
+
+    const projects = await this.projectModel
+      .find({ supervisor: { $in: [objectId] } }) // Dùng ObjectId thay vì string
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate({
+        path: 'members',
+        populate: [
+          { path: 'major', select: 'name' },
+          { path: 'field', select: 'name' }
+        ]
+      })
+      .populate({
+        path: 'documents',
+        populate: { path: 'user', select: 'display_name email' }
+      })
+      .session(session)
+      .exec();
+
+    if (!projects || projects.length === 0) {
+      throw new HttpException(`No projects found for this supervisor ${supervisorId}`, 404);
+    }
+
+    return projects;
+  });
+}
+
 
 
 }
