@@ -11,21 +11,33 @@ import MajorBadge from '@/components/common/MajorBadge'
 import { Project } from '@/types/project.type'
 import { User } from '@/types/user.type'
 import { useRouter } from '@/hooks/useRouter'
+import useInvite from '@/hooks/useInvite'
 import instance from '@/utils/axios'
+import { useAppSelector } from '@/hooks'
+import { toast } from 'sonner'
 
 interface IdeaDetailsProps {
   project: Project | null
 }
 
 const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
+  const user = useAppSelector((state) => state.auth.user)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false) 
   const router = useRouter()
-  const handleInviteClick = () => {
-    // Thực hiện hành động khi nhấn nút "Invite"
-    console.log('Invite sent to:', email)
+  const { sendInvite } = useInvite()
+  const handleInviteClick = async () => {
+    if (email && project?._id) {
+      if (user?._id) {
+        await sendInvite(user._id, email, project._id) // Gọi hàm sendInvite từ hook
+      } else {
+        toast.error('User not found')
+      }
+    } else {
+      toast.error('Please enter a valid email')
+    }
   }
   const handleDeleteClick = async () => {
     if (!project) return
@@ -38,7 +50,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
     setLoading(true)
     setShowSuccessModal(false)
     try {
-      const  response  = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}`, { withCredentials: true })
+      const response = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}`, { withCredentials: true })
 
       if (response.data.success) {
         setShowSuccessModal(true)
@@ -59,6 +71,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   return (
     <div className='p-6 max-w-6xl mx-auto'>
       <h2 className='text-2xl font-bold text-purple-700'>My Group</h2>
+
       <Card className='mt-4'>
         <CardContent className='p-6'>
           <div className='flex items-center gap-4'>

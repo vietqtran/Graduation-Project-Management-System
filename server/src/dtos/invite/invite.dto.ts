@@ -1,4 +1,4 @@
-import {  IsMongoId, IsString, IsEnum, IsNotEmpty } from 'class-validator'
+import {  IsMongoId, IsString, IsEnum, IsNotEmpty, IsEmail } from 'class-validator'
 import { InviteStatus } from '@/constants/invite-status-enum'
 
 export class InviteDto {
@@ -6,11 +6,10 @@ export class InviteDto {
   @IsString()
   @IsMongoId({ each: true, message: 'Sender user must be a valid MongoDB ID.' })
   from_user : string 
-
-  @IsNotEmpty()
-  @IsString()
-  @IsMongoId({ each: true, message: 'Sender user must be a valid MongoDB ID.' })
-  to_user : string 
+ 
+  @IsEmail()
+  @IsNotEmpty({ message: 'Email is required' })
+  to_user : string
 
   @IsNotEmpty()
   @IsString()
