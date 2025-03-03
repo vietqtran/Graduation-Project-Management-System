@@ -36,16 +36,19 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
   const { upload } = useUpload()
   const [uploading, setUploading] = useState(false)
   const [documentId, setDocumentId] = useState<string | null>(null)
-  const [leaders, setLeaders] = useState<{ id: string; name: string }[]>([])
+  const [leaders, setLeaders] = useState<{ id: string; email: string }[]>([])
 
   useEffect(() => {
     async function fetchLeaders() {
       try {
-        const response = await instance.get('/project/get-leader-from-project')
-        if (response.success) {
-          setLeaders(response.data)
+        const response = await instance.get('/project/get-project-leader-for-supervisor', {
+          withCredentials: true
+        })
+        console.log('Leaders data:', response.data.data) // Debug API response
+        if (Array.isArray(response.data.data)) {
+          setLeaders(response.data.data)
         } else {
-          console.error('Failed to fetch leaders')
+          console.error('API did not return an array:', response.data)
         }
       } catch (error) {
         console.error('Error fetching leaders:', error)
@@ -103,9 +106,20 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
               name='to_user'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>To User</FormLabel>
+                  <FormLabel>To User (Leader)</FormLabel>
                   <FormControl>
-                    <Input type='text' placeholder='Enter recipient ID' {...field} />
+                    <select {...field} className='border rounded p-2 w-full'>
+                      <option value=''>Select a leader</option>
+                      {Array.isArray(leaders) && leaders.length > 0 ? (
+                        leaders.map((leader) => (
+                          <option key={leader.id} value={leader.id}>
+                            {leader.email}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>Loading leaders...</option>
+                      )}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +147,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
                 <FormItem>
                   <FormLabel>From User</FormLabel>
                   <FormControl>
-                    <Input type='text' placeholder='Enter sender ID' {...field} />
+                    <Input disabled type='text' placeholder='Enter sender ID' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

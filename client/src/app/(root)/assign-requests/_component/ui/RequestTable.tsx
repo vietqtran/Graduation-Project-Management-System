@@ -5,13 +5,15 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 
 interface Request {
   id: number
+  remark: string
+  to_user: string
+  type: string
+  from_user: string
+  document: string
+  due_date?: string // Có thể null hoặc undefined
   status: string
-  amount: number
-  customer: string
-  site: string
-  date: string
-  scheduled: string
-  assignedTo: string
+  create_at?: string // Có thể null hoặc undefined
+  update_at?: string // Có thể null hoặc undefined
 }
 
 interface RequestTableProps {
@@ -19,29 +21,29 @@ interface RequestTableProps {
 }
 
 const RequestTable: React.FC<RequestTableProps> = ({ requests }) => {
+  console.log('data', requests)
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Status</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Site</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Scheduled</TableHead>
-          <TableHead>Assigned To</TableHead>
+          <TableHead>Remark</TableHead>
+          <TableHead>Updated At</TableHead>
+          <TableHead>Created At</TableHead>
+          <TableHead>Due Date</TableHead>
+          <TableHead>To User</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {requests.map((request) => (
           <TableRow key={request.id}>
-            <TableCell>{request.status}</TableCell>
-            <TableCell>${request.amount}</TableCell>
-            <TableCell>{request.customer}</TableCell>
-            <TableCell>{request.site}</TableCell>
-            <TableCell>{request.date}</TableCell>
-            <TableCell>{request.scheduled}</TableCell>
-            <TableCell>{request.assignedTo}</TableCell>
+            <TableCell>{request.status || 'N/A'}</TableCell>
+            <TableCell>{request.remark || 'N/A'}</TableCell>
+            <TableCell>{request.create_at ? new Date(request.create_at).toLocaleDateString() : 'N/A'}</TableCell>
+            <TableCell>{request.update_at ? new Date(request.update_at).toLocaleDateString() : 'N/A'}</TableCell>
+            <TableCell>{request.due_date ? new Date(request.due_date).toLocaleDateString() : 'N/A'}</TableCell>
+            <TableCell>{request.to_user || 'N/A'}</TableCell>
           </TableRow>
         ))}
       </TableBody>
