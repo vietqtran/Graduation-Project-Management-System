@@ -2,21 +2,24 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { FaEdit, FaTrashAlt, FaInfoCircle } from 'react-icons/fa' // Import các icon từ FontAwesome
+import { FaEdit, FaTrashAlt, FaInfoCircle } from 'react-icons/fa'
 import instance from '@/utils/axios'
 
 export interface Project {
   _id: string
   name: string
   description: string
+  majorId?: string // Thêm `majorId` để lọc
+}
+
+interface TopicListProps {
+  selectedMajorId: string | null // Major đang được chọn
 }
 
 const parseDescription = (desc: string) => {
-  // Dùng regex để tách từng phần
- const match = desc.match(
-  /^(.*?)\s*Requirements:\s*([.\s\S]*?)\s*Prerequisites:\s*([.\s\S]*?)\s*Guidelines:\s*([.\s\S]*)$/
-)
-
+  const match = desc.match(
+    /^(.*?)\s*Requirements:\s*([.\s\S]*?)\s*Prerequisites:\s*([.\s\S]*?)\s*Guidelines:\s*([.\s\S]*)$/
+  )
 
   if (match) {
     return {
@@ -27,7 +30,6 @@ const parseDescription = (desc: string) => {
     }
   }
 
-  // Nếu không tách được, trả về toàn bộ dưới dạng description
   return {
     mainDescription: desc,
     requirements: 'N/A',
@@ -36,17 +38,16 @@ const parseDescription = (desc: string) => {
   }
 }
 
-
-const TopicList = () => {
+const TopicList: React.FC<TopicListProps> = ({ selectedMajorId }) => {
   const [topics, setTopics] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
-  const [hasData, setHasData] = useState(true)  
+  const [hasData, setHasData] = useState(true)
 
   useEffect(() => {
     const fetchTopics = async () => {
       try {
         const response = await instance.get('/project/get-project-with-null-status', { withCredentials: true })
-       console.log(response.data)
+        console.log(response.data)
         if (response.data.data.length > 0) {
           setTopics(response.data.data)
           setHasData(true)
@@ -64,14 +65,19 @@ const TopicList = () => {
     fetchTopics()
   }, [])
 
-  return (
+  // **Lọc topics theo `selectedMajorId`**
+  const filteredTopics = selectedMajorId
+    ? topics.filter(topic => topic.majorId === selectedMajorId)
+    : topics
+
+ return (
   <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
     <h2 className='text-lg font-semibold mb-2'>Available Topics</h2>
 
     {loading ? (
       <div className="text-center text-gray-500">Loading...</div>
-    ) : hasData ? (
-      topics.map((topic) => {
+    ) : hasData && filteredTopics.length > 0 ? (
+      filteredTopics.map((topic) => {
         const { mainDescription, requirements, prerequisites, guidelines } = parseDescription(topic.description)
 
         return (

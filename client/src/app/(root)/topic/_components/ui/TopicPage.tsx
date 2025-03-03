@@ -17,6 +17,7 @@ const TopicPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(null)
+  const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null)
 
   const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
     setLoading(true)
@@ -50,8 +51,8 @@ const TopicPage = () => {
     <div>
       <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} />
       <div className='flex gap-6 mt-4'>
-        <MajorSelection />
-        <TopicList />
+        <MajorSelection onMajorSelect={setSelectedMajorId} />
+        <TopicList selectedMajorId={selectedMajorId} />
       </div>
 
       {/* Hiển thị thông báo */}
