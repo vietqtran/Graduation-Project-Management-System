@@ -380,16 +380,16 @@ async createProjectAsTopic(
           major: projectData.major, // Bắt buộc
           field: projectData.field, // Bắt buộc
           campus: projectData.campus, // Bắt buộc
-          category: projectData.category, // Bắt buộc
-          supervisor: projectData.supervisor || [], // Có thể trống
-          members: [], // Bắt buộc: Đặt rỗng vì member = 0
-          documents: projectData.documents || [], // Có thể trống
-          histories: [], // Mặc định rỗng
-          tasks: [], // Mặc định rỗng
-          mark: null, // Mặc định
-          slow_count: 0, // Mặc định
-          status: null, // Mặc định
-          stage: 1, // Mặc định
+          category: projectData.category,  
+          supervisor: projectData.supervisor || [],  
+          members: [],  
+          documents: projectData.documents || [],  
+          histories: [], 
+          tasks: [], 
+          mark: null,  
+          slow_count: 0,  
+          status: null,  
+          stage: 1,  
           created_at: new Date(),
           updated_at: new Date()
         }
@@ -404,7 +404,6 @@ async createProjectAsTopic(
     return project
   })
 }
-
 
 async getProjectsWithNullStatus() {
   return runTransaction(async (session) => {
@@ -516,16 +515,63 @@ async getTopicDetail(projectId: string) {
 
 async getProjectsBySupervisor(supervisorId: string) {
   return runTransaction(async (session) => {
-    console.log('🔍 Supervisor ID:', supervisorId);
-
-    // Kiểm tra và chuyển supervisorId thành ObjectId
-    if (!Types.ObjectId.isValid(supervisorId)) {
-      throw new HttpException(`Invalid Supervisor ID format: ${supervisorId}`, 400);
+    console.log('🔍 Supervisor ID from token:', supervisorId);
+    
+    // Log a sample project to see structure
+    const sampleProject = await this.projectModel.findOne().lean().exec();
+    console.log('Sample project supervisor field structure:', sampleProject?.supervisor);
+    
+    // Try multiple query approaches and log results
+    console.log('Attempting string query...');
+    const stringQuery = await this.projectModel
+      .find({ supervisor: supervisorId })
+      .lean()
+      .exec();
+    console.log(`String query found ${stringQuery.length} projects`);
+    
+    console.log('Attempting array string query...');
+    const arrayStringQuery = await this.projectModel
+      .find({ supervisor: { $in: [supervisorId] } })
+      .lean()
+      .exec();
+    console.log(`Array string query found ${arrayStringQuery.length} projects`);
+    
+    if (Types.ObjectId.isValid(supervisorId)) {
+      const objectId = new Types.ObjectId(supervisorId);
+      console.log('Attempting ObjectId query...');
+      const objectIdQuery = await this.projectModel
+        .find({ supervisor: objectId })
+        .lean()
+        .exec();
+      console.log(`ObjectId query found ${objectIdQuery.length} projects`);
+      
+      console.log('Attempting array ObjectId query...');
+      const arrayObjectIdQuery = await this.projectModel
+        .find({ supervisor: { $in: [objectId] } })
+        .lean()
+        .exec();
+      console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`);
     }
-    const objectId = new Types.ObjectId(supervisorId); // Chuyển thành ObjectId
-
+    
+    // Direct MongoDB query to compare
+    console.log('Attempting raw MongoDB query...');
+    const rawQuery = await this.projectModel.collection.find({ 
+      'supervisor': { $in: [supervisorId] } 
+    }).toArray();
+    console.log(`Raw MongoDB query found ${rawQuery.length} documents`);
+    
+    // Your original query with all the populates
     const projects = await this.projectModel
-      .find({ supervisor: { $in: [objectId] } }) // Dùng ObjectId thay vì string
+      .find({ 
+        $or: [
+          { supervisor: supervisorId },
+          { supervisor: { $in: [supervisorId] } },
+          ...(Types.ObjectId.isValid(supervisorId) ? [
+            { supervisor: new Types.ObjectId(supervisorId) },
+            { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
+          ] : [])
+        ]
+      })
       .populate('leader')
       .populate('supervisor')
       .populate('major')
@@ -546,14 +592,13 @@ async getProjectsBySupervisor(supervisorId: string) {
       .exec();
 
     if (!projects || projects.length === 0) {
-      throw new HttpException(`No projects found for this supervisor ${supervisorId}`, 404);
+      console.log('No projects found for supervisor after all query attempts');
+      return [];
     }
 
     return projects;
   });
 }
-
-
 
 }
 

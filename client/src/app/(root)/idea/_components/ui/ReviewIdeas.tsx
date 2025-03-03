@@ -29,8 +29,8 @@ const ReviewIdeas = () => {
   useEffect(() => {
     const fetchProjectIdeas = async () => {
       try {
-        const response = await instance.get('/get-projects-by-supervisor', { withCredentials: true })
-        if (response.data.length > 0) {
+        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
+        if (response.data.data.length > 0) {
           setProjectIdeas(response.data)
           setHasData(true)
         } else {
@@ -83,7 +83,7 @@ const ReviewIdeas = () => {
           value={statusFilter}
           onChange={setStatusFilter}
           options={statusOptions}
-          placeholder='All Statuses'
+          placeholder='All Status'
         />
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>
