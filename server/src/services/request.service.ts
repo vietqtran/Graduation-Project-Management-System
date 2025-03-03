@@ -10,6 +10,7 @@ import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
 import { runTransaction } from '@/helpers/transaction-helper'
+import { IUploadDocument } from '@/models/document.model'
 
 dotenv.config()
 
@@ -26,34 +27,32 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-async createRequest(
-  requestData: Omit<IRequest, '_id' | 'approve_user' | 'status' | 'created_at' | 'updated_at'>
-) {
-  return runTransaction(async (session) => {
-    // Tạo request với giá trị mặc định
-    const request = await this.requestModel.create(
-      [
-        {
-          to_user: requestData.to_user, // Bắt buộc
-          from_user: requestData.from_user, // Bắt buộc
-          type: requestData.type, // Bắt buộc
-          remark: requestData.remark || '', // Có thể trống
-          status: 'pending', // Mặc định là 'pending'
-          approve_user: null, // Chưa có người duyệt
-          created_at: new Date(),
-          updated_at: new Date()
-        }
-      ],
-      { session }
-    )
+  async createRequest(requestData: Omit<IRequest, '_id' | 'approve_user' | 'status' | 'created_at' | 'updated_at'>) {
+    return runTransaction(async (session) => {
+      // Tạo request với giá trị mặc định
+      const request = await this.requestModel.create(
+        [
+          {
+            to_user: requestData.to_user, // Bắt buộc
+            from_user: requestData.from_user, // Bắt buộc
+            type: requestData.type, // Bắt buộc
+            remark: requestData.remark || '', // Có thể trống
+            status: 'pending', // Mặc định là 'pending'
+            approve_user: null, // Chưa có người duyệt
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+        ],
+        { session }
+      )
 
-    if (!request) {
-      throw new HttpException('Error at creating request', 400)
-    }
+      if (!request) {
+        throw new HttpException('Error at creating request', 400)
+      }
 
-    return request
-  })
-}
+      return request
+    })
+  }
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
     const session = await mongoose.startSession()
@@ -138,18 +137,40 @@ async createRequest(
   async getRequestById(requestId: string) {
     return this.requestModel.findById(requestId).populate('from_user').populate('to_user').populate('approve_user')
   }
-
   async getUserRequests(userId: string) {
-    return this.requestModel
+    const requests = await this.requestModel
       .find({ from_user: userId })
+      .populate('from_user') // Lấy toàn bộ thông tin của from_user
+      .populate('to_user') // Lấy toàn bộ thông tin của to_user
+      .populate('approve_user') // Lấy toàn bộ thông tin của approve_user
+      .lean() // Trả về object thuần, giúp dễ dàng format dữ liệu
+
+    return requests.map((request) => ({
+      _id: request._id?.toString() || null, // Chuyển _id thành string
+      to_user: request.to_user || null,
+      from_user: request.from_user || null,
+      approve_user: request.approve_user || null,
+      type: request.type || null,
+      remark: request.remark || null,
+      due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
+      created_at: request.createdAt ? new Date(request.createdAt).toISOString() : null,
+      updated_at: request.updatedAt ? new Date(request.updatedAt).toISOString() : null,
+      status: request.status || null
+    }))
+  }
+
+  async getAllRequests(tokenPayload: any) {
+    const userId = tokenPayload._id // Lấy userId từ token
+
+    if (!userId) {
+      throw new Error('User ID not found in token')
+    }
+
+    return this.requestModel
+      .find({ from_user: userId }) // ✅ Lọc theo from_user
       .populate('from_user')
       .populate('to_user')
       .populate('approve_user')
-  }
-
-  async getAllRequests(status?: RequestStatus) {
-    const query = status ? { status } : {}
-    return this.requestModel.find(query).populate('from_user').populate('to_user').populate('approve_user')
   }
 
   async deleteRequest(requestId: string, userId: string) {

@@ -22,7 +22,7 @@ const ReviewIdeas = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>([])
   const [loading, setLoading] = useState(true)
-  const [hasData, setHasData] = useState(true) // Kiểm tra xem có dữ liệu hay không
+  const [hasData, setHasData] = useState(true)
   const itemsPerPage = 5
   const availableSlots = 10
 
@@ -30,15 +30,17 @@ const ReviewIdeas = () => {
     const fetchProjectIdeas = async () => {
       try {
         const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
-        if (response.data.data.length > 0) {
-          setProjectIdeas(response.data)
+        if (response.data.data && response.data.data.length > 0) {
+          setProjectIdeas(response.data.data)
           setHasData(true)
         } else {
           setHasData(false)
+          setProjectIdeas([])
         }
       } catch (error) {
         console.error('Error fetching project ideas:', error)
         setHasData(false)
+        setProjectIdeas([])
       } finally {
         setLoading(false)
       }
@@ -47,15 +49,19 @@ const ReviewIdeas = () => {
     fetchProjectIdeas()
   }, [])
 
-  const filteredIdeas = projectIdeas.filter((idea) => {
-    const matchesSearch =
-      idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.type.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGroup = !groupFilter || idea.status === groupFilter
-    const matchesStatus = !statusFilter || idea.status === statusFilter
+  const filteredIdeas = hasData
+    ? projectIdeas.filter((idea) => {
+        if (!idea || !idea.remark || !idea.type || !idea.status) return false
+        
+        const matchesSearch =
+          idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          idea.type.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesGroup = !groupFilter || idea.status === groupFilter
+        const matchesStatus = !statusFilter || idea.status === statusFilter
 
-    return matchesSearch && matchesGroup && matchesStatus
-  })
+        return matchesSearch && matchesGroup && matchesStatus
+      })
+    : []
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage

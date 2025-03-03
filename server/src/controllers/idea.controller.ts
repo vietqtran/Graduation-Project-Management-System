@@ -32,5 +32,4 @@ export class IdeaController {
       next(error)
     }
   })
-  
 }
