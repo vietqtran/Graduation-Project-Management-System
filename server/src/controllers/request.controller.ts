@@ -1,15 +1,11 @@
-import { Request, Response, NextFunction } from 'express'
+import { NextFunction, Request, Response } from 'express'
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string
-  }
-}
-import { RequestService } from '@/services/request.service'
-import { HttpException } from '@/shared/exceptions/http.exception'
-import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { ApproveRequestDto } from '@/dtos/request/approve-request.dto'
 import { DenyRequestDto } from '@/dtos/request/deny-request.dto'
+import { asyncHandler } from '@/helpers/async-handler'
+import { ResponseHandler } from '@/middlewares/response-handler.middleware'
+import { RequestService } from '@/services/request.service'
+import { HttpException } from '@/shared/exceptions/http.exception'
 
 export class RequestController {
   private readonly requestService: RequestService
@@ -58,18 +54,9 @@ export class RequestController {
     }
   }
 
-  async createRequest(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new HttpException('User not authenticated', 401)
-      }
-      const { id } = req.user
-      const createRequestDto = req.body
-      const request = await this.requestService.createRequest(id, createRequestDto)
-      ResponseHandler.sendSuccess(res, request, 'Request created successfully')
-    } catch (error) {
-      ResponseHandler.sendError(res, error)
-      next(error)
-    }
-  }
+  createRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const requestData = req.body
+  const request = await this.requestService.createRequest(requestData)
+  ResponseHandler.sendSuccess(res, request, 'Create request successfully')
+})
 }

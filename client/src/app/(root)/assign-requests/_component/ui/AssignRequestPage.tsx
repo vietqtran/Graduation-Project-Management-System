@@ -103,11 +103,6 @@ const RequestsPage: React.FC = () => {
     console.log('Clear filter')
   }
 
-  const handleAddRequest = () => {
-    // Logic mở modal hoặc form để thêm request
-    console.log('Add request clicked')
-  }
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     // Gọi API hoặc xử lý phân trang
@@ -116,12 +111,7 @@ const RequestsPage: React.FC = () => {
 
   return (
     <div className='p-4'>
-      <FilterBar
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onClearFilter={handleClearFilter}
-        onAddRequest={handleAddRequest}
-      />
+      <FilterBar onSearch={handleSearch} onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
 
       <RequestTable requests={requests} />
 
@@ -130,4 +120,4 @@ const RequestsPage: React.FC = () => {
   )
 }
 
-export default RequestsPage // Đổi tên component từ JobsPage thành RequestsPage
+export default RequestsPage

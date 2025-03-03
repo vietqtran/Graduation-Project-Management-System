@@ -79,12 +79,7 @@ const ReviewIdeas = () => {
           <IdeaSearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
         <IdeaSelect value={groupFilter} onChange={setGroupFilter} options={groupOptions} placeholder='All Groups' />
-        <IdeaSelect
-          value={statusFilter}
-          onChange={setStatusFilter}
-          options={statusOptions}
-          placeholder='All Status'
-        />
+        <IdeaSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder='All Status' />
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>
 

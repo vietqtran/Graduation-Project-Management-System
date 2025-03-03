@@ -101,4 +101,17 @@ getProjectsBySupervisor = asyncHandler(async (req: Request, res: Response, next:
   }
 })
 
+getProjectLeaderForSupervisor = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const tokenPayload = getUser(req)
+    const leaders = await this.projectService.getProjectLeadersBySupervisor(tokenPayload._id)
+
+    return ResponseHandler.sendSuccess(res, leaders, 'Get leaders from projects successfully')
+  } catch (error) {
+    return ResponseHandler.sendError(res, error)
+  }
+})
+
+ 
+
 }

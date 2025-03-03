@@ -600,6 +600,59 @@ async getProjectsBySupervisor(supervisorId: string) {
   });
 }
 
+
+async getProjectLeadersBySupervisor(supervisorId: string) {
+  if (!supervisorId) {
+    throw new HttpException('Supervisor ID is required', 400);
+  }
+
+  return runTransaction(async (session) => {
+    try {
+      console.log('🆔 Supervisor ID:', supervisorId);
+
+      const supervisorObjectId = new Types.ObjectId(supervisorId);
+
+      // Tìm project có leader hợp lệ
+      const projects = await this.projectModel
+        .find({
+          supervisor: supervisorObjectId,
+          leader: { $ne: null } // Chỉ lấy project có leader không null
+        })
+        .populate<{ leader: { id: string; name: string; email: string } }>(
+          'leader',
+          'id name email'
+        )
+        .session(session)
+        .exec();
+
+      console.log('📌 Projects found:', projects.length);
+
+      if (!projects.length) {
+        return []; // Không có leader thì trả về mảng rỗng thay vì lỗi
+      }
+
+      // Lọc danh sách leader không trùng lặp
+      const leaders: { id: string; name: string; email: string }[] = [];
+
+      for (const project of projects) {
+        if (project.leader && !leaders.some((l) => l.id === project.leader.id)) {
+          leaders.push(project.leader);
+        }
+      }
+
+      console.log('👨‍💼 Leaders found:', leaders);
+
+      return leaders;
+    } catch (error) {
+      console.error('❌ Error in getProjectLeadersBySupervisor:', error);
+    }
+  });
+}
+
+
+
+
+
 }
 
 export default new ProjectService()

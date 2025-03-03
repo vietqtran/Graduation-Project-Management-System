@@ -9,6 +9,7 @@ import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
 import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
+import { runTransaction } from '@/helpers/transaction-helper'
 
 dotenv.config()
 
@@ -25,45 +26,34 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  async createRequest(userId: string, createRequestDto: CreateRequestDto) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
+async createRequest(
+  requestData: Omit<IRequest, '_id' | 'approve_user' | 'status' | 'created_at' | 'updated_at'>
+) {
+  return runTransaction(async (session) => {
+    // Tạo request với giá trị mặc định
+    const request = await this.requestModel.create(
+      [
+        {
+          to_user: requestData.to_user, // Bắt buộc
+          from_user: requestData.from_user, // Bắt buộc
+          type: requestData.type, // Bắt buộc
+          remark: requestData.remark || '', // Có thể trống
+          status: 'pending', // Mặc định là 'pending'
+          approve_user: null, // Chưa có người duyệt
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ],
+      { session }
+    )
 
-    try {
-      const user = await this.userModel.findById(userId).session(session)
-      if (!user) {
-        throw new HttpException('User not found', 404)
-      }
-
-      const { to_user, type, remark } = createRequestDto
-
-      const createdRequest = await this.requestModel.create(
-        [
-          {
-            from_user: userId,
-            to_user,
-            type,
-            status: RequestStatus.PENDING,
-            remark
-          }
-        ],
-        { session }
-      )
-
-      if (!createdRequest[0]) {
-        throw new HttpException("Can't create request", 500)
-      }
-
-      await session.commitTransaction()
-
-      return createdRequest[0]
-    } catch (error) {
-      await session.abortTransaction()
-      throw error
-    } finally {
-      session.endSession()
+    if (!request) {
+      throw new HttpException('Error at creating request', 400)
     }
-  }
+
+    return request
+  })
+}
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
     const session = await mongoose.startSession()
