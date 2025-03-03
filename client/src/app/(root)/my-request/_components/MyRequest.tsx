@@ -6,14 +6,14 @@ import { useAppSelector } from '@/hooks'
 import  { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Field } from '@/types/field.type'
 import { Major } from '@/types/major.type'
-
 import { User } from '@/types/user.type'
+import { Project } from '@/types/project.type' 
 
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
   const [invites, setInvites] = useState<any[]>([])
-  const [selectedProject, setSelectedProject] = useState<any | null>(null) // State to hold selected project
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const { getInviteByUserId, acceptInvite, rejectInvite } = useInvite()
 
   useEffect(() => {
@@ -62,12 +62,12 @@ const MyRequest = () => {
     }
   }
 
-  const handleProjectClick = (project: any) => {
-    setSelectedProject(project) // Set selected project to show in the modal
+  const handleProjectClick = (project: Project) => {
+    setSelectedProject(project)
   }
 
   const closeModal = () => {
-    setSelectedProject(null) // Close modal by resetting selected project
+    setSelectedProject(null)
   }
 
   return (
@@ -98,7 +98,7 @@ const MyRequest = () => {
                     <td className='border p-3'>{index + 1}</td>
                     <td
                       className='border p-3 text-blue-600 hover:underline cursor-pointer'
-                      onClick={() => handleProjectClick(invite.project)} // Handle project click
+                      onClick={() => handleProjectClick(invite.project)} 
                     >
                       {invite.project.name}
                     </td>
@@ -126,7 +126,7 @@ const MyRequest = () => {
                         </>
                       )}
                     </td>
-                    <td className='border p-3'>{new Date(invite.updated_at).toLocaleString()}</td>
+                    <td className='border p-3'>{new Date(invite.updated_at).toLocaleDateString()}</td>
                   </tr>
                 ))
               ) : (
@@ -171,7 +171,7 @@ const MyRequest = () => {
             <div className='mt-6'>
               <p className='font-bold'>Members</p>
               <div className='mt-2'>
-                {selectedProject.members.map((member: any) => (
+                {selectedProject.members.map((member: User) => (
                   <div key={member._id} className='flex items-center gap-3'>
                     <Avatar className='w-12 h-12'>
                       <AvatarImage src={member.avatar} alt='User Avatar' />

@@ -63,11 +63,11 @@ export class InviteService {
 
       if (existingInvite) {
         existingInvite.set('status', InviteStatus.PENDING);
-        existingInvite.set('updated_at', new Date()); // Cập nhật thời gian cập nhật
+        existingInvite.set('updated_at', new Date()); 
         await existingInvite.save({ session }); // Mongoose sẽ tự động cập nhật `updated_at`
-        await session.commitTransaction() // Commit transaction
+        await session.commitTransaction() 
         return existingInvite
-      } // Kiểm tra xem đã có lời mời chưa, nếu có thì cập nhật lại timestamp của lời mời
+      } 
       else{
         const createInvite = await this.inviteModel.create(
           [
