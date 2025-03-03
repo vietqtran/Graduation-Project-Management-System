@@ -79,21 +79,26 @@ const ReviewIdeas = () => {
           <IdeaSearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
         <IdeaSelect value={groupFilter} onChange={setGroupFilter} options={groupOptions} placeholder='All Groups' />
-        <IdeaSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder='All Statuses' />
+        <IdeaSelect
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={statusOptions}
+          placeholder='All Statuses'
+        />
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className='text-center text-gray-500'>Loading...</div>
       ) : hasData ? (
         <>
           <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
           <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center mt-10">
-          <Image src="/gif/no-data.gif" alt="No data" width={100} height={100} />
-          <p className="text-gray-500 mt-2">No Data</p>
+        <div className='flex flex-col items-center justify-center mt-10'>
+          <Image src='/gif/no-data.gif' alt='No data' width={100} height={100} />
+          <p className='text-gray-500 mt-2'>No Data</p>
         </div>
       )}
     </div>

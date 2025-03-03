@@ -12,11 +12,11 @@ export interface Project {
   majorId?: string // Thêm `majorId` để lọc
 }
 interface TopicListProps {
-  selectedMajorId: string | null;
-  searchTerm: string;
-  sortOrder: string;
-  filterField: string;
-  refresh: boolean;
+  selectedMajorId: string | null
+  searchTerm: string
+  sortOrder: string
+  filterField: string
+  refresh: boolean
 }
 
 const parseDescription = (desc: string) => {
@@ -69,64 +69,62 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
   }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
 
   // **Lọc topics theo `selectedMajorId`, `searchTerm`, và `filterField`**
-  let filteredTopics = selectedMajorId ? topics.filter(topic => topic.majorId === selectedMajorId) : topics
-  filteredTopics = filteredTopics.filter(topic => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.majorId === selectedMajorId) : topics
+  filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
   if (filterField !== 'all') {
-    filteredTopics = filteredTopics.filter(topic => topic.majorId === filterField)
+    filteredTopics = filteredTopics.filter((topic) => topic.majorId === filterField)
   }
 
   // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
 
+  return (
+    <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
+      <h2 className='text-lg font-semibold mb-2'>Available Topics</h2>
 
- return (
-  <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
-    <h2 className='text-lg font-semibold mb-2'>Available Topics</h2>
+      {loading ? (
+        <div className='text-center text-gray-500'>Loading...</div>
+      ) : hasData && filteredTopics.length > 0 ? (
+        filteredTopics.map((topic) => {
+          const { mainDescription, requirements, prerequisites, guidelines } = parseDescription(topic.description)
 
-    {loading ? (
-      <div className="text-center text-gray-500">Loading...</div>
-    ) : hasData && filteredTopics.length > 0 ? (
-      filteredTopics.map((topic) => {
-        const { mainDescription, requirements, prerequisites, guidelines } = parseDescription(topic.description)
+          return (
+            <div key={topic._id} className='p-3 border rounded-lg bg-gray-100 w-full relative'>
+              <h3 className='font-medium text-lg'>{topic.name}</h3>
+              <p className='text-sm text-gray-600'>{mainDescription}</p>
+              <p className='text-sm'>
+                <strong>Requirements:</strong> {requirements}
+              </p>
+              <p className='text-sm'>
+                <strong>Prerequisites:</strong> {prerequisites}
+              </p>
+              <p className='text-sm'>
+                <strong>Guidelines:</strong> {guidelines}
+              </p>
 
-        return (
-          <div key={topic._id} className='p-3 border rounded-lg bg-gray-100 w-full relative'>
-            <h3 className='font-medium text-lg'>{topic.name}</h3>
-            <p className='text-sm text-gray-600'>{mainDescription}</p>
-            <p className='text-sm'>
-              <strong>Requirements:</strong> {requirements}
-            </p>
-            <p className='text-sm'>
-              <strong>Prerequisites:</strong> {prerequisites}
-            </p>
-            <p className='text-sm'>
-              <strong>Guidelines:</strong> {guidelines}
-            </p>
-
-            {/* Các icon sửa, xóa và chi tiết */}
-            <div className='absolute top-2 right-2 flex gap-3'>
-              <button className='text-blue-500 hover:text-blue-700' title='Edit'>
-                <FaEdit size={20} />
-              </button>
-              <button className='text-red-500 hover:text-red-700' title='Delete'>
-                <FaTrashAlt size={20} />
-              </button>
-              <button className='text-green-500 hover:text-green-700' title='Detail'>
-                <FaInfoCircle size={20} />
-              </button>
+              {/* Các icon sửa, xóa và chi tiết */}
+              <div className='absolute top-2 right-2 flex gap-3'>
+                <button className='text-blue-500 hover:text-blue-700' title='Edit'>
+                  <FaEdit size={20} />
+                </button>
+                <button className='text-red-500 hover:text-red-700' title='Delete'>
+                  <FaTrashAlt size={20} />
+                </button>
+                <button className='text-green-500 hover:text-green-700' title='Detail'>
+                  <FaInfoCircle size={20} />
+                </button>
+              </div>
             </div>
-          </div>
-        )
-      })
-    ) : (
-      <div className="flex flex-col items-center justify-center mt-10">
-        <Image src="/gif/no-data.gif" alt="No data" width={100} height={100} />
-        <p className="text-gray-500 mt-2">No Data for {selectedMajorId}</p>
-      </div>
-    )}
-  </div>
-)
-
+          )
+        })
+      ) : (
+        <div className='flex flex-col items-center justify-center mt-10'>
+          <Image src='/gif/no-data.gif' alt='No data' width={100} height={100} />
+          <p className='text-gray-500 mt-2'>No Data for {selectedMajorId}</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default TopicList

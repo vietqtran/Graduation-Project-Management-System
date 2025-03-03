@@ -8,7 +8,7 @@ interface Major {
 }
 
 interface MajorSelectProps {
-  onMajorSelect: (majorId: string| null, selectAll?:boolean) => void; // Thêm prop để truyền major ID khi bấm
+  onMajorSelect: (majorId: string | null, selectAll?: boolean) => void // Thêm prop để truyền major ID khi bấm
 }
 
 const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
@@ -37,29 +37,34 @@ const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
     fetchMajors()
   }, [])
   return (
-  <div className='w-1/3 border rounded-lg p-4 self-start flex flex-col gap-2'>
-    <h2 className='text-lg font-semibold mb-2'>Select Major</h2>
+    <div className='w-1/3 border rounded-lg p-4 self-start flex flex-col gap-2'>
+      <h2 className='text-lg font-semibold mb-2'>Select Major</h2>
 
-    {loading ? (
-      <div className="text-center text-gray-500">Loading...</div>
-    ) : hasData ? (
-     <>
-     <button className='p-2 rounded-md border bg-blue-700 border-gray-300 ' onClick={()=> onMajorSelect(null, true)}>Select all majors</button>
-      {majors.map(major => (
-        <button
-          key={major._id}
-          className='p-2 rounded-md border border-gray-300 hover:bg-gray-100'
-          onClick={() => onMajorSelect(major._id, false)}
-        >
-          {major.name}
-        </button>
-      ))}
-      </>
-    ) : (
-      <div>No majors available</div>
-    )}
-  </div>
-)}
+      {loading ? (
+        <div className='text-center text-gray-500'>Loading...</div>
+      ) : hasData ? (
+        <>
+          <button
+            className='p-2 rounded-md border bg-blue-700 border-gray-300 '
+            onClick={() => onMajorSelect(null, true)}
+          >
+            Select all majors
+          </button>
+          {majors.map((major) => (
+            <button
+              key={major._id}
+              className='p-2 rounded-md border border-gray-300 hover:bg-gray-100'
+              onClick={() => onMajorSelect(major._id, false)}
+            >
+              {major.name}
+            </button>
+          ))}
+        </>
+      ) : (
+        <div>No majors available</div>
+      )}
+    </div>
+  )
+}
 
-
-export default MajorSelection;
+export default MajorSelection

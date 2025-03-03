@@ -6,7 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PlusCircle } from 'lucide-react'
 import { useState } from 'react'
 
-export default function TopicSearchBar({ onOpenForm, onSearch }: { onOpenForm: () => void;onSearch: (searchTerm: string, sortOrder: string, filterField: string) => void }) {
+export default function TopicSearchBar({
+  onOpenForm,
+  onSearch
+}: {
+  onOpenForm: () => void
+  onSearch: (searchTerm: string, sortOrder: string, filterField: string) => void
+}) {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
   const [filterField, setFilterField] = useState('all')
@@ -25,7 +31,6 @@ export default function TopicSearchBar({ onOpenForm, onSearch }: { onOpenForm: (
     setFilterField(value)
     onSearch(searchTerm, sortOrder, value)
   }
-
 
   return (
     <div className='p-4 shadow-md rounded bg-white'>
