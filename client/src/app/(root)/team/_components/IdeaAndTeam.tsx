@@ -50,7 +50,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
     setLoading(true)
     setShowSuccessModal(false)
     try {
-      const response = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}`, { withCredentials: true })
+      const response = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}&userId=${user?._id}`, { withCredentials: true })
 
       if (response.data.success) {
         setShowSuccessModal(true)
@@ -85,18 +85,20 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                 Created at: {project?.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-            <div className='flex gap-3 p-6 ml-auto'>
-              <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
-                + Update Idea
-              </Button>
-              <Button
-                onClick={handleDeleteClick}
-                className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
-                disabled={loading}
-              >
-                {loading ? 'Deleting...' : 'Delete Idea'}
-              </Button>
-            </div>
+           {user?._id === project?.leader && (
+             <div className='flex gap-3 p-6 ml-auto'>
+             <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
+               + Update Idea
+             </Button>
+             <Button
+               onClick={handleDeleteClick}
+               className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
+               disabled={loading}
+             >
+               {loading ? 'Deleting...' : 'Delete Idea'}
+             </Button>
+           </div>
+           )}
           </div>
           <div className='mt-4 grid grid-cols-2 gap-4'>
             <div>

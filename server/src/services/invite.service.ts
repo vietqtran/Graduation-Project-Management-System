@@ -8,6 +8,7 @@ import { InviteStatus } from '@/constants/invite-status-enum'
 import UserModel, { IUser } from '@/models/user.model'
 import ProjectModel, { IProject } from '@/models/project.model'
 import e from 'express'
+import { USER_STATUS } from '@/constants/status'
 
 export class InviteService {
   private readonly inviteModel: Model<IInvite>
@@ -42,10 +43,10 @@ export class InviteService {
         throw new HttpException('Project not found', 404) // Kiểm tra xem project đó có tồn tại không
       }
       const checkInOtherProject = await this.projectModel
-      .findOne({
-        members: { $in: [existingUser?._id] }
-      })
-      .session(session)
+        .findOne({
+          members: { $in: [existingUser?._id] }
+        })
+        .session(session)
       if (existingProject.members.includes(existingUser._id)) {
         throw new HttpException('User is already a member of the project', 400) // Kiểm tra xem user đã là thành viên của project đó chưa
       }
@@ -62,13 +63,12 @@ export class InviteService {
         .session(session)
 
       if (existingInvite) {
-        existingInvite.set('status', InviteStatus.PENDING);
-        existingInvite.set('updated_at', new Date()); 
-        await existingInvite.save({ session }); // Mongoose sẽ tự động cập nhật `updated_at`
-        await session.commitTransaction() 
+        existingInvite.set('status', InviteStatus.PENDING)
+        existingInvite.set('updated_at', new Date())
+        await existingInvite.save({ session }) // Mongoose sẽ tự động cập nhật `updated_at`
+        await session.commitTransaction()
         return existingInvite
-      } 
-      else{
+      } else {
         const createInvite = await this.inviteModel.create(
           [
             {
@@ -99,20 +99,21 @@ export class InviteService {
   }
 
   async getInvitesOfUser(userId: string, status?: InviteStatus) {
-    const query = status ? { status } : {};
-    return this.inviteModel.find({ to_user: userId }, query)
-        .populate('from_user')
-        .populate({
-            path: 'project',
-            populate: [
-                { path: 'members' },
-                { path: 'major' },
-                { path: 'field' },
-                { path: 'campus' },
-                { path: 'supervisor' }
-            ]
-        });
-}
+    const query = status ? { status } : {}
+    return this.inviteModel
+      .find({ to_user: userId }, query)
+      .populate('from_user')
+      .populate({
+        path: 'project',
+        populate: [
+          { path: 'members' },
+          { path: 'major' },
+          { path: 'field' },
+          { path: 'campus' },
+          { path: 'supervisor' }
+        ]
+      })
+  }
   async acceptInvite(inviteId: string) {
     const maxMember = 5
     const maxSupervisor = 2
@@ -121,7 +122,7 @@ export class InviteService {
       if (!invite) {
         throw new HttpException('Invite not found', 404)
       }
-      if (invite.status !== InviteStatus.PENDING ) {
+      if (invite.status !== InviteStatus.PENDING) {
         throw new HttpException('Request has already been processed', 400)
       }
       invite.status = InviteStatus.APPROVED
@@ -149,6 +150,12 @@ export class InviteService {
       }
 
       await project.save({ session })
+              await this.userModel.updateOne(
+          { _id: invite.to_user },
+          { $set: { status: USER_STATUS.ACTIVATED } },
+          { session }
+        )
+
       return invite
     })
   }

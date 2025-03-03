@@ -17,7 +17,7 @@ export default function TeamPage() {
       ) : (
         <div className='w-full flex items-center justify-center flex-col'>
           <Image width={500} height={500} src='/images/empty-box.png' alt='loading' />
-          <p>You don&apos;t have any projects yet. Search for members and create together!</p>
+          <p className='text-center text-red-600'>You don&apos;t have any projects yet. Search for members and create together!</p>
         </div>
       )
     }
