@@ -518,90 +518,105 @@ export class ProjectService {
     })
   }
 
-  async getProjectsBySupervisor(supervisorId: string) {
-    return runTransaction(async (session) => {
-      console.log('🔍 Supervisor ID from token:', supervisorId)
+async getProjectsBySupervisor(supervisorId: string) {
+  return runTransaction(async (session) => {
+    console.log('🔍 Supervisor ID from token:', supervisorId)
 
-      // Log a sample project to see structure
-      const sampleProject = await this.projectModel.findOne().lean().exec()
-      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
+    // Log a sample project to see structure
+    const sampleProject = await this.projectModel.findOne().lean().exec()
+    console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
 
-      // Try multiple query approaches and log results
-      console.log('Attempting string query...')
-      const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
-      console.log(`String query found ${stringQuery.length} projects`)
+    // Try multiple query approaches and log results
+    console.log('Attempting string query...')
+    const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
+    console.log(`String query found ${stringQuery.length} projects`)
 
-      console.log('Attempting array string query...')
-      const arrayStringQuery = await this.projectModel
-        .find({ supervisor: { $in: [supervisorId] } })
+    console.log('Attempting array string query...')
+    const arrayStringQuery = await this.projectModel
+      .find({ supervisor: { $in: [supervisorId] } })
+      .lean()
+      .exec()
+    console.log(`Array string query found ${arrayStringQuery.length} projects`)
+
+    let projects: any[] = []
+
+    // Handle valid ObjectId supervisor query
+    if (Types.ObjectId.isValid(supervisorId)) {
+      const objectId = new Types.ObjectId(supervisorId)
+      console.log('Attempting ObjectId query...')
+      const objectIdQuery = await this.projectModel.find({ supervisor: objectId }).lean().exec()
+      console.log(`ObjectId query found ${objectIdQuery.length} projects`)
+
+      console.log('Attempting array ObjectId query...')
+      const arrayObjectIdQuery = await this.projectModel
+        .find({ supervisor: { $in: [objectId] } })
         .lean()
         .exec()
-      console.log(`Array string query found ${arrayStringQuery.length} projects`)
+      console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
 
-      if (Types.ObjectId.isValid(supervisorId)) {
-        const objectId = new Types.ObjectId(supervisorId)
-        console.log('Attempting ObjectId query...')
-        const objectIdQuery = await this.projectModel.find({ supervisor: objectId }).lean().exec()
-        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
+      // Combine both ObjectId and string-based queries to a single array
+      projects = [...projects, ...objectIdQuery, ...arrayObjectIdQuery]
+    }
 
-        console.log('Attempting array ObjectId query...')
-        const arrayObjectIdQuery = await this.projectModel
-          .find({ supervisor: { $in: [objectId] } })
-          .lean()
-          .exec()
-        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
-      }
+    // Direct MongoDB query to compare
+    console.log('Attempting raw MongoDB query...')
+    const rawQuery = await this.projectModel.collection
+      .find({
+        supervisor: { $in: [supervisorId] }
+      })
+      .toArray()
+    console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
 
-      // Direct MongoDB query to compare
-      console.log('Attempting raw MongoDB query...')
-      const rawQuery = await this.projectModel.collection
-        .find({
-          supervisor: { $in: [supervisorId] }
-        })
-        .toArray()
-      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
+    // Combine raw query results into the projects array
+    projects = [...projects, ...rawQuery]
 
-      // Your original query with all the populates
-      const projects = await this.projectModel
-        .find({
-          $or: [
-            { supervisor: supervisorId },
-            { supervisor: { $in: [supervisorId] } },
-            ...(Types.ObjectId.isValid(supervisorId)
-              ? [
-                  { supervisor: new Types.ObjectId(supervisorId) },
-                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
-                ]
-              : [])
-          ]
-        })
-        .populate('leader')
-        .populate('supervisor')
-        .populate('major')
-        .populate('field')
-        .populate('campus')
-        .populate({
-          path: 'members',
-          populate: [
-            { path: 'major', select: 'name' },
-            { path: 'field', select: 'name' }
-          ]
-        })
-        .populate({
-          path: 'documents',
-          populate: { path: 'user', select: 'display_name email' }
-        })
-        .session(session)
-        .exec()
+    // Your original query with all the populates
+    const populatedProjects = await this.projectModel
+      .find({
+        $or: [
+          { supervisor: supervisorId },
+          { supervisor: { $in: [supervisorId] } },
+          ...(Types.ObjectId.isValid(supervisorId)
+            ? [
+                { supervisor: new Types.ObjectId(supervisorId) },
+                { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
+              ]
+            : []),
+        ],
+      })
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate({
+        path: 'members',
+        populate: [
+          { path: 'major', select: 'name' },
+          { path: 'field', select: 'name' }
+        ]
+      })
+      .populate({
+        path: 'documents',
+        populate: { path: 'user', select: 'display_name email' }
+      })
+      .session(session)
+      .exec()
 
-      if (!projects || projects.length === 0) {
-        console.log('No projects found for supervisor after all query attempts')
-        return []
-      }
+    console.log(`Populated projects found: ${populatedProjects.length}`)
 
-      return projects
-    })
-  }
+    // Combine populated projects into the projects array
+    projects = [...projects, ...populatedProjects]
+
+    if (!projects || projects.length === 0) {
+      console.log('No projects found for supervisor after all query attempts')
+      return []
+    }
+
+    // Ensure projects is returned as an array
+    return projects
+  })
+}
 
   async getProjectLeadersBySupervisor(supervisorId: string) {
     if (!supervisorId) {

@@ -10,8 +10,8 @@ import instance from '@/utils/axios'
 
 export interface ProjectIdea {
   _id: string
-  remark: string
-  type: string
+  name: string
+  field: string
   status: string
 }
 
@@ -30,8 +30,8 @@ const ReviewIdeas = () => {
     const fetchProjectIdeas = async () => {
       try {
         const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
-        if (response.data.data && response.data.data.length > 0) {
-          setProjectIdeas(response.data.data)
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          setProjectIdeas(response.data)
           setHasData(true)
         } else {
           setHasData(false)
@@ -50,18 +50,20 @@ const ReviewIdeas = () => {
   }, [])
 
   const filteredIdeas = hasData
-    ? projectIdeas.filter((idea) => {
-        if (!idea || !idea.remark || !idea.type || !idea.status) return false
-        
-        const matchesSearch =
-          idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          idea.type.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesGroup = !groupFilter || idea.status === groupFilter
-        const matchesStatus = !statusFilter || idea.status === statusFilter
+  ? (Array.isArray(projectIdeas) ? projectIdeas : []).filter((idea) => {
+      if (!idea || !idea.name || !idea.field || !idea.status) return false;
 
-        return matchesSearch && matchesGroup && matchesStatus
-      })
-    : []
+      const matchesSearch =
+        idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        idea.field.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesGroup = !groupFilter || idea.status === groupFilter;
+      const matchesStatus = !statusFilter || idea.status === statusFilter;
+
+      return matchesSearch && matchesGroup && matchesStatus;
+    })
+  : [];  // If no data, return an empty array
+
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -89,19 +91,20 @@ const ReviewIdeas = () => {
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>
 
-      {loading ? (
-        <div className='text-center text-gray-500'>Loading...</div>
-      ) : hasData ? (
-        <>
-          <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
-          <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
-        </>
-      ) : (
-        <div className='flex flex-col items-center justify-center mt-10'>
-          <Image src='/gif/no-data.gif' alt='No data' width={100} height={100} />
-          <p className='text-gray-500 mt-2'>No Data</p>
-        </div>
-      )}
+     {loading ? (
+  <div className="text-center text-gray-500">Loading...</div>
+) : hasData ? (
+  <>
+    <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
+    <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+  </>
+) : (
+  <div className="flex flex-col items-center justify-center mt-10">
+    <Image src="/gif/no-data.gif" alt="No data" width={100} height={100} />
+    <p className="text-gray-500 mt-2">No Data</p>
+  </div>
+)}
+
     </div>
   )
 }
