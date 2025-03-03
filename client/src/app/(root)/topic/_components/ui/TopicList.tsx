@@ -11,9 +11,11 @@ export interface Project {
   description: string
   majorId?: string // Thêm `majorId` để lọc
 }
-
 interface TopicListProps {
-  selectedMajorId: string | null // Major đang được chọn
+  selectedMajorId: string | null;
+  searchTerm: string;
+  sortOrder: string;
+  filterField: string;
 }
 
 const parseDescription = (desc: string) => {
@@ -38,7 +40,7 @@ const parseDescription = (desc: string) => {
   }
 }
 
-const TopicList: React.FC<TopicListProps> = ({ selectedMajorId }) => {
+const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sortOrder, filterField }) => {
   const [topics, setTopics] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(true)
@@ -65,10 +67,16 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId }) => {
     fetchTopics()
   }, [])
 
-  // **Lọc topics theo `selectedMajorId`**
-  const filteredTopics = selectedMajorId
-    ? topics.filter(topic => topic.majorId === selectedMajorId)
-    : topics
+  // **Lọc topics theo `selectedMajorId`, `searchTerm`, và `filterField`**
+  let filteredTopics = selectedMajorId ? topics.filter(topic => topic.majorId === selectedMajorId) : topics
+  filteredTopics = filteredTopics.filter(topic => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  if (filterField !== 'all') {
+    filteredTopics = filteredTopics.filter(topic => topic.majorId === filterField)
+  }
+
+  // **Sắp xếp topics theo thứ tự bảng chữ cái**
+  filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
+
 
  return (
   <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
@@ -112,7 +120,7 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId }) => {
     ) : (
       <div className="flex flex-col items-center justify-center mt-10">
         <Image src="/gif/no-data.gif" alt="No data" width={100} height={100} />
-        <p className="text-gray-500 mt-2">No Data</p>
+        <p className="text-gray-500 mt-2">No Data for {selectedMajorId}</p>
       </div>
     )}
   </div>

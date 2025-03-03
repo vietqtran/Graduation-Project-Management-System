@@ -18,6 +18,15 @@ const TopicPage = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(null)
   const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortOrder, setSortOrder] = useState('asc')
+  const [filterField, setFilterField] = useState('all')
+
+  const handleSearch = (search: string, sort: string, filter: string) => {
+    setSearchTerm(search)
+    setSortOrder(sort)
+    setFilterField(filter)
+  }
 
   const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
     setLoading(true)
@@ -49,10 +58,10 @@ const TopicPage = () => {
 
   return (
     <div>
-      <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} />
+      <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} onSearch={handleSearch} />
       <div className='flex gap-6 mt-4'>
         <MajorSelection onMajorSelect={setSelectedMajorId} />
-        <TopicList selectedMajorId={selectedMajorId} />
+        <TopicList selectedMajorId={selectedMajorId} searchTerm={searchTerm} sortOrder={sortOrder} filterField={filterField} />
       </div>
 
       {/* Hiển thị thông báo */}
