@@ -34,7 +34,7 @@ const getStatusLabelClass = (status: string) => {
 
 const StatusTable: React.FC<StatusTableProps> = ({ tasks, filteredStatuses }) => {
   // Filter tasks based on selected status filters
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = tasks.filter((task) => {
     // If 'All' is selected or no filters are selected, show everything
     if (filteredStatuses.includes('All') || filteredStatuses.length === 0) {
       return true
@@ -67,9 +67,7 @@ const StatusTable: React.FC<StatusTableProps> = ({ tasks, filteredStatuses }) =>
                   </div>
                   <p className='text-xs text-gray-400'>{task.description}</p>
                 </TableCell>
-                <TableCell className='px-6 py-4'>
-                  {new Date(task.created_at).toLocaleString()}
-                </TableCell>
+                <TableCell className='px-6 py-4'>{new Date(task.created_at).toLocaleString()}</TableCell>
                 <TableCell className='px-6 py-4'>
                   <span
                     className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusLabelClass(
@@ -83,7 +81,7 @@ const StatusTable: React.FC<StatusTableProps> = ({ tasks, filteredStatuses }) =>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={3} className="text-center py-4">
+              <TableCell colSpan={3} className='text-center py-4'>
                 No tasks matching the selected filters
               </TableCell>
             </TableRow>

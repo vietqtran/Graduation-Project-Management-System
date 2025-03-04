@@ -15,11 +15,11 @@ interface Task {
 
 const TeacherDashboard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([])
-   const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [filteredStatuses, setFilteredStatuses] = useState<string[]>(['All'])
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchTasks = async () => {
       try {
         const response = await instance.get('/request/get-all-requests', { withCredentials: true })
@@ -53,16 +53,14 @@ const TeacherDashboard: React.FC = () => {
     setFilteredStatuses(selectedLabels)
   }
 
-
   return (
     <div className='p-6'>
       {loading ? (
         <div>Loading...</div>
       ) : (
         <>
-          <StatusBar  onFilterChange={handleFilterChange} />
-          <StatusTable tasks={tasks} 
-        filteredStatuses={filteredStatuses}  />
+          <StatusBar onFilterChange={handleFilterChange} />
+          <StatusTable tasks={tasks} filteredStatuses={filteredStatuses} />
         </>
       )}
     </div>

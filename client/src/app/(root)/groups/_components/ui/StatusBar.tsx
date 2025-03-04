@@ -45,10 +45,10 @@ const ExampleUsage: React.FC<ExampleUsageProps> = ({ onFilterChange, setIsFilter
       // For other status labels:
       // If already selected, deselect it
       if (selectedIndices.includes(index)) {
-        updatedIndices = selectedIndices.filter(i => i !== index)
+        updatedIndices = selectedIndices.filter((i) => i !== index)
       } else {
         // If not selected, add it and remove 'All' if present
-        updatedIndices = [...selectedIndices.filter(i => i !== 5), index]
+        updatedIndices = [...selectedIndices.filter((i) => i !== 5), index]
       }
     }
 
@@ -56,8 +56,8 @@ const ExampleUsage: React.FC<ExampleUsageProps> = ({ onFilterChange, setIsFilter
 
     // Get text values of selected indices (excluding Sort and Filter)
     const selectedLabels = updatedIndices
-      .map(i => {
-        const item = labelItems.find(item => item.index === i)
+      .map((i) => {
+        const item = labelItems.find((item) => item.index === i)
         return item ? item.text : ''
       })
       .filter(Boolean)
