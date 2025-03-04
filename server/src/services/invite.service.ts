@@ -21,6 +21,7 @@ export class InviteService {
     this.projectModel = ProjectModel
   }
   async sendInvite(inviteData: InviteDto) {
+    const maxNumberOfSupervisorJoin = 5
     const requiredFields: (keyof InviteDto)[] = ['from_user', 'to_user', 'project']
     const missingFields = requiredFields.filter((field) => !inviteData[field])
 
@@ -35,23 +36,38 @@ export class InviteService {
       if (!existingUser) {
         throw new HttpException('User with the provided email does not exist', 404) // Kiểm tra xem user đã tồn tại trong ứng dụng chưa
       }
-      if (from_user === existingUser._id) {
-        throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
-      }
       const existingProject = await this.projectModel.findById(project).session(session)
       if (!existingProject) {
         throw new HttpException('Project not found', 404) // Kiểm tra xem project đó có tồn tại không
       }
-      const checkInOtherProject = await this.projectModel
+      if(existingUser.roles?.includes('student')){
+        if (from_user === existingUser._id) {
+            throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
+          }
+          if (existingProject.members.includes(existingUser._id)) {
+              throw new HttpException('User is already a member of the project', 400) // Kiểm tra xem user đã là thành viên của project đó chưa
+            }
+            const checkInOtherProject = await this.projectModel
         .findOne({
           members: { $in: [existingUser?._id] }
         })
         .session(session)
-      if (existingProject.members.includes(existingUser._id)) {
-        throw new HttpException('User is already a member of the project', 400) // Kiểm tra xem user đã là thành viên của project đó chưa
-      }
-      if (checkInOtherProject) {
-        throw new HttpException('User is already a member of another project', 400) // Kiểm tra xem user đã là thành viên của project khác chưa
+        if (checkInOtherProject) {
+            throw new HttpException('User is already a member of another project', 400) // Kiểm tra xem user đã là thành viên của project khác chưa
+          }
+      } else if(existingUser.roles?.includes('supervisor')){
+        if (from_user === existingUser._id) {
+          throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
+        }
+        if (existingProject.supervisor.includes(existingUser._id)) {
+          throw new HttpException('User is already a supervisor of the project', 400) // Kiểm tra xem user là người hướng dẫn của project đó chưa
+        }
+        const numberOfSupervisorJoin = await this.projectModel.find({
+          supervisor: { $in: [existingUser?._id] }
+        })
+        if (numberOfSupervisorJoin.length >= maxNumberOfSupervisorJoin) {
+          throw new HttpException('The supervisor has reached the maximum number of projects', 400)
+        }
       }
       const existingInvite = await this.inviteModel
         .findOne({
@@ -136,19 +152,19 @@ export class InviteService {
       if (!user) {
         throw new HttpException('User not found', 404)
       }
-      if (project.members.length >= maxMember) {
-        throw new HttpException('Project has reached the maximum number of members', 400)
-      } else {
-        project.members.push(user._id)
-      }
-      if (user.roles && user.roles.includes('supervisor')) {
+      if(user.roles && user.roles?.includes('student')){
+        if (project.members.length >= maxMember) {
+            throw new HttpException('Project has reached the maximum number of members', 400)
+          } else {
+            project.members.push(user._id)
+          }
+      }else if(user.roles &&  user.roles?.includes('supervisor')){
         if (project.supervisor.length >= maxSupervisor) {
-          throw new HttpException('Project has reached the maximum number of supervisors', 400)
-        } else {
-          project.supervisor.push(user._id)
-        }
+              throw new HttpException('Project has reached the maximum number of supervisors', 400)
+            } else {
+              project.supervisor.push(user._id)
+            }
       }
-
       await project.save({ session })
               await this.userModel.updateOne(
           { _id: invite.to_user },

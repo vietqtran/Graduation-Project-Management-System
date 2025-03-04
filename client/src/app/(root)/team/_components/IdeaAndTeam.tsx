@@ -88,7 +88,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
            {user?._id === project?.leader && (
              <div className='flex gap-3 p-6 ml-auto'>
              <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
-               + Update Idea
+                Change Idea
              </Button>
              <Button
                onClick={handleDeleteClick}
@@ -153,9 +153,32 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
               ))}
             </div>
           </div>
+          <div className='mt-6'>
+            <p className='font-bold'>Supervisor</p>
+            <div className='mt-2 flex items-center gap-3'>
+              {project?.supervisor.map((sup: User) => (
+                <div key={sup._id} className='flex items-center gap-3'>
+                  <Avatar className='w-12 h-12'>
+                    <AvatarImage src={sup.avatar} alt='User Avatar' />
+                    <AvatarFallback>
+                      {sup.first_name[0]}
+                      {sup.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className='flex items-center gap-3'>
+                      <p className='font-semibold'>{sup.display_name}</p>
+                      {sup._id === project.leader._id && <LeaderStar />}
+                    </div>
+                    <p className='text-sm text-gray-600'>{sup.email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </CardContent>
-        <CardFooter className='flex items-center justify-between p-6'>
-          <CardTitle className='text-lg font-semibold w-max'>Invite Member</CardTitle>{' '}
+        <CardFooter className='flex items-center justify-between p-6 bg-purple-100  rounded-lg border-gray-200'>
+          <CardTitle className='text-lg font-semibold w-max'>Invite Member Or Supervisor</CardTitle>{' '}
           <div className='flex items-center gap-2 w-5/6'>
             <input
               type='email'
