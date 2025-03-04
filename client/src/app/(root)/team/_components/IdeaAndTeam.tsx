@@ -85,7 +85,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                 Created at: {project?.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-           {user?._id === project?.leader && (
+           {user?._id === project?.leader?._id && (
              <div className='flex gap-3 p-6 ml-auto'>
              <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
                 Change Idea
