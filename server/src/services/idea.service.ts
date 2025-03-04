@@ -1,6 +1,6 @@
 import { FilterQuery, Model, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
-import UserModel, { IUser } from '@/models/user.model'  
+import UserModel, { IUser } from '@/models/user.model'
 import { CreateIdeaDto } from '@/dtos/idea/create-idea.dto'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
@@ -47,11 +47,7 @@ export class IdeaService {
       })
 
       await idea.save({ session })
-      await this.userModel.updateOne(
-        { _id: ideaData.leader },
-        { $set: { status: USER_STATUS.ACTIVATED } },
-        { session }
-      )
+      await this.userModel.updateOne({ _id: ideaData.leader }, { $set: { status: USER_STATUS.ACTIVATED } }, { session })
       return idea
     })
   }

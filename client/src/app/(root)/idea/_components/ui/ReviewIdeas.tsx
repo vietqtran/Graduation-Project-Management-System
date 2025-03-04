@@ -1,53 +1,68 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import IdeaPagination from './IdeaPagination'
 import IdeaSearchBar from './IdeaSearchBar'
 import IdeaSelect from './IdeaSelect'
 import IdeaTable from './IdeaTable'
+import instance from '@/utils/axios'
 
 export interface ProjectIdea {
   _id: string
-  remark: string
-  type: string
+  name: string
+  field: string
   status: string
 }
-
-const mockProjectIdeas: ProjectIdea[] = [
-  { _id: '1', remark: 'AI Chatbot for Education', type: 'Technology', status: 'pending' },
-  { _id: '2', remark: 'E-commerce Website', type: 'Business', status: 'approved' },
-  { _id: '3', remark: 'Smart Traffic Light System', type: 'Engineering', status: 'pending' },
-  { _id: '4', remark: 'Blockchain Voting System', type: 'Technology', status: 'rejected' },
-  { _id: '5', remark: 'Mental Health Mobile App', type: 'Healthcare', status: 'approved' },
-  { _id: '6', remark: 'IoT-based Smart Home', type: 'Technology', status: 'pending' },
-  { _id: '7', remark: 'Food Waste Management System', type: 'Environment', status: 'approved' },
-  { _id: '8', remark: 'Autonomous Delivery Robot', type: 'Engineering', status: 'pending' },
-  { _id: '9', remark: 'AI-Powered Resume Screener', type: 'Technology', status: 'approved' },
-  { _id: '10', remark: 'Fitness Tracking Wearable', type: 'Healthcare', status: 'rejected' }
-]
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [groupFilter, setGroupFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>(mockProjectIdeas)
+  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>([])
+  const [loading, setLoading] = useState(true)
+  const [hasData, setHasData] = useState(true)
   const itemsPerPage = 5
   const availableSlots = 10
 
   useEffect(() => {
-    setProjectIdeas(mockProjectIdeas)
+    const fetchProjectIdeas = async () => {
+      try {
+        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          setProjectIdeas(response.data)
+          setHasData(true)
+        } else {
+          setHasData(false)
+          setProjectIdeas([])
+        }
+      } catch (error) {
+        console.error('Error fetching project ideas:', error)
+        setHasData(false)
+        setProjectIdeas([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjectIdeas()
   }, [])
 
-  const filteredIdeas = projectIdeas.filter((idea) => {
-    const matchesSearch =
-      idea.remark.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.type.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGroup = !groupFilter || idea.status === groupFilter
-    const matchesStatus = !statusFilter || idea.status === statusFilter
+  const filteredIdeas = hasData
+    ? (Array.isArray(projectIdeas) ? projectIdeas : []).filter((idea) => {
+        if (!idea || !idea.name || !idea.field || !idea.status) return false
 
-    return matchesSearch && matchesGroup && matchesStatus
-  })
+        const matchesSearch =
+          idea.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          idea.field.toLowerCase().includes(searchQuery.toLowerCase())
+
+        const matchesGroup = !groupFilter || idea.status === groupFilter
+        const matchesStatus = !statusFilter || idea.status === statusFilter
+
+        return matchesSearch && matchesGroup && matchesStatus
+      })
+    : [] // If no data, return an empty array
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -71,17 +86,23 @@ const ReviewIdeas = () => {
           <IdeaSearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
         <IdeaSelect value={groupFilter} onChange={setGroupFilter} options={groupOptions} placeholder='All Groups' />
-        <IdeaSelect
-          value={statusFilter}
-          onChange={setStatusFilter}
-          options={statusOptions}
-          placeholder='All Statuses'
-        />
+        <IdeaSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder='All Status' />
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>
 
-      <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
-      <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+      {loading ? (
+        <div className='text-center text-gray-500'>Loading...</div>
+      ) : hasData ? (
+        <>
+          <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
+          <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+        </>
+      ) : (
+        <div className='flex flex-col items-center justify-center mt-10'>
+          <Image src='/gif/no-data.gif' alt='No data' width={100} height={100} />
+          <p className='text-gray-500 mt-2'>No Data</p>
+        </div>
+      )}
     </div>
   )
 }

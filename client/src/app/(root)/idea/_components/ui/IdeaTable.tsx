@@ -25,8 +25,8 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
           {ideas.map((idea, index) => (
             <TableRow key={idea._id} className='hover:bg-gray-50'>
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
-              <TableCell>{idea.remark}</TableCell>
-              <TableCell>{idea.type}</TableCell>
+              <TableCell>{idea.name}</TableCell>
+              <TableCell>{idea.field}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
                 <Button variant='default'>Accept</Button>
                 <Button variant='destructive'>Reject</Button>
