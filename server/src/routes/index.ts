@@ -11,7 +11,7 @@ import { userRoutes } from './user.route'
 import { ideaRoutes } from './idea.route'
 import { taskRoutes } from './task.route'
 import { inviteRoutes } from './invite.route'
-
+import { supervisorRoutes } from './supervisor.route'
 const routes = {
   authRoutes,
   userRoutes,
@@ -25,7 +25,8 @@ const routes = {
   documentRoutes,
   ideaRoutes,
   taskRoutes,
-  inviteRoutes
+  inviteRoutes,
+  supervisorRoutes
 }
 
 export default routes
