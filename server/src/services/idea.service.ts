@@ -108,37 +108,36 @@ export class IdeaService {
   }
   async changeIdea(projectId: string, updateIdea: UpdateIdeaDto, userId: string): Promise<IProject> {
     // Kiểm tra các trường bắt buộc
-    const requiredFields: (keyof UpdateIdeaDto)[] = ['name', 'description'];
-    const missingFields = requiredFields.filter(field => !updateIdea[field]);
-  
+    const requiredFields: (keyof UpdateIdeaDto)[] = ['name', 'description']
+    const missingFields = requiredFields.filter((field) => !updateIdea[field])
+
     if (missingFields.length > 0) {
-      throw new HttpException(`${missingFields.join(', ')} are required`, 400);
+      throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
-  
+
     return runTransaction(async (session) => {
-      const project = await this.projectModel.findById(projectId).session(session).exec();
-  
+      const project = await this.projectModel.findById(projectId).session(session).exec()
+
       if (!project) {
-        throw new HttpException('Project not found', 404);
+        throw new HttpException('Project not found', 404)
       }
-  
+
       // Kiểm tra quyền của người dùng
       if (String(project.leader) !== userId) {
-        throw new HttpException('You are not the leader of this idea', 400);
+        throw new HttpException('You are not the leader of this idea', 400)
       }
-  
+
       // Cập nhật thông tin dự án
-      const { name, description } = updateIdea;
-  
-      if (name) project.name = name;
+      const { name, description } = updateIdea
+
+      if (name) project.name = name
       if (description) project.description = description
-  
-      project.updated_at = new Date(); // Cập nhật thời gian sửa đổi
-  
-      await project.save({ session });
-  
-      return project;
-    });
+
+      project.updated_at = new Date() // Cập nhật thời gian sửa đổi
+
+      await project.save({ session })
+
+      return project
+    })
   }
-  
 }

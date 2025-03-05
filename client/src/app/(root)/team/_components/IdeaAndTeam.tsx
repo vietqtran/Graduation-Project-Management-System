@@ -15,6 +15,7 @@ import useInvite from '@/hooks/useInvite'
 import instance from '@/utils/axios'
 import { useAppSelector } from '@/hooks'
 import { toast } from 'sonner'
+import { AxiosError } from 'axios'
 
 interface IdeaDetailsProps {
   project: Project | null
@@ -24,7 +25,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   const user = useAppSelector((state) => state.auth.user)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [idea,setIdea] = useState(project)
+  const [idea, setIdea] = useState(project)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showChangeModal, setShowChangeModal] = useState(false)
@@ -61,11 +62,14 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
       })
 
       if (response.data.success) {
-        setShowSuccessModal(true)      
+        setShowSuccessModal(true)
       }
-    } catch (error) {
-      console.error('Error deleting idea:', error)
-      alert('Something went wrong while deleting the idea.')
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -99,18 +103,23 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
       )
       if (response.data.success) {
         setShowChangeModal(false)
-        toast.success('Change Idea successfully!')   
-        const updatedProjectResponse = await instance.get(`/ideas/get-idea-student/?userIds=${user?._id}`, { withCredentials: true })
-      if (updatedProjectResponse.data.success) {
-        // Cập nhật lại state project
-        setIdea(updatedProjectResponse.data.data)
-      }
+        toast.success('Change Idea successfully!')
+        const updatedProjectResponse = await instance.get(`/ideas/get-idea-student/?userIds=${user?._id}`, {
+          withCredentials: true
+        })
+        if (updatedProjectResponse.data.success) {
+          // Cập nhật lại state project
+          setIdea(updatedProjectResponse.data.data)
+        }
       } else {
         toast.error('Failed to change idea')
       }
-    } catch (error) {
-      console.error('Error updating idea:', error)
-      toast.error('Something went wrong while changing the idea.')
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -134,9 +143,10 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             </div>
             {user?._id === idea?.leader?._id && (
               <div className='flex gap-3 p-6 ml-auto'>
-                <Button 
-                onClick={handleChangeIdeaClick}
-                className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
+                <Button
+                  onClick={handleChangeIdeaClick}
+                  className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'
+                >
                   Change Idea
                 </Button>
                 <Button
@@ -278,12 +288,14 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             <div className='mt-4 flex justify-between'>
               <Button
                 onClick={handleSubmit}
-                className='border border-blue-600 text-blue-600 hover:bg-blue-400 hover:text-white bg-transparent w-1/3'>
+                className='border border-blue-600 text-blue-600 hover:bg-blue-400 hover:text-white bg-transparent w-1/3'
+              >
                 Save Changes
               </Button>
               <Button
                 onClick={() => setShowChangeModal(false)}
-                className='border border-gray-500 text-gray-500 hover:bg-gray-400 hover:text-white bg-transparent w-1/3'>
+                className='border border-gray-500 text-gray-500 hover:bg-gray-400 hover:text-white bg-transparent w-1/3'
+              >
                 Cancel
               </Button>
             </div>

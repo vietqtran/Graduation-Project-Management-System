@@ -7,5 +7,5 @@ const ideaController = new IdeaController()
 router.post('/create-idea', ideaController.createIdea)
 router.get('/get-idea-student', ideaController.getIdeaStudent)
 router.delete('/delete-idea', ideaController.deleteIdea)
-router.patch('/change-idea',ideaController.changeIdea)
+router.patch('/change-idea', ideaController.changeIdea)
 export { router as ideaRoutes }
