@@ -9,8 +9,8 @@ import React, { useState } from 'react'
 import RequestForm from './RequestForm' // Import RequestForm component
 
 interface FilterBarProps {
-  onSearch: (keyword: string) => void
   onFilterChange: (filterData: {
+    search?: string
     status?: string
     requestType?: string
     dateRange?: { start: string; end: string }
@@ -25,8 +25,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  const handleFilterChange = () => {
+  const handleApplyFilter = () => {
     onFilterChange({
+      search: searchValue || undefined,
       status: status === 'all' ? undefined : status,
       requestType: requestType === 'all' ? undefined : requestType,
       dateRange: dateRange.start && dateRange.end ? dateRange : undefined
@@ -89,7 +90,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
           className='flex-1'
         />
 
-        <Button variant='default' size='sm' onClick={handleFilterChange}>
+        <Button variant='default' size='sm' onClick={handleApplyFilter}>
           Apply Filter
         </Button>
 

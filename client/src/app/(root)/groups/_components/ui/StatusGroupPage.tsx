@@ -50,7 +50,7 @@ const TeacherDashboard: React.FC = () => {
   }
 
   const handleFilterChange = (selectedLabels: string[]) => {
-    setFilteredStatuses(selectedLabels)
+    setFilteredStatuses((prev) => (JSON.stringify(prev) === JSON.stringify(selectedLabels) ? prev : selectedLabels))
   }
 
   return (

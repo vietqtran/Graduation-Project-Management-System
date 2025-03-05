@@ -12,14 +12,14 @@ import { Textarea } from '@/components/ui/textarea'
 
 interface TopicModalProps {
   topic: {
-    _id: string; 
-    name: string; 
-    description: string; 
-    major?: { _id: string; name: string }[] | { _id: string; name: string } | null;
-    field?: { _id: string; name: string }[] | { _id: string; name: string } | null;
-    campus?: { _id: string; name: string } | null; 
-    category: number | string | null; 
-    document?: string | null;
+    _id: string
+    name: string
+    description: string
+    major?: { _id: string; name: string }[] | { _id: string; name: string } | null
+    field?: { _id: string; name: string }[] | { _id: string; name: string } | null
+    campus?: { _id: string; name: string } | null
+    category: number | string | null
+    document?: string | null
   }
   type: 'update' | 'detail'
   onClose: () => void
@@ -42,16 +42,16 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
   }
 
   const form = useForm<{
-    name: string; 
-    description: string; 
-    document: string; 
-    major: string; 
-    field: string; 
-    campus: string; 
+    name: string
+    description: string
+    document: string
+    major: string
+    field: string
+    campus: string
     category: string
   }>({
     defaultValues: {
-      name: topic.name || '', 
+      name: topic.name || '',
       description: topic.description || '',
       major: normalizeMajor(topic.major),
       field: normalizeMajor(topic.field),
@@ -64,7 +64,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
 
   useEffect(() => {
     console.log('Resetting form with values:', {
-      name: topic.name || '', 
+      name: topic.name || '',
       description: topic.description || '',
       major: normalizeMajor(topic.major),
       field: normalizeMajor(topic.field),
@@ -74,7 +74,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
     })
 
     form.reset({
-      name: topic.name || '', 
+      name: topic.name || '',
       description: topic.description || '',
       major: normalizeMajor(topic.major),
       field: normalizeMajor(topic.field),
@@ -85,12 +85,12 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
   }, [topic, form])
 
   const handleSubmit: SubmitHandler<{
-    name: string; 
-    description: string; 
-    document: string; 
-    major: string; 
-    field: string; 
-    campus: string; 
+    name: string
+    description: string
+    document: string
+    major: string
+    field: string
+    campus: string
     category: string
   }> = async (data) => {
     if (type !== 'update') return
@@ -125,11 +125,11 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      type='text' 
-                      {...field} 
-                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`} 
-                      disabled={type === 'detail'} 
+                    <Input
+                      type='text'
+                      {...field}
+                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`}
+                      disabled={type === 'detail'}
                     />
                   </FormControl>
                   <FormMessage />
@@ -145,9 +145,9 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      {...field} 
-                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`} 
-                      disabled={type === 'detail'} 
+                      {...field}
+                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`}
+                      disabled={type === 'detail'}
                     />
                   </FormControl>
                   <FormMessage />
@@ -162,9 +162,9 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
                 <FormItem>
                   <FormLabel>Upload Document</FormLabel>
                   <FormControl>
-                    <Input 
-                    {...field}
-                      type='file' 
+                    <Input
+                      {...field}
+                      type='file'
                       disabled={type === 'detail'}
                       className={type === 'detail' ? 'bg-gray-100' : ''}
                     />
@@ -180,11 +180,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Field</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value} 
-                    disabled={type === 'detail'}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={type === 'detail'}>
                     <SelectTrigger className={type === 'detail' ? 'bg-gray-100' : ''}>
                       <SelectValue placeholder='Select field' />
                     </SelectTrigger>
@@ -204,11 +200,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Majors</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value} 
-                    disabled={type === 'detail'}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={type === 'detail'}>
                     <SelectTrigger className={type === 'detail' ? 'bg-gray-100' : ''}>
                       <SelectValue placeholder='Select major' />
                     </SelectTrigger>
@@ -228,9 +220,9 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Campus</FormLabel>
-                  <Select 
-                    onValueChange={type === 'detail' ? () => {} : field.onChange} 
-                    value={field.value} 
+                  <Select
+                    onValueChange={type === 'detail' ? () => {} : field.onChange}
+                    value={field.value}
                     disabled={type === 'detail'}
                   >
                     <SelectTrigger className={type === 'detail' ? 'bg-gray-100' : ''}>
@@ -253,11 +245,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value} 
-                    disabled={type === 'detail'}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={type === 'detail'}>
                     <SelectTrigger className={type === 'detail' ? 'bg-gray-100' : ''}>
                       <SelectValue placeholder='Select category' />
                     </SelectTrigger>

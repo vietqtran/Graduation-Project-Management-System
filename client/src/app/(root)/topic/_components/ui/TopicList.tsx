@@ -86,6 +86,15 @@ const TopicList: React.FC<TopicListProps> = ({
     fetchTopics()
   }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
 
+  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.majorId === selectedMajorId) : topics
+  filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  if (filterField !== 'all') {
+    filteredTopics = filteredTopics.filter((topic) => topic.majorId === filterField)
+  }
+
+  // **Sắp xếp topics theo thứ tự bảng chữ cái**
+  filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
+
   const handleDelete = async (id: string) => {
     setConfirmDelete({ id })
   }
@@ -133,8 +142,8 @@ const TopicList: React.FC<TopicListProps> = ({
 
       {loading ? (
         <div className='text-center text-gray-500'>Loading...</div>
-      ) : hasData && topics.length > 0 ? (
-        topics.map((topic) => {
+      ) : hasData && filteredTopics.length > 0 ? (
+        filteredTopics.map((topic) => {
           const { mainDescription, requirements, prerequisites, guidelines } = parseDescription(topic.description)
           return (
             <div key={topic._id} className='p-3 border rounded-lg bg-gray-100 w-full relative'>

@@ -5,22 +5,35 @@ import React, { useEffect, useState } from 'react'
 import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
 
-const RequestsPage: React.FC = () => {
-  const [requests, setRequests] = useState([]) // Dữ liệu từ API
-  // const [currentPage, setCurrentPage] = useState(1)
-  const [loading, setLoading] = useState(true)
+interface Request {
+  _id: number
+  remark: string
+  to_user: string
+  type: string
+  from_user: string
+  document: string
+  due_date?: Date
+  status: string
+  created_at?: Date
+  updated_at?: Date
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>
+}
 
-  // 🛠️ Hàm fetch dữ liệu từ API
+const RequestsPage: React.FC = () => {
+  const [requests, setRequests] = useState<Request[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refresh, setRefresh] = useState(false)
+
+  // Hàm fetch dữ liệu từ API
   const fetchRequests = async () => {
     setLoading(true)
     try {
       const response = await intance.get('/request/get-all-requests', {
         withCredentials: true
-      }) // ✅ Dùng Axios instance
+      })
       console.log(response.data.data)
-
       if (response.data.success) {
-        setRequests(response.data.data || []) // Gán dữ liệu từ API
+        setRequests(response.data.data || [])
       } else {
         console.error('Error fetching requests:', response.data.message)
       }
@@ -30,43 +43,71 @@ const RequestsPage: React.FC = () => {
     setLoading(false)
   }
 
-  // 🎯 Gọi API khi component mount hoặc khi `currentPage` thay đổi
   useEffect(() => {
     fetchRequests()
-  }, [])
+  }, [refresh])
 
-  // 🔎 Xử lý tìm kiếm
-  const handleSearch = async (keyword: string) => {
-    console.log('Search keyword:', keyword)
-  }
-
-  // 🏷️ Xử lý bộ lọc
-  const handleFilterChange = async (filterData: {
+  const [filters, setFilters] = useState<{
+    search?: string
     status?: string
-    jobType?: string
+    requestType?: string
+    dateRange?: { start: string; end: string }
+  }>({})
+
+  const [filteredRequests, setFilteredRequests] = useState<Request[]>([])
+
+  useEffect(() => {
+    let filtered = requests
+
+    if (filters.search) {
+      filtered = filtered.filter((request) => request.remark.toLowerCase().includes(filters.search!.toLowerCase()))
+    }
+
+    if (filters.status) {
+      filtered = filtered.filter((request) => request.status.toLowerCase() === filters.status!.toLowerCase())
+    }
+
+    if (filters.requestType) {
+      filtered = filtered.filter((request) => request.type.toLowerCase() === filters.requestType!.toLowerCase())
+    }
+
+    if (filters.dateRange && filters.dateRange.start && filters.dateRange.end) {
+      const start = new Date(filters.dateRange.start)
+      const end = new Date(filters.dateRange.end)
+      filtered = filtered.filter((request) => {
+        if (request.created_at) {
+          const createDate = new Date(request.created_at)
+          return createDate >= start && createDate <= end
+        }
+        return false
+      })
+    }
+
+    setFilteredRequests(filtered)
+  }, [filters, requests])
+
+  const handleFilterChange = (filterData: {
+    search?: string
+    status?: string
+    requestType?: string
     dateRange?: { start: string; end: string }
   }) => {
-    console.log('Filter data:', filterData)
+    setFilters(filterData)
   }
 
-  // ❌ Xóa bộ lọc
-  const handleClearFilter = async () => {
-    console.log('Clear filter')
-    fetchRequests() // Load lại danh sách request
+  const handleClearFilter = () => {
+    setFilters({})
   }
-
-  // 🔄 Xử lý phân trang
 
   return (
     <div className='p-4'>
-      <FilterBar onSearch={handleSearch} onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
+      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
 
       {loading ? (
         <p>Loading requests...</p>
       ) : (
         <>
-          <RequestTable requests={requests} />
-          {/* <Pagination currentPage={currentPage}  onPageChange={handlePageChange} /> */}
+          <RequestTable requests={filteredRequests} setRefresh={setRefresh} />
         </>
       )}
     </div>

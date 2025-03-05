@@ -446,98 +446,96 @@ export class ProjectService {
     })
   }
 
- async updateTopic(
-  projectId: string,
-  updateData: Partial<Omit<IProject, '_id' | 'created_by' | 'created_at' | 'updated_at'>>,
-  tokenPayload: TokenPayload
-) {
-  return runTransaction(async (session) => {
-    const project = await this.projectModel.findOne({ _id: projectId }).session(session)
+  async updateTopic(
+    projectId: string,
+    updateData: Partial<Omit<IProject, '_id' | 'created_by' | 'created_at' | 'updated_at'>>,
+    tokenPayload: TokenPayload
+  ) {
+    return runTransaction(async (session) => {
+      const project = await this.projectModel.findOne({ _id: projectId }).session(session)
 
-    if (!project) {
-      throw new HttpException('Project not found', 404)
-    }
+      if (!project) {
+        throw new HttpException('Project not found', 404)
+      }
 
-    // Cập nhật thông tin project
-    const updatedProject = await this.projectModel.updateOne(
-      { _id: projectId },
-      {
-        $set: {
-          name: updateData.name ?? project.name,
-          description: updateData.description ?? project.description,
-          major: updateData.major ?? project.major,
-          field: updateData.field ?? project.field,
-          campus: updateData.campus ?? project.campus,
-          category: updateData.category ?? project.category,
-          supervisor: updateData.supervisor ?? project.supervisor,
-          members: updateData.members ?? project.members,
-          documents: updateData.documents ?? project.documents,
-          histories: updateData.histories ?? project.histories,
-          tasks: updateData.tasks ?? project.tasks,
-          mark: updateData.mark ?? project.mark,
-          slow_count: updateData.slow_count ?? project.slow_count,
-          status: updateData.status ?? project.status,
-          stage: updateData.stage ?? project.stage,
-          updated_by: tokenPayload._id,
-          updated_at: new Date(),
+      // Cập nhật thông tin project
+      const updatedProject = await this.projectModel.updateOne(
+        { _id: projectId },
+        {
+          $set: {
+            name: updateData.name ?? project.name,
+            description: updateData.description ?? project.description,
+            major: updateData.major ?? project.major,
+            field: updateData.field ?? project.field,
+            campus: updateData.campus ?? project.campus,
+            category: updateData.category ?? project.category,
+            supervisor: updateData.supervisor ?? project.supervisor,
+            members: updateData.members ?? project.members,
+            documents: updateData.documents ?? project.documents,
+            histories: updateData.histories ?? project.histories,
+            tasks: updateData.tasks ?? project.tasks,
+            mark: updateData.mark ?? project.mark,
+            slow_count: updateData.slow_count ?? project.slow_count,
+            status: updateData.status ?? project.status,
+            stage: updateData.stage ?? project.stage,
+            updated_by: tokenPayload._id,
+            updated_at: new Date()
+          }
         },
-      },
-      { session }
-    )
+        { session }
+      )
 
-    if (updatedProject.matchedCount === 0) {
-      throw new HttpException('Failed to update project', 400)
-    }
+      if (updatedProject.matchedCount === 0) {
+        throw new HttpException('Failed to update project', 400)
+      }
 
-    return { message: 'Project updated successfully' }
-  })
-}
+      return { message: 'Project updated successfully' }
+    })
+  }
 
+  async getTopicDetail(projectId: string) {
+    return runTransaction(async (session) => {
+      const project = await this.projectModel
+        .findOne({ _id: projectId })
+        .populate({ path: 'major', select: '_id name' })
+        .populate({ path: 'field', select: '_id name' })
+        .populate({ path: 'campus', select: '_id name' })
+        .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
+        .populate({ path: 'leader', select: '_id display_name username email avatar' })
+        .populate({ path: 'members', select: '_id display_name username email avatar' })
+        .populate({ path: 'created_by', select: '_id display_name username email avatar' })
+        .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
+        .session(session)
 
- async getTopicDetail(projectId: string) {
-  return runTransaction(async (session) => {
-    const project = await this.projectModel
-      .findOne({ _id: projectId })
-      .populate({ path: 'major', select: '_id name' })
-      .populate({ path: 'field', select: '_id name' })
-      .populate({ path: 'campus', select: '_id name' })
-      .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
-      .populate({ path: 'leader', select: '_id display_name username email avatar' })
-      .populate({ path: 'members', select: '_id display_name username email avatar' })
-      .populate({ path: 'created_by', select: '_id display_name username email avatar' })
-      .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
-      .session(session)
+      if (!project) {
+        throw new HttpException('Project not found', 404)
+      }
 
-    if (!project) {
-      throw new HttpException('Project not found', 404)
-    }
-
-    return {
-      _id: project._id,
-      name: project.name,
-      description: project.description, // Thêm description vào response
-      major: project.major,
-      field: project.field,
-      campus: project.campus,
-      category: project.category,
-      status: project.status,
-      stage: project.stage,
-      mark: project.mark,
-      slow_count: project.slow_count,
-      members: project.members,
-      supervisor: project.supervisor,
-      leader: project.leader,
-      created_by: project.created_by,
-      updated_by: project.updated_by,
-      created_at: project.created_at,
-      updated_at: project.updated_at,
-      histories: project.histories, // Thêm lịch sử cập nhật nếu cần
-      documents: project.documents, // Trả về tài liệu nếu cần
-      tasks: project.tasks, // Trả về danh sách task nếu cần
-    }
-  })
-}
-
+      return {
+        _id: project._id,
+        name: project.name,
+        description: project.description, // Thêm description vào response
+        major: project.major,
+        field: project.field,
+        campus: project.campus,
+        category: project.category,
+        status: project.status,
+        stage: project.stage,
+        mark: project.mark,
+        slow_count: project.slow_count,
+        members: project.members,
+        supervisor: project.supervisor,
+        leader: project.leader,
+        created_by: project.created_by,
+        updated_by: project.updated_by,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+        histories: project.histories, // Thêm lịch sử cập nhật nếu cần
+        documents: project.documents, // Trả về tài liệu nếu cần
+        tasks: project.tasks // Trả về danh sách task nếu cần
+      }
+    })
+  }
 
   async getProjectsBySupervisor(supervisorId: string) {
     return runTransaction(async (session) => {

@@ -12,8 +12,8 @@ export interface IRequest extends Document {
   description: string
   documents: IUploadDocument['_id'][]
   due_date: Date
-  createdAt: Date
-  updatedAt: Date
+  created_at: Date
+  updated_at: Date
 }
 
 export const RequestSchema = new Schema<IRequest>(
@@ -34,7 +34,7 @@ export const RequestSchema = new Schema<IRequest>(
         values: ['assigned', 'submitted', 'completed', 'in progress', 'overdue'],
         message: '{VALUE} is not a valid status'
       },
-      default: 'pending'
+      default: 'assigned'
     },
     approve_user: {
       type: Schema.Types.ObjectId,
@@ -71,7 +71,7 @@ export const RequestSchema = new Schema<IRequest>(
   },
   {
     timestamps: {
-      createdAt: 'created_at',
+      createdAt: 'created_at',  
       updatedAt: 'updated_at'
     },
     versionKey: false
