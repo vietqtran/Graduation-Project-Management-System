@@ -1,5 +1,6 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
 import { IUser } from './user.model'
+import { IUploadDocument } from './document.model'
 
 export interface IRequest extends Document {
   to_user: IUser['_id']
@@ -8,6 +9,11 @@ export interface IRequest extends Document {
   approve_user: IUser['_id']
   remark: string
   type: string
+  description: string
+  documents: IUploadDocument['_id'][]
+  due_date: Date
+  createdAt: Date
+  updatedAt: Date
 }
 
 export const RequestSchema = new Schema<IRequest>(
@@ -25,7 +31,7 @@ export const RequestSchema = new Schema<IRequest>(
     status: {
       type: String,
       enum: {
-        values: ['pending', 'approved', 'rejected'],
+        values: ['assigned', 'submitted', 'completed', 'in progress', 'overdue'],
         message: '{VALUE} is not a valid status'
       },
       default: 'pending'
@@ -46,6 +52,21 @@ export const RequestSchema = new Schema<IRequest>(
         values: ['project', 'defense', 'extension', 'other'],
         message: '{VALUE} is not a valid request type'
       }
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Description cannot exceed 1000 characters']
+    },
+    documents: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'UploadDocument'
+      }
+    ],
+    due_date: {
+      type: Date,
+      required: [true, 'Due date is required']
     }
   },
   {
