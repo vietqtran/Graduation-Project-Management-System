@@ -8,6 +8,9 @@ export interface IRequest extends Document {
   approve_user: IUser['_id']
   remark: string
   type: string
+  createdAt: Date
+  updatedAt: Date
+  due_date: Date
 }
 
 export const RequestSchema = new Schema<IRequest>(

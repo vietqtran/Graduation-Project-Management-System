@@ -85,4 +85,30 @@ export class ProjectController {
     await this.projectService.deleteTopic(id)
     ResponseHandler.sendSuccess(res, null, 'Delete topic successfully')
   })
+
+  getProjectsBySupervisor = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const supervisorId = tokenPayload._id
+      console.log('Token payload:', tokenPayload)
+      console.log('Supervisor ID from token:', supervisorId)
+
+      const projects = await this.projectService.getProjectsBySupervisor(supervisorId)
+      ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  })
+
+  getProjectLeaderForSupervisor = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const tokenPayload = getUser(req)
+      const leaders = await this.projectService.getProjectLeadersBySupervisor(tokenPayload._id)
+
+      return ResponseHandler.sendSuccess(res, leaders, 'Get leaders from projects successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 }

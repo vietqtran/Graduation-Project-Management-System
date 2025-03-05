@@ -1,133 +1,76 @@
 'use client'
 
-import React, { useState } from 'react'
+import intance from '@/utils/axios'
+import React, { useEffect, useState } from 'react'
 import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
-import Pagination from './Pagination'
-
-// Dữ liệu mẫu cho requests
-const sampleRequests = [
-  {
-    id: 1,
-    status: 'Pending',
-    amount: 550,
-    customer: 'John Doe',
-    site: '123 Main Street',
-    date: '2023-02-01',
-    scheduled: '2023-02-03 10:00',
-    assignedTo: 'Technician A'
-  },
-  {
-    id: 2,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 3,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 4,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 5,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 6,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 7,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  }
-]
 
 const RequestsPage: React.FC = () => {
-  const [requests] = useState(sampleRequests)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages] = useState(5) // ví dụ cứng, có thể tính toán dựa vào length của requests
+  const [requests, setRequests] = useState([]) // Dữ liệu từ API
+  // const [currentPage, setCurrentPage] = useState(1)
+  const [loading, setLoading] = useState(true)
 
-  const handleSearch = (keyword: string) => {
-    // Logic tìm kiếm
+  // 🛠️ Hàm fetch dữ liệu từ API
+  const fetchRequests = async () => {
+    setLoading(true)
+    try {
+      const response = await intance.get('/request/get-all-requests', {
+        withCredentials: true
+      }) // ✅ Dùng Axios instance
+      console.log(response.data.data)
+
+      if (response.data.success) {
+        setRequests(response.data.data || []) // Gán dữ liệu từ API
+      } else {
+        console.error('Error fetching requests:', response.data.message)
+      }
+    } catch (error) {
+      console.error('Failed to fetch requests:', error)
+    }
+    setLoading(false)
+  }
+
+  // 🎯 Gọi API khi component mount hoặc khi `currentPage` thay đổi
+  useEffect(() => {
+    fetchRequests()
+  }, [])
+
+  // 🔎 Xử lý tìm kiếm
+  const handleSearch = async (keyword: string) => {
     console.log('Search keyword:', keyword)
   }
 
-  const handleFilterChange = (filterData: {
+  // 🏷️ Xử lý bộ lọc
+  const handleFilterChange = async (filterData: {
     status?: string
     jobType?: string
     dateRange?: { start: string; end: string }
   }) => {
-    // Logic filter
     console.log('Filter data:', filterData)
   }
 
-  const handleClearFilter = () => {
-    // Logic clear filter
+  // ❌ Xóa bộ lọc
+  const handleClearFilter = async () => {
     console.log('Clear filter')
+    fetchRequests() // Load lại danh sách request
   }
 
-  const handleAddRequest = () => {
-    // Logic mở modal hoặc form để thêm request
-    console.log('Add request clicked')
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    // Gọi API hoặc xử lý phân trang
-    console.log('Page changed:', page)
-  }
+  // 🔄 Xử lý phân trang
 
   return (
     <div className='p-4'>
-      <FilterBar
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onClearFilter={handleClearFilter}
-        onAddRequest={handleAddRequest}
-      />
+      <FilterBar onSearch={handleSearch} onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
 
-      <RequestTable requests={requests} />
-
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+      {loading ? (
+        <p>Loading requests...</p>
+      ) : (
+        <>
+          <RequestTable requests={requests} />
+          {/* <Pagination currentPage={currentPage}  onPageChange={handlePageChange} /> */}
+        </>
+      )}
     </div>
   )
 }
 
-export default RequestsPage // Đổi tên component từ JobsPage thành RequestsPage
+export default RequestsPage
