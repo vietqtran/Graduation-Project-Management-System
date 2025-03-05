@@ -13,6 +13,11 @@ export interface Project {
   name: string
   description: string
   majorId?: string
+  major: { _id: string; name: string }[]
+  field: { _id: string; name: string }[]
+  document: string
+  campus: { _id: string; name: string } | null
+  category: string
 }
 
 interface TopicListProps {
@@ -46,14 +51,20 @@ const parseDescription = (desc: string) => {
   }
 }
 
-const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sortOrder, filterField, refresh, setRefresh }) => {
+const TopicList: React.FC<TopicListProps> = ({
+  selectedMajorId,
+  searchTerm,
+  sortOrder,
+  filterField,
+  refresh,
+  setRefresh
+}) => {
   const [topics, setTopics] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(true)
   const [selectedTopic, setSelectedTopic] = useState<Project | null>(null)
   const [modalType, setModalType] = useState<'update' | 'detail' | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ id: string | null }>({ id: null })
-
   useEffect(() => {
     const fetchTopics = async () => {
       try {
@@ -90,7 +101,7 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
       console.error('Error deleting topic:', error)
       toast.error('Failed to delete topic.')
     } finally {
-      setConfirmDelete({ id: null })  
+      setConfirmDelete({ id: null })
     }
   }
 
@@ -102,8 +113,9 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
   const handleDetail = async (id: string) => {
     try {
       const response = await instance.get(`/project/detail-topic/${id}`, { withCredentials: true })
-      setSelectedTopic(response.data) 
-      setModalType('detail')  
+      console.log('Detailed Topic Response:', response.data)
+      setSelectedTopic(response.data)
+      setModalType('detail')
     } catch (error) {
       console.error('Error fetching topic details:', error)
       toast.error('Failed to fetch topic details.')
@@ -128,18 +140,32 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
             <div key={topic._id} className='p-3 border rounded-lg bg-gray-100 w-full relative'>
               <h3 className='font-medium text-lg'>{topic.name}</h3>
               <p className='text-sm text-gray-600'>{mainDescription}</p>
-              <p className='text-sm'><strong>Requirements:</strong> {requirements}</p>
-              <p className='text-sm'><strong>Prerequisites:</strong> {prerequisites}</p>
-              <p className='text-sm'><strong>Guidelines:</strong> {guidelines}</p>
+              <p className='text-sm'>
+                <strong>Requirements:</strong> {requirements}
+              </p>
+              <p className='text-sm'>
+                <strong>Prerequisites:</strong> {prerequisites}
+              </p>
+              <p className='text-sm'>
+                <strong>Guidelines:</strong> {guidelines}
+              </p>
 
               <div className='absolute top-2 right-2 flex gap-3'>
                 <button className='text-blue-500 hover:text-blue-700' title='Edit' onClick={() => handleEdit(topic)}>
                   <FaEdit size={20} />
                 </button>
-                <button className='text-red-500 hover:text-red-700' title='Delete' onClick={() => handleDelete(topic._id)}>
+                <button
+                  className='text-red-500 hover:text-red-700'
+                  title='Delete'
+                  onClick={() => handleDelete(topic._id)}
+                >
                   <FaTrashAlt size={20} />
                 </button>
-                <button className='text-green-500 hover:text-green-700' title='Detail' onClick={() => handleDetail(topic._id)}>
+                <button
+                  className='text-green-500 hover:text-green-700'
+                  title='Detail'
+                  onClick={() => handleDetail(topic._id)}
+                >
                   <FaInfoCircle size={20} />
                 </button>
               </div>

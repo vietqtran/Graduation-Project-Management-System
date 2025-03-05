@@ -36,7 +36,7 @@ const TopicPage = () => {
       console.log('Server response:', response.data)
       toast.success('Topic submitted successfully!')
       setIsDrawerOpen(false)
-      setRefresh((prev)=> !prev)
+      setRefresh((prev) => !prev)
     } catch (error) {
       console.error('Error submitting topic:', error)
       toast.error('Failed to submit topic!')
