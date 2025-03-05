@@ -93,8 +93,8 @@ export class IdeaService {
       }
     })
   }
-  async getIdeaSupervisor(){
-    const IdeaOfSupervisor = await this.projectModel.find({category: 2}).populate('supervisor')
+  async getIdeaSupervisor() {
+    const IdeaOfSupervisor = await this.projectModel.find({ category: 2 }).populate('supervisor')
     return IdeaOfSupervisor
   }
   async deleteIdea(projectId: string, userId: string) {

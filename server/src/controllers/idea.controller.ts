@@ -37,9 +37,9 @@ export class IdeaController {
       const projects = await this.ideaService.getIdeaSupervisor()
       ResponseHandler.sendSuccess(res, projects)
     } catch (error) {
-        console.error('Error in getIdeaSupervisor controller:', error)
-        next(error)
-      }
+      console.error('Error in getIdeaSupervisor controller:', error)
+      next(error)
+    }
   })
   deleteIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
