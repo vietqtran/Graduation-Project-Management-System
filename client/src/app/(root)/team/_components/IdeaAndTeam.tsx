@@ -24,8 +24,14 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   const user = useAppSelector((state) => state.auth.user)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [idea,setIdea] = useState(project)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showChangeModal, setShowChangeModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: project?.name || '',
+    description: project?.description || ''
+  })
   const router = useRouter()
   const { sendInvite } = useInvite()
   const handleInviteClick = async () => {
@@ -55,7 +61,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
       })
 
       if (response.data.success) {
-        setShowSuccessModal(true)
+        setShowSuccessModal(true)      
       }
     } catch (error) {
       console.error('Error deleting idea:', error)
@@ -68,7 +74,47 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
     setShowSuccessModal(false)
     router.push('/create-idea')
   }
+  const handleChangeIdeaClick = () => {
+    setShowChangeModal(true)
+  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }))
+  }
 
+  const handleSubmit = async () => {
+    if (!project) return
+    setLoading(true)
+    try {
+      const response = await instance.patch(
+        `/ideas/change-idea/?projectId=${project._id}&userId=${user?._id}`,
+        {
+          name: formData.name,
+          description: formData.description
+        },
+        { withCredentials: true }
+      )
+      if (response.data.success) {
+        setShowChangeModal(false)
+        toast.success('Change Idea successfully!')   
+        const updatedProjectResponse = await instance.get(`/ideas/get-idea-student/?userIds=${user?._id}`, { withCredentials: true })
+      if (updatedProjectResponse.data.success) {
+        // Cập nhật lại state project
+        setIdea(updatedProjectResponse.data.data)
+      }
+      } else {
+        toast.error('Failed to change idea')
+      }
+    } catch (error) {
+      console.error('Error updating idea:', error)
+      toast.error('Something went wrong while changing the idea.')
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className='p-6 max-w-6xl mx-auto'>
       <h2 className='text-2xl font-bold text-purple-700'>My Group</h2>
@@ -81,14 +127,16 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
               <AvatarFallback>G</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className='text-xl font-semibold'>{project?.name}</h3>
+              <h3 className='text-xl font-semibold'>{idea?.name}</h3>
               <p className='text-sm text-gray-500'>
-                Created at: {project?.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
+                Created at: {idea?.created_at ? new Date(idea.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-            {user?._id === project?.leader?._id && (
+            {user?._id === idea?.leader?._id && (
               <div className='flex gap-3 p-6 ml-auto'>
-                <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
+                <Button 
+                onClick={handleChangeIdeaClick}
+                className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
                   Change Idea
                 </Button>
                 <Button
@@ -104,37 +152,37 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           <div className='mt-4 grid grid-cols-2 gap-4'>
             <div>
               <p className='font-bold'>Description</p>
-              <p className='italic'>{project?.description}</p>
+              <p className='italic'>{idea?.description}</p>
             </div>
             <div>
               <p className='font-bold'>Campus</p>
-              <p className='italic'>{project?.campus.name}</p>
+              <p className='italic'>{idea?.campus.name}</p>
             </div>
             <div>
               <p className='font-bold'>Field</p>
               <div className='flex flex-wrap gap-2'>
-                {project?.field.map((f: Field) => <FieldBadge key={f._id} name={f.name} description={f.description} />)}
+                {idea?.field.map((f: Field) => <FieldBadge key={f._id} name={f.name} description={f.description} />)}
               </div>
             </div>
             <div>
               <p className='font-bold'>Major</p>
               <div className='flex flex-wrap gap-2'>
-                {project?.major.map((m: Major) => <MajorBadge key={m._id} name={m.name} description={m.description} />)}
+                {idea?.major.map((m: Major) => <MajorBadge key={m._id} name={m.name} description={m.description} />)}
               </div>
             </div>
             <div>
               <p className='font-bold'>Total Members</p>
-              <p>{project?.members.length} members</p>
+              <p>{idea?.members.length} members</p>
             </div>
             <div>
               <p className='font-bold'>Available Slot</p>
-              <p>{5 - (project?.members?.length ?? 0)} members</p>
+              <p>{5 - (idea?.members?.length ?? 0)} members</p>
             </div>
           </div>
           <div className='mt-6'>
             <p className='font-bold'>Members</p>
             <div className='mt-2 flex items-center gap-3'>
-              {project?.members.map((member: User) => (
+              {idea?.members.map((member: User) => (
                 <div key={member._id} className='flex items-center gap-3'>
                   <Avatar className='w-12 h-12'>
                     <AvatarImage src={member.avatar} alt='User Avatar' />
@@ -146,7 +194,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                   <div>
                     <div className='flex items-center gap-3'>
                       <p className='font-semibold'>{member.display_name}</p>
-                      {member._id === project.leader._id && <LeaderStar />}
+                      {member._id === idea.leader._id && <LeaderStar />}
                     </div>
                     <p className='text-sm text-gray-600'>{member.email}</p>
                   </div>
@@ -157,7 +205,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           <div className='mt-6'>
             <p className='font-bold'>Supervisor</p>
             <div className='mt-2 flex items-center gap-3'>
-              {project?.supervisor.map((sup: User) => (
+              {idea?.supervisor.map((sup: User) => (
                 <div key={sup._id} className='flex items-center gap-3'>
                   <Avatar className='w-12 h-12'>
                     <AvatarImage src={sup.avatar} alt='User Avatar' />
@@ -169,7 +217,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                   <div>
                     <div className='flex items-center gap-3'>
                       <p className='font-semibold'>{sup.display_name}</p>
-                      {sup._id === project.leader._id && <LeaderStar />}
+                      {sup._id === idea.leader._id && <LeaderStar />}
                     </div>
                     <p className='text-sm text-gray-600'>{sup.email}</p>
                   </div>
@@ -197,6 +245,51 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           </div>
         </CardFooter>
       </Card>
+      {showChangeModal && (
+        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+          <div className='bg-white p-6 rounded-md w-96'>
+            <h3 className='text-lg font-semibold text-center'>Change Project Idea</h3>
+
+            {/* Project Name */}
+            <div className='mt-4'>
+              <label className='font-semibold text-gray-700'>Project Name</label>
+              <input
+                type='text'
+                name='name'
+                value={formData.name}
+                onChange={handleChange}
+                className='w-full border p-2 rounded-md mt-1'
+                placeholder='New Project Name'
+              />
+            </div>
+
+            {/* Description */}
+            <div className='mt-4'>
+              <label className='font-semibold text-gray-700'>Description</label>
+              <textarea
+                name='description'
+                value={formData.description}
+                onChange={handleChange}
+                className='w-full border p-2 rounded-md mt-1 h-24'
+                placeholder='Describe the new idea'
+              ></textarea>
+            </div>
+
+            <div className='mt-4 flex justify-between'>
+              <Button
+                onClick={handleSubmit}
+                className='border border-blue-600 text-blue-600 hover:bg-blue-400 hover:text-white bg-transparent w-1/3'>
+                Save Changes
+              </Button>
+              <Button
+                onClick={() => setShowChangeModal(false)}
+                className='border border-gray-500 text-gray-500 hover:bg-gray-400 hover:text-white bg-transparent w-1/3'>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal xác nhận xóa */}
       {showDeleteConfirmation && (
@@ -220,7 +313,6 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           </div>
         </div>
       )}
-
       {/* Success Modal */}
       {showSuccessModal && (
         <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>

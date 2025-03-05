@@ -43,4 +43,16 @@ export class IdeaController {
       next(error)
     }
   })
+  changeIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projectId = req.query.projectId as string
+      const userId = req.query.userId as string
+      const updateData = req.body
+      await this.ideaService.changeIdea(projectId,updateData, userId)
+      ResponseHandler.sendSuccess(res, null, 'Idea Changed successfully')
+    } catch (error) {
+      console.error('Error in deleteIdea controller:', error)
+      next(error)
+    }
+  })
 }
