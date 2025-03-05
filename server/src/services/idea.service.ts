@@ -93,6 +93,10 @@ export class IdeaService {
       }
     })
   }
+  async getIdeaSupervisor(){
+    const IdeaOfSupervisor = await this.projectModel.find({category: 2}).populate('supervisor')
+    return IdeaOfSupervisor
+  }
   async deleteIdea(projectId: string, userId: string) {
     return runTransaction(async (session) => {
       const project = await this.projectModel.findOne({ _id: projectId }).session(session).exec()
