@@ -17,7 +17,7 @@ const TopicPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
   const [filterField, setFilterField] = useState('all')
-  const [refresh, setRefresh] = useState(false)
+  const [refresh, setRefresh] = useState(true)
 
   const handleSearch = (search: string, sort: string, filter: string) => {
     setSearchTerm(search)
@@ -36,7 +36,7 @@ const TopicPage = () => {
       console.log('Server response:', response.data)
       toast.success('Topic submitted successfully!')
       setIsDrawerOpen(false)
-      setRefresh(!refresh)
+      setRefresh((prev)=> !prev)
     } catch (error) {
       console.error('Error submitting topic:', error)
       toast.error('Failed to submit topic!')
@@ -52,6 +52,7 @@ const TopicPage = () => {
         <MajorSelection onMajorSelect={setSelectedMajorId} />
         <TopicList
           refresh={refresh}
+          setRefresh={setRefresh}
           selectedMajorId={selectedMajorId}
           searchTerm={searchTerm}
           sortOrder={sortOrder}
