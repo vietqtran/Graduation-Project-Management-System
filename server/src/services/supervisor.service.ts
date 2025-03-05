@@ -7,15 +7,15 @@ import ProjectModel, { IProject } from '@/models/project.model'
 import { USER_STATUS } from '@/constants/status'
 
 export class SupervisorService {
-    private userModel: Model<IUser>
-    private projectModel: Model<IProject>
+  private userModel: Model<IUser>
+  private projectModel: Model<IProject>
 
-    constructor() {
-        this.userModel = UserModel
-        this.projectModel = ProjectModel
-    }
-    async getAllSupervisors() {
-        const supervisors = await this.userModel.find({ roles: {$in: ["supervisor"]} }).populate('campus')
-        return supervisors
-    }
+  constructor() {
+    this.userModel = UserModel
+    this.projectModel = ProjectModel
+  }
+  async getAllSupervisors() {
+    const supervisors = await this.userModel.find({ roles: { $in: ['supervisor'] } }).populate('campus')
+    return supervisors
+  }
 }

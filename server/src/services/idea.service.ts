@@ -1,6 +1,6 @@
 import { FilterQuery, Model, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
-import UserModel, { IUser } from '@/models/user.model'  
+import UserModel, { IUser } from '@/models/user.model'
 import { CreateIdeaDto } from '@/dtos/idea/create-idea.dto'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
@@ -47,11 +47,7 @@ export class IdeaService {
       })
 
       await idea.save({ session })
-      await this.userModel.updateOne(
-        { _id: ideaData.leader },
-        { $set: { status: USER_STATUS.ACTIVATED } },
-        { session }
-      )
+      await this.userModel.updateOne({ _id: ideaData.leader }, { $set: { status: USER_STATUS.ACTIVATED } }, { session })
       return idea
     })
   }
@@ -97,17 +93,17 @@ export class IdeaService {
       }
     })
   }
-  async deleteIdea(projectId: string,userId: string) {
+  async deleteIdea(projectId: string, userId: string) {
     return runTransaction(async (session) => {
       const project = await this.projectModel.findOne({ _id: projectId }).session(session).exec()
       if (project?.leader !== userId) {
-        throw new HttpException('You are not the leader of this idea', 400)   
+        throw new HttpException('You are not the leader of this idea', 400)
       }
       await this.projectModel.deleteOne({ _id: projectId }).session(session).exec()
-      await this.userModel.updateOne(
-        { _id: userId},
-        { $set: { status: USER_STATUS.UN_GROUPED } },        
-      ).session(session).exec()
+      await this.userModel
+        .updateOne({ _id: userId }, { $set: { status: USER_STATUS.UN_GROUPED } })
+        .session(session)
+        .exec()
     })
   }
 }

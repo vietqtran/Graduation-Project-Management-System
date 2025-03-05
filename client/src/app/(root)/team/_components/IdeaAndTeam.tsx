@@ -1,8 +1,8 @@
-"use client"
+'use client'
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Field } from '@/types/field.type'
 import FieldBadge from '@/components/common/FieldBadge'
 import LeaderStar from '@/components/common/LeaderStar'
@@ -25,7 +25,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false) 
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const router = useRouter()
   const { sendInvite } = useInvite()
   const handleInviteClick = async () => {
@@ -45,12 +45,14 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
     // Hiển thị modal xác nhận xóa
     setShowDeleteConfirmation(true)
   }
-  const confirmDelete  = async () => {
+  const confirmDelete = async () => {
     if (!project) return
     setLoading(true)
     setShowSuccessModal(false)
     try {
-      const response = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}&userId=${user?._id}`, { withCredentials: true })
+      const response = await instance.delete(`/ideas/delete-idea/?projectId=${project._id}&userId=${user?._id}`, {
+        withCredentials: true
+      })
 
       if (response.data.success) {
         setShowSuccessModal(true)
@@ -65,7 +67,6 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   const closeSuccessModal = () => {
     setShowSuccessModal(false)
     router.push('/create-idea')
-
   }
 
   return (
@@ -85,20 +86,20 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                 Created at: {project?.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-           {user?._id === project?.leader?._id && (
-             <div className='flex gap-3 p-6 ml-auto'>
-             <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
-                Change Idea
-             </Button>
-             <Button
-               onClick={handleDeleteClick}
-               className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
-               disabled={loading}
-             >
-               {loading ? 'Deleting...' : 'Delete Idea'}
-             </Button>
-           </div>
-           )}
+            {user?._id === project?.leader?._id && (
+              <div className='flex gap-3 p-6 ml-auto'>
+                <Button className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'>
+                  Change Idea
+                </Button>
+                <Button
+                  onClick={handleDeleteClick}
+                  className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
+                  disabled={loading}
+                >
+                  {loading ? 'Deleting...' : 'Delete Idea'}
+                </Button>
+              </div>
+            )}
           </div>
           <div className='mt-4 grid grid-cols-2 gap-4'>
             <div>

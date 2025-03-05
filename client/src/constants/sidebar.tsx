@@ -109,5 +109,5 @@ export const SIDEBAR_LINKS = [
     href: '/list-supervisor',
     label: 'List Supervisor',
     icon: <ListSupervisorIcon />
-  },
+  }
 ]

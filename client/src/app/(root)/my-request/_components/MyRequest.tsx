@@ -3,16 +3,17 @@ import React, { useEffect, useState } from 'react'
 import useInvite from '@/hooks/useInvite'
 import { toast } from 'sonner'
 import { useAppSelector } from '@/hooks'
-import  { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Field } from '@/types/field.type'
 import { Major } from '@/types/major.type'
 import { User } from '@/types/user.type'
-import { Project } from '@/types/project.type' 
-
+import { Project } from '@/types/project.type'
+import { Invite } from '@/types/invite.type'
+import { AxiosError } from 'axios'
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
-  const [invites, setInvites] = useState<any[]>([])
+  const [invites, setInvites] = useState<Invite[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const { getInviteByUserId, acceptInvite, rejectInvite } = useInvite()
 
@@ -27,8 +28,12 @@ const MyRequest = () => {
         } else {
           toast.error('User ID is not available')
         }
-      } catch (error) {
-        toast.error('Failed to fetch invites')
+      } catch (error: unknown) {
+        if (error instanceof AxiosError && error.response) {
+          toast.error(error.response.data.message)
+        } else {
+          toast.error('An unexpected error occurred')
+        }
       }
     }
     fetchInvites()
@@ -46,19 +51,27 @@ const MyRequest = () => {
 
   const handleAcceptInvite = async (inviteId: string) => {
     try {
-      await acceptInvite(inviteId) 
+      await acceptInvite(inviteId)
       setInvites((prevInvites) => prevInvites.filter((invite) => invite._id !== inviteId))
-    } catch (error) {
-      toast.error('Failed to accept invite')
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
     }
   }
 
   const handleRejectInvite = async (inviteId: string) => {
     try {
-      await rejectInvite(inviteId) 
+      await rejectInvite(inviteId)
       setInvites((prevInvites) => prevInvites.filter((invite) => invite._id !== inviteId))
-    } catch (error) {
-      toast.error('Failed to reject invite')
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
     }
   }
 
@@ -98,7 +111,7 @@ const MyRequest = () => {
                     <td className='border p-3'>{index + 1}</td>
                     <td
                       className='border p-3 text-blue-600 hover:underline cursor-pointer'
-                      onClick={() => handleProjectClick(invite.project)} 
+                      onClick={() => handleProjectClick(invite.project)}
                     >
                       {invite.project.name}
                     </td>
@@ -126,7 +139,9 @@ const MyRequest = () => {
                         </>
                       )}
                     </td>
-                    <td className='border p-3'>{new Date(invite.updated_at).toLocaleDateString()}</td>
+                    <td className='border p-3'>
+                      {invite.updated_at ? new Date(invite.updated_at).toLocaleDateString() : 'N/A'}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -176,7 +191,8 @@ const MyRequest = () => {
                     <Avatar className='w-12 h-12'>
                       <AvatarImage src={member.avatar} alt='User Avatar' />
                       <AvatarFallback>
-                        {member.first_name[0]}{member.last_name[0]}
+                        {member.first_name[0]}
+                        {member.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -187,10 +203,7 @@ const MyRequest = () => {
                 ))}
               </div>
             </div>
-            <button
-              className='bg-blue-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-blue-600'
-              onClick={closeModal}
-            >
+            <button className='bg-blue-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-blue-600' onClick={closeModal}>
               Close
             </button>
           </div>

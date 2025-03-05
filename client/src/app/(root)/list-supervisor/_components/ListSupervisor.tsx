@@ -8,6 +8,7 @@ import { useAppSelector } from '@/hooks'
 import useSupervisor from '@/hooks/useSupervisor'
 import useInvite from '@/hooks/useInvite'
 import { useProject } from '@/hooks'
+import { AxiosError } from 'axios'
 const ListSupervisor = () => {
   const user = useAppSelector((state) => state.auth.user)
   const [supervisors, setSupervisors] = useState<User[]>([])
@@ -18,15 +19,19 @@ const ListSupervisor = () => {
   const [itemsPerPage] = useState(5) // Số mục mỗi trang
   const { getSupervisor } = useSupervisor()
   const { sendInvite } = useInvite()
-  const { project, isLoading } = useProject()
+  const { project } = useProject()
   useEffect(() => {
     const fetchSupervisor = async () => {
       try {
         const response = await getSupervisor()
         setSupervisors(response.data)
         setFilteredSupervisors(response.data)
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Error fetching supervisors')
+      } catch (error: unknown) {
+        if (error instanceof AxiosError && error.response) {
+          toast.error(error.response.data.message)
+        } else {
+          toast.error('An unexpected error occurred')
+        }
       }
     }
     fetchSupervisor()
@@ -88,8 +93,13 @@ const ListSupervisor = () => {
       }
       await sendInvite(user._id, selectedSupervisor.email, project?._id)
       // console.log(user._id, selectedSupervisor.email, project?._id);
-    } catch (error: any) {
-      toast.error(error)
+    } catch (error: unknown) {
+      // Kiểm tra nếu lỗi là đối tượng Error
+      if (error instanceof Error) {
+        toast.error(error.message) // Sử dụng message từ đối tượng Error
+      } else {
+        toast.error('An unknown error occurred') // Trường hợp lỗi không xác định
+      }
     }
   }
   return (
@@ -119,7 +129,7 @@ const ListSupervisor = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredSupervisors.map((supervisor, index) => (
+              {currentItems.map((supervisor, index) => (
                 <tr key={supervisor._id} className='border-t hover:bg-gray-50'>
                   <td className='border p-3'>{index + 1}</td>
                   <td className='border p-3'>{supervisor.display_name}</td>

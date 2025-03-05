@@ -40,22 +40,22 @@ export class InviteService {
       if (!existingProject) {
         throw new HttpException('Project not found', 404) // Kiểm tra xem project đó có tồn tại không
       }
-      if(existingUser.roles?.includes('student')){
+      if (existingUser.roles?.includes('student')) {
         if (from_user === existingUser._id) {
-            throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
-          }
-          if (existingProject.members.includes(existingUser._id)) {
-              throw new HttpException('User is already a member of the project', 400) // Kiểm tra xem user đã là thành viên của project đó chưa
-            }
-            const checkInOtherProject = await this.projectModel
-        .findOne({
-          members: { $in: [existingUser?._id] }
-        })
-        .session(session)
+          throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
+        }
+        if (existingProject.members.includes(existingUser._id)) {
+          throw new HttpException('User is already a member of the project', 400) // Kiểm tra xem user đã là thành viên của project đó chưa
+        }
+        const checkInOtherProject = await this.projectModel
+          .findOne({
+            members: { $in: [existingUser?._id] }
+          })
+          .session(session)
         if (checkInOtherProject) {
-            throw new HttpException('User is already a member of another project', 400) // Kiểm tra xem user đã là thành viên của project khác chưa
-          }
-      } else if(existingUser.roles?.includes('supervisor')){
+          throw new HttpException('User is already a member of another project', 400) // Kiểm tra xem user đã là thành viên của project khác chưa
+        }
+      } else if (existingUser.roles?.includes('supervisor')) {
         if (from_user === existingUser._id) {
           throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
         }
@@ -152,25 +152,21 @@ export class InviteService {
       if (!user) {
         throw new HttpException('User not found', 404)
       }
-      if(user.roles && user.roles?.includes('student')){
+      if (user.roles && user.roles?.includes('student')) {
         if (project.members.length >= maxMember) {
-            throw new HttpException('Project has reached the maximum number of members', 400)
-          } else {
-            project.members.push(user._id)
-          }
-      }else if(user.roles &&  user.roles?.includes('supervisor')){
+          throw new HttpException('Project has reached the maximum number of members', 400)
+        } else {
+          project.members.push(user._id)
+        }
+      } else if (user.roles && user.roles?.includes('supervisor')) {
         if (project.supervisor.length >= maxSupervisor) {
-              throw new HttpException('Project has reached the maximum number of supervisors', 400)
-            } else {
-              project.supervisor.push(user._id)
-            }
+          throw new HttpException('Project has reached the maximum number of supervisors', 400)
+        } else {
+          project.supervisor.push(user._id)
+        }
       }
       await project.save({ session })
-              await this.userModel.updateOne(
-          { _id: invite.to_user },
-          { $set: { status: USER_STATUS.ACTIVATED } },
-          { session }
-        )
+      await this.userModel.updateOne({ _id: invite.to_user }, { $set: { status: USER_STATUS.ACTIVATED } }, { session })
 
       return invite
     })
