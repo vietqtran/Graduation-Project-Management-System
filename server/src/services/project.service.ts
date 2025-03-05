@@ -1,4 +1,4 @@
-import { FilterQuery, Model, UpdateQuery } from 'mongoose'
+import { FilterQuery, Model, mongo, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
@@ -18,6 +18,7 @@ import UserModel, { IUser } from '@/models/user.model'
 import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { convertType } from '@/helpers/convert-type-helper'
 import { USER_STATUS } from '@/constants/status'
+import { Types } from 'mongoose'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -363,21 +364,44 @@ export class ProjectService {
   }
 
   async createProjectAsTopic(
-    projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count' | 'status'>
+    projectData: Omit<
+      IProject,
+      | '_id'
+      | 'histories'
+      | 'tasks'
+      | 'mark'
+      | 'slow_count'
+      | 'status'
+      | 'created_by'
+      | 'updated_by'
+      | 'created_at'
+      | 'updated_at'
+    >
   ) {
     return runTransaction(async (session) => {
+      // Tạo project với các giá trị mặc định
       const project = await this.projectModel.create(
-        {
-          ...projectData,
-          histories: [], // Mảng lịch sử rỗng
-          tasks: [], // Mảng task rỗng
-          mark: null, // Điểm mặc định là null
-          slow_count: 0, // Số lần chậm tiến độ mặc định là 0
-          status: null, // Trạng thái mặc định là null
-          category: 1, // Giả định đây là dự án của sinh viên (category: 1)
-          leader: projectData.leader, // Lấy giá trị `leader` từ dữ liệu gửi lên
-          stage: 1 // Giai đoạn mặc định là 1
-        },
+        [
+          {
+            name: projectData.name, // Bắt buộc
+            description: projectData.description || '', // Có thể trống
+            major: projectData.major, // Bắt buộc
+            field: projectData.field, // Bắt buộc
+            campus: projectData.campus, // Bắt buộc
+            category: projectData.category,
+            supervisor: projectData.supervisor || [],
+            members: [],
+            documents: projectData.documents || [],
+            histories: [],
+            tasks: [],
+            mark: null,
+            slow_count: 0,
+            status: null,
+            stage: 1,
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+        ],
         { session }
       )
 
@@ -490,6 +514,151 @@ export class ProjectService {
         updated_by: project.updated_by,
         created_at: project.created_at,
         updated_at: project.updated_at
+      }
+    })
+  }
+
+  async getProjectsBySupervisor(supervisorId: string) {
+    return runTransaction(async (session) => {
+      console.log('🔍 Supervisor ID from token:', supervisorId)
+
+      // Log a sample project to see structure
+      const sampleProject = await this.projectModel.findOne().lean().exec()
+      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
+
+      // Try multiple query approaches and log results
+      console.log('Attempting string query...')
+      const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
+      console.log(`String query found ${stringQuery.length} projects`)
+
+      console.log('Attempting array string query...')
+      const arrayStringQuery = await this.projectModel
+        .find({ supervisor: { $in: [supervisorId] } })
+        .lean()
+        .exec()
+      console.log(`Array string query found ${arrayStringQuery.length} projects`)
+
+      let projects: any[] = []
+
+      // Handle valid ObjectId supervisor query
+      if (Types.ObjectId.isValid(supervisorId)) {
+        const objectId = new Types.ObjectId(supervisorId)
+        console.log('Attempting ObjectId query...')
+        const objectIdQuery = await this.projectModel.find({ supervisor: objectId }).lean().exec()
+        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
+
+        console.log('Attempting array ObjectId query...')
+        const arrayObjectIdQuery = await this.projectModel
+          .find({ supervisor: { $in: [objectId] } })
+          .lean()
+          .exec()
+        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
+
+        // Combine both ObjectId and string-based queries to a single array
+        projects = [...projects, ...objectIdQuery, ...arrayObjectIdQuery]
+      }
+
+      // Direct MongoDB query to compare
+      console.log('Attempting raw MongoDB query...')
+      const rawQuery = await this.projectModel.collection
+        .find({
+          supervisor: { $in: [supervisorId] }
+        })
+        .toArray()
+      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
+
+      // Combine raw query results into the projects array
+      projects = [...projects, ...rawQuery]
+
+      // Your original query with all the populates
+      const populatedProjects = await this.projectModel
+        .find({
+          $or: [
+            { supervisor: supervisorId },
+            { supervisor: { $in: [supervisorId] } },
+            ...(Types.ObjectId.isValid(supervisorId)
+              ? [
+                  { supervisor: new Types.ObjectId(supervisorId) },
+                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
+                ]
+              : [])
+          ]
+        })
+        .populate('leader')
+        .populate('supervisor')
+        .populate('major')
+        .populate('field')
+        .populate('campus')
+        .populate({
+          path: 'members',
+          populate: [
+            { path: 'major', select: 'name' },
+            { path: 'field', select: 'name' }
+          ]
+        })
+        .populate({
+          path: 'documents',
+          populate: { path: 'user', select: 'display_name email' }
+        })
+        .session(session)
+        .exec()
+
+      console.log(`Populated projects found: ${populatedProjects.length}`)
+
+      // Combine populated projects into the projects array
+      projects = [...projects, ...populatedProjects]
+
+      if (!projects || projects.length === 0) {
+        console.log('No projects found for supervisor after all query attempts')
+        return []
+      }
+
+      // Ensure projects is returned as an array
+      return projects
+    })
+  }
+
+  async getProjectLeadersBySupervisor(supervisorId: string) {
+    if (!supervisorId) {
+      throw new HttpException('Supervisor ID is required', 400)
+    }
+
+    return runTransaction(async (session) => {
+      try {
+        console.log('🆔 Supervisor ID:', supervisorId)
+
+        const supervisorObjectId = new Types.ObjectId(supervisorId)
+
+        // Tìm project có leader hợp lệ
+        const projects = await this.projectModel
+          .find({
+            supervisor: supervisorObjectId,
+            leader: { $ne: null } // Chỉ lấy project có leader không null
+          })
+          .populate<{ leader: { id: string; name: string; email: string } }>('leader', 'id name email')
+          .session(session)
+          .exec()
+
+        console.log('📌 Projects found:', projects.length)
+
+        if (!projects.length) {
+          return [] // Không có leader thì trả về mảng rỗng thay vì lỗi
+        }
+
+        // Lọc danh sách leader không trùng lặp
+        const leaders: { id: string; name: string; email: string }[] = []
+
+        for (const project of projects) {
+          if (project.leader && !leaders.some((l) => l.id === project.leader.id)) {
+            leaders.push(project.leader)
+          }
+        }
+
+        console.log('👨‍💼 Leaders found:', leaders)
+
+        return leaders
+      } catch (error) {
+        console.error('❌ Error in getProjectLeadersBySupervisor:', error)
       }
     })
   }

@@ -1,22 +1,68 @@
-import React from 'react'
+'use client'
+import React, { useEffect, useState } from 'react'
+import instance from '@/utils/axios'
 
-const majors = [
-  { id: 1, name: 'Software Engineering', description: 'Focuses on software development and architecture.' },
-  { id: 2, name: 'Information Security', description: 'Covers cybersecurity, encryption, and network security.' },
-  { id: 3, name: 'Information Systems', description: 'Combines business and technology to manage information.' },
-  { id: 4, name: 'Artificial Intelligence', description: 'Explores machine learning, robotics, and data science.' },
-  { id: 5, name: 'Digital Art & Design', description: 'Blends creativity with digital tools for multimedia design.' }
-]
+interface Major {
+  _id: string
+  name: string
+}
 
-const MajorSelection = () => {
+interface MajorSelectProps {
+  onMajorSelect: (majorId: string | null, selectAll?: boolean) => void // Thêm prop để truyền major ID khi bấm
+}
+
+const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
+  const [majors, setMajors] = useState<Major[]>([])
+  const [loading, setLoading] = useState(true)
+  const [hasData, setHasData] = useState(true)
+
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const response = await instance.get('/public/majors', { withCredentials: true })
+        if (response.data.data && response.data.data.length > 0) {
+          setMajors(response.data.data)
+          setHasData(true)
+        } else {
+          setHasData(false)
+        }
+      } catch (error) {
+        console.error('Error fetching majors:', error)
+        setHasData(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMajors()
+  }, [])
   return (
-    <div className='w-1/3 border rounded-lg p-2 self-start flex flex-col gap-2 p-4'>
-      <h2 className='text-lg font-semibold mb-2'>Select Your Major</h2>
-      {majors.map((major) => (
-        <button key={major.id} className='p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition'>
-          {major.name}
-        </button>
-      ))}
+    <div className='w-1/3 border rounded-lg p-4 self-start flex flex-col gap-2'>
+      <h2 className='text-lg font-semibold mb-2'>Select Major</h2>
+
+      {loading ? (
+        <div className='text-center text-gray-500'>Loading...</div>
+      ) : hasData ? (
+        <>
+          <button
+            className='p-2 rounded-md border bg-blue-700 border-gray-300 '
+            onClick={() => onMajorSelect(null, true)}
+          >
+            Select all majors
+          </button>
+          {majors.map((major) => (
+            <button
+              key={major._id}
+              className='p-2 rounded-md border border-gray-300 hover:bg-gray-100'
+              onClick={() => onMajorSelect(major._id, false)}
+            >
+              {major.name}
+            </button>
+          ))}
+        </>
+      ) : (
+        <div>No majors available</div>
+      )}
     </div>
   )
 }

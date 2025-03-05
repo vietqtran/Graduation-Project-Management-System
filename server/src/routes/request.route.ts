@@ -4,7 +4,8 @@ import { Router } from 'express'
 const router = Router()
 const requestController = new RequestController()
 
-router.get('/requests', requestController.getAllRequests)
+router.get('/get-all-requests', requestController.getAllRequests)
+router.post('/create', requestController.createRequest)
 router.post('/approve/:id', requestController.approveRequest)
 router.post('/deny/:id', requestController.denyRequest)
 
