@@ -15,10 +15,10 @@ interface Request {
   type: string
   from_user: string
   document: string
-  due_date?: Date // Có thể null hoặc undefined
+  due_date?: Date  
   status: string
-  created_at?: Date // Có thể null hoặc undefined
-  updated_at?: Date // Có thể null hoặc undefined\
+  created_at?: Date  
+  updated_at?: Date  
 }
 
 interface RequestTableProps {
@@ -75,28 +75,27 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
             <TableCell>{request.to_user || 'N/A'}</TableCell>
             <TableCell>
               <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="default">Actions</Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent
-    align="center"
-    className="w-40 bg-black border text-red-500 border-blue-500 divide-y flex flex-col items-center rounded-lg"
-  >
-    <DropdownMenuItem
-      className="w-full text-center justify-center bg-black text-white border border-blue-500 transition-all duration-200 hover:text-red-500 hover:-translate-y-1"
-      onClick={() => handleUpdate(request._id)}
-    >
-      Edit request
-    </DropdownMenuItem>
-    <DropdownMenuItem
-      className="w-full text-center justify-center bg-black text-white border border-blue-500 transition-all duration-200 hover:text-red-500 hover:-translate-y-1"
-      onClick={() => handleDelete(request._id)}
-    >
-      Delete request
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-
+                <DropdownMenuTrigger asChild>
+                  <Button variant='default'>Actions</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align='center'
+                  className='w-40 bg-black border text-red-500 border-blue-500 divide-y flex flex-col items-center rounded-lg'
+                >
+                  <DropdownMenuItem
+                    className='w-full text-center justify-center bg-black text-white border border-blue-500 transition-all duration-200 hover:text-red-500 hover:-translate-y-1'
+                    onClick={() => handleUpdate(request._id)}
+                  >
+                    Edit request
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className='w-full text-center justify-center bg-black text-white border border-blue-500 transition-all duration-200 hover:text-red-500 hover:-translate-y-1'
+                    onClick={() => handleDelete(request._id)}
+                  >
+                    Delete request
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
           </TableRow>
         ))}

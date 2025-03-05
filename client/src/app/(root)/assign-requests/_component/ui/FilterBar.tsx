@@ -57,9 +57,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>All Status</SelectItem>
-            <SelectItem value='pending'>Pending</SelectItem>
-            <SelectItem value='scheduled'>Scheduled</SelectItem>
-            <SelectItem value='on progress'>On Progress</SelectItem>
+            <SelectItem value='assigned'>Assigned</SelectItem>
             <SelectItem value='completed'>Completed</SelectItem>
           </SelectContent>
         </Select>
@@ -70,8 +68,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>All Request Types</SelectItem>
-            <SelectItem value='standard'>Standard Request</SelectItem>
-            <SelectItem value='video-game'>Video Games</SelectItem>
+            <SelectItem value='project'>Project</SelectItem>
           </SelectContent>
         </Select>
 
@@ -114,7 +111,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
         </Button>
       </div>
 
-      {/* Drawer using Radix UI */}
       <Dialog.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className='fixed inset-0 bg-black bg-opacity-30' />
