@@ -1,5 +1,7 @@
 import * as React from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 
 const DetailIdea: React.FC = () => {
   const ideaDetails = [
@@ -19,36 +21,32 @@ const DetailIdea: React.FC = () => {
   ]
 
   return (
-    <div
-      style={{
-        maxWidth: '800px',
-        margin: 'auto',
-        padding: '20px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '10px',
-        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
-      }}
-    >
-      <h2 style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', color: '#007bff', marginBottom: '20px' }}>
-        Detail Idea
-      </h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead style={{ width: '30%', fontWeight: 'bold', color: '#333' }}>Field</TableHead>
-            <TableHead style={{ color: '#333' }}>Value</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {ideaDetails.map((detail, index) => (
-            <TableRow key={index}>
-              <TableCell style={{ fontWeight: 'bold', color: '#555' }}>{detail.label}:</TableCell>
-              <TableCell style={{ color: '#555' }}>{detail.value}</TableCell>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant='outline'>View Idea Details</Button>
+      </DialogTrigger>
+      <DialogContent className='max-w-2xl'>
+        <DialogHeader>
+          <DialogTitle className='text-center text-xl font-bold text-blue-600'>Detail Idea</DialogTitle>
+        </DialogHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-1/3 font-bold text-gray-700'>Field</TableHead>
+              <TableHead className='text-gray-700'>Value</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {ideaDetails.map((detail, index) => (
+              <TableRow key={index}>
+                <TableCell className='font-bold text-gray-600'>{detail.label}:</TableCell>
+                <TableCell className='text-gray-600'>{detail.value}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
   )
 }
 

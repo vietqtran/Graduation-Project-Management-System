@@ -2,7 +2,19 @@
 
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ProjectIdea } from './ReviewIdeas'
+import * as React from 'react'
+import { toast } from 'sonner'
+
+interface ProjectIdea {
+  _id: string
+  name: string
+  field: string
+  description: string // Add this line
+  status: string
+  created_at: string
+  updated_at: string
+  campus: string
+}
 
 interface IdeaTableProps {
   ideas: ProjectIdea[]
@@ -26,12 +38,13 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
             <TableRow key={idea._id} className='hover:bg-gray-50'>
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
-              <TableCell>{idea.field}</TableCell>
+              <TableCell>{idea._id}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                <Button variant='default'>Accept</Button>
-                <Button variant='destructive'>Reject</Button>
-                <Button variant='outline' onClick={() => (window.location.href = '/idea/idea-detail')}>
-                  Detail
+                <Button variant='default' onClick={() => toast.success('Idea accepted successfully')}>
+                  Accept
+                </Button>
+                <Button variant='destructive' onClick={() => toast.success('Idea reject successfully')}>
+                  Reject
                 </Button>
               </TableCell>
             </TableRow>
