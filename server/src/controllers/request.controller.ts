@@ -67,4 +67,10 @@ export class RequestController {
     await this.requestService.deleteRequest(id, tokenPayload._id)
     ResponseHandler.sendSuccess(res, null, 'Delete request successfully')
   })
+
+  getRequestById = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const request = await this.requestService.getRequestById(id)
+    ResponseHandler.sendSuccess(res, request)
+  })
 }

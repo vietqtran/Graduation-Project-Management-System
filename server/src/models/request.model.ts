@@ -71,7 +71,7 @@ export const RequestSchema = new Schema<IRequest>(
   },
   {
     timestamps: {
-      createdAt: 'created_at',  
+      createdAt: 'created_at',
       updatedAt: 'updated_at'
     },
     versionKey: false
