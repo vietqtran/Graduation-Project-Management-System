@@ -21,4 +21,15 @@ export class IdeaController {
       next(error) // Nếu có lỗi, truyền lỗi tới middleware xử lý lỗi
     }
   })
+
+  getIdeaStudent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userIds = req.query.userIds as unknown as string
+      const projects = await this.ideaService.getIdeaStudent(userIds.split(','))
+      ResponseHandler.sendSuccess(res, projects)
+    } catch (error) {
+      console.error('Error in getIdeaStudent controller:', error)
+      next(error)
+    }
+  })
 }

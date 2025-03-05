@@ -1,9 +1,12 @@
-import { Request, Response, NextFunction } from 'express'
-import { RequestService } from '@/services/request.service'
-import { HttpException } from '@/shared/exceptions/http.exception'
-import { ResponseHandler } from '@/middlewares/response-handler.middleware'
+import { NextFunction, Request, Response } from 'express'
+
 import { ApproveRequestDto } from '@/dtos/request/approve-request.dto'
 import { DenyRequestDto } from '@/dtos/request/deny-request.dto'
+import { asyncHandler } from '@/helpers/async-handler'
+import { getUser } from '@/helpers/auth-helper'
+import { ResponseHandler } from '@/middlewares/response-handler.middleware'
+import { RequestService } from '@/services/request.service'
+import { HttpException } from '@/shared/exceptions/http.exception'
 
 export class RequestController {
   private readonly requestService: RequestService
@@ -12,43 +15,49 @@ export class RequestController {
     this.requestService = new RequestService()
   }
 
-  async getAllRequests(req: Request, res: Response, next: NextFunction) {
+  getAllRequests = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const requests = await this.requestService.getAllRequests()
+      const tokenPayload = getUser(req) // ✅ Lấy user từ token
+      const userId = tokenPayload._id
+
+      console.log('Token payload:', tokenPayload)
+      console.log('User ID from token:', userId)
+
+      const requests = await this.requestService.getUserRequests(userId) // ✅ Lấy request theo from_user
       ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)
       next(error)
     }
-  }
+  })
 
-  async approveRequest(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params
-      const approveRequestDto: ApproveRequestDto = req.body
-      const request = await this.requestService.updateRequest(id, 'approved', approveRequestDto)
-      if (!request) {
-        throw new HttpException('Request not found', 404)
-      }
-      ResponseHandler.sendSuccess(res, request, 'Request approved successfully')
-    } catch (error) {
-      ResponseHandler.sendError(res, error)
-      next(error)
-    }
-  }
+  approveRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const approveRequestDto: ApproveRequestDto = req.body
+    const request = await this.requestService.updateRequest(id, 'approved', approveRequestDto)
 
-  async denyRequest(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params
-      const denyRequestDto: DenyRequestDto = req.body
-      const request = await this.requestService.updateRequest(id, 'rejected', denyRequestDto)
-      if (!request) {
-        throw new HttpException('Request not found', 404)
-      }
-      ResponseHandler.sendSuccess(res, request, 'Request denied successfully')
-    } catch (error) {
-      ResponseHandler.sendError(res, error)
-      next(error)
+    if (!request) {
+      throw new HttpException('Request not found', 404)
     }
-  }
+
+    ResponseHandler.sendSuccess(res, request, 'Request approved successfully')
+  })
+
+  denyRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const denyRequestDto: DenyRequestDto = req.body
+    const request = await this.requestService.updateRequest(id, 'rejected', denyRequestDto)
+
+    if (!request) {
+      throw new HttpException('Request not found', 404)
+    }
+
+    ResponseHandler.sendSuccess(res, request, 'Request denied successfully')
+  })
+
+  createRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const requestData = req.body
+    const request = await this.requestService.createRequest(requestData)
+    ResponseHandler.sendSuccess(res, request, 'Create request successfully')
+  })
 }

@@ -54,4 +54,61 @@ export class ProjectController {
     const students = await this.projectService.staffGetListAvailableStudents(staffGetListAvailableStudentsDto)
     ResponseHandler.sendSuccess(res, students)
   })
+
+  createProjectAsTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const projectData = req.body
+    const project = await this.projectService.createProjectAsTopic(projectData)
+    ResponseHandler.sendSuccess(res, project, 'Create project as topic successfully')
+  })
+
+  getProjectsWithNullStatus = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const projects = await this.projectService.getProjectsWithNullStatus()
+    ResponseHandler.sendSuccess(res, projects)
+  })
+
+  updateTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const projectData = req.body
+    const tokenPayload = getUser(req)
+    const project = await this.projectService.updateTopic(id, projectData, tokenPayload)
+    ResponseHandler.sendSuccess(res, project, 'Update topic successfully')
+  })
+
+  getTopicDetail = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const project = await this.projectService.getTopicDetail(id)
+    ResponseHandler.sendSuccess(res, project)
+  })
+
+  deleteTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    await this.projectService.deleteTopic(id)
+    ResponseHandler.sendSuccess(res, null, 'Delete topic successfully')
+  })
+
+  getProjectsBySupervisor = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const supervisorId = tokenPayload._id
+      console.log('Token payload:', tokenPayload)
+      console.log('Supervisor ID from token:', supervisorId)
+
+      const projects = await this.projectService.getProjectsBySupervisor(supervisorId)
+      ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  })
+
+  getProjectLeaderForSupervisor = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const tokenPayload = getUser(req)
+      const leaders = await this.projectService.getProjectLeadersBySupervisor(tokenPayload._id)
+
+      return ResponseHandler.sendSuccess(res, leaders, 'Get leaders from projects successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 }
