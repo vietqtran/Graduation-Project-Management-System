@@ -6,7 +6,7 @@ import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
 
 interface Request {
-  _id: number
+  _id: string
   remark: string
   to_user: string
   type: string

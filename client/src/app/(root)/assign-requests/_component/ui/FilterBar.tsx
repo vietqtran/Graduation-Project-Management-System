@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import * as Dialog from '@radix-ui/react-dialog'
 import React, { useState } from 'react'
-import RequestForm from './RequestForm' // Import RequestForm component
+import RequestForm from './RequestForm'
+import { toast } from 'sonner'
+import instance from '@/utils/axios'
 
 interface FilterBarProps {
   onFilterChange: (filterData: {
@@ -24,6 +26,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
   const [requestType, setRequestType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [formData, setFormData] = useState<{
+    to_user: string
+    type: string
+    remark: string
+    description: string
+    from_user: string
+    document: string
+    due_date: string
+  } | null>(null)
 
   const handleApplyFilter = () => {
     onFilterChange({
@@ -40,6 +51,44 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
     setRequestType('all')
     setDateRange({ start: '', end: '' })
     onClearFilter()
+  }
+
+  const handleSubmit = async (data: {
+    to_user: string
+    type: string
+    remark: string
+    description: string
+    from_user: string
+    document: string
+    due_date: string
+  }) => {
+    setFormData(data)
+  }
+
+  const confirmSubmit = async () => {
+    if (!formData) {
+      toast.error('No request data to submit')
+      return
+    }
+
+    if (!formData.document) {
+      toast.error('Please upload a document before submitting')
+      return
+    }
+
+    try {
+      const response = await instance.post('/request/create-request', formData, {
+        withCredentials: true
+      })
+
+      console.log(response.data)
+      toast.success('Request created successfully!')
+      setIsDrawerOpen(false)
+      setFormData(null)
+    } catch (error) {
+      console.error('Error creating request:', error)
+      toast.error('Failed to create request')
+    }
   }
 
   return (
@@ -98,7 +147,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
 
       <div className='flex gap-2 justify-center items-center'>
         <div className='flex flex-wrap gap-4 items-center justify-center'>
-          {' '}
           <Label className='text-center rounded-full border-2 border-red-500 p-2'>Group 1 | SE</Label>
           <Label className='text-center rounded-full border-2 border-purpe-500 p-2'>Group 2 | IT</Label>
           <Label className='text-center rounded-full border-2 border-blue-500 p-2'>Group 3 | HR</Label>
@@ -116,13 +164,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
           <Dialog.Overlay className='fixed inset-0 bg-black bg-opacity-30' />
           <Dialog.Content className='fixed top-0 right-0 w-1/2 h-full bg-white shadow-lg p-6 flex flex-col'>
             <div className='flex-1 overflow-y-auto'>
-              <RequestForm onClose={() => setIsDrawerOpen(false)} onSubmit={(data) => console.log(data)} />
+              <RequestForm onClose={() => setIsDrawerOpen(false)} onSubmit={(formData) => handleSubmit(formData)} />
             </div>
             <div className='flex justify-end gap-6'>
               <Button variant='outline' onClick={() => setIsDrawerOpen(false)}>
                 Cancel
               </Button>
-              <Button variant='default' onClick={() => setIsDrawerOpen(false)}>
+              <Button variant='default' onClick={confirmSubmit} disabled={!formData}>
                 Submit
               </Button>
             </div>

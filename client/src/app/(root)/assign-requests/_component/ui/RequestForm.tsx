@@ -8,12 +8,12 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import instance from '@/utils/axios'
-
 type RequestFormProps = {
   onSubmit: (data: {
     to_user: string
     type: string
     remark: string
+    description: string
     from_user: string
     document: string
     due_date: string
@@ -21,12 +21,13 @@ type RequestFormProps = {
   onClose: () => void
 }
 
-const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
+const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
   const form = useForm({
     defaultValues: {
       to_user: '',
       type: 'project',
       remark: '',
+      description: '',
       from_user: '',
       document: '',
       due_date: ''
@@ -44,7 +45,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
         const response = await instance.get('/project/get-project-leader-for-supervisor', {
           withCredentials: true
         })
-        console.log('Leaders data:', response.data.data) // Debug API response
         if (Array.isArray(response.data.data)) {
           setLeaders(response.data.data)
         } else {
@@ -58,6 +58,11 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
   }, [])
 
   async function handleUpload(file: File) {
+    if (!file) {
+      toast.error('Please select a file first')
+      return
+    }
+
     setUploading(true)
     try {
       const fileList = {
@@ -81,6 +86,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
       }
 
       setDocumentId(fileResult.key)
+      form.setValue('document', fileResult.key)
       toast.success('File uploaded successfully!')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Upload failed')
@@ -89,18 +95,34 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
     }
   }
 
+  const handleFormSubmit = (
+    data: Record<'to_user' | 'type' | 'remark' | 'description' | 'from_user' | 'document' | 'due_date', string>
+  ) => {
+    // Validate document upload
+    if (!documentId) {
+      toast.error('Please upload a document before submitting')
+      return
+    }
+
+    // Validate required fields
+    const requiredFields: Array<keyof typeof data> = ['to_user', 'description', 'due_date']
+    const missingFields = requiredFields.filter((field) => !data[field])
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in the following fields: ${missingFields.join(', ')}`)
+      return
+    }
+
+    // Call the onSubmit prop with the form data
+    onSubmit(data)
+  }
+
   return (
     <div>
       <div className='bg-white grid p-1 gap-4'>
         <h2 className='text-2xl font-bold text-center mt-12'>Submit a Request</h2>
         <Form {...form}>
-          <form
-            className='grid grid-cols-2 gap-4'
-            onSubmit={form.handleSubmit((data) => {
-              onSubmit(data)
-              onClose() // Đóng Drawer sau khi submit
-            })}
-          >
+          <form className='grid grid-cols-2 gap-4' onSubmit={form.handleSubmit(handleFormSubmit)}>
             <FormField
               control={form.control}
               name='to_user'
@@ -134,6 +156,20 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit, onClose }) => {
                   <FormLabel>Remark</FormLabel>
                   <FormControl>
                     <Input type='text' placeholder='Enter remark' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='description'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input type='text' placeholder='Enter description' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
