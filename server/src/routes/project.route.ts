@@ -34,4 +34,5 @@ router.patch('/update-topic/:id', projectController.updateTopic)
 router.delete('/delete-topic/:id', projectController.deleteTopic)
 router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
 router.get('/get-project-leader-for-supervisor', projectController.getProjectLeaderForSupervisor)
+router.patch('/approve-idea/:id', projectController.approveIdea)
 export { router as projectRoutes }

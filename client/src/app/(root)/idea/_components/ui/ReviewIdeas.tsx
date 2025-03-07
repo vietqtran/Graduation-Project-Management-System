@@ -38,8 +38,8 @@ const ReviewIdeas = () => {
             ...project,
             priority: determinePriority(project)
           }))
-          fetchProjectIdeas()
-          setFilteredIdeas(projectsWithPriority)
+          console.log(projectsWithPriority)
+          setFilteredIdeas(response.data.data)
           setHasData(true)
         } else {
           setHasData(false)
@@ -54,7 +54,6 @@ const ReviewIdeas = () => {
     fetchProjectIdeas()
   }, [])
 
-  // Simple priority determination logic (adjust as needed)
   const determinePriority = (project: ProjectIdea): 'low' | 'medium' | 'high' => {
     if (project.status === 'completed') return 'low'
     if (project.status === 'in-progress') return 'medium'

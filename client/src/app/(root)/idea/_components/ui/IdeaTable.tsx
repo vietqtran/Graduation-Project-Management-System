@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import * as React from 'react'
+import { useState, useCallback} from 'react'
 import { toast } from 'sonner'
+import instance from '@/utils/axios'
 
 interface ProjectIdea {
   _id: string
@@ -22,6 +23,24 @@ interface IdeaTableProps {
 }
 
 const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
+const [loadingId, setLoadingId] = useState<string | null>(null) // ID của project đang xử lý
+
+  const handleAccept = useCallback(async (id: string) => {
+    if (!id || loadingId) return // Ngăn gọi API nếu không có ID hoặc đang xử lý
+
+    setLoadingId(id) // Đánh dấu project đang xử lý
+    try {
+      const response = await instance.patch('/project/approve-idea', { id }, { withCredentials: true })
+      if (response.status === 200) {
+        toast.success('Idea accepted successfully')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to accept idea')
+    } finally {
+      setLoadingId(null) // Reset trạng thái sau khi API hoàn thành
+    }
+  }, [loadingId])
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
       <Table className='min-w-full bg-white'>
@@ -40,7 +59,7 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
               <TableCell>{idea.name}</TableCell>
               <TableCell>{idea._id}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                <Button variant='default' onClick={() => toast.success('Idea accepted successfully')}>
+                <Button variant='default' onClick={() => handleAccept(idea._id)}>
                   Accept
                 </Button>
                 <Button variant='destructive' onClick={() => toast.success('Idea reject successfully')}>

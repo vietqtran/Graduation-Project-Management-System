@@ -2,6 +2,7 @@ import { FilterQuery, Model, mongo, UpdateQuery } from 'mongoose'
 import ProjectModel, { IProject } from '@/models/project.model'
 
 import { HttpException } from '@/shared/exceptions/http.exception'
+import { EmailQueue } from '@/queues/email.queue'
 import { runTransaction } from '@/helpers/transaction-helper'
 import {
   StaffGetDetailProjectDto,
@@ -17,18 +18,22 @@ import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/hel
 import UserModel, { IUser } from '@/models/user.model'
 import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { convertType } from '@/helpers/convert-type-helper'
-import { USER_STATUS } from '@/constants/status'
+import { MailService } from '@/services/mail.service'
+import { USER_STATUS, PROJECT_STATUS } from '@/constants/status'
 import { Types } from 'mongoose'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
   private readonly userModel: Model<IUser>
   private readonly parameterModel: Model<IParameter>
+  private readonly emailQueue: EmailQueue
+  private readonly mailService: MailService
 
   constructor() {
     this.projectModel = ProjectModel
     this.userModel = UserModel
-    this.parameterModel = ParameterModel
+    this.mailService = new MailService()
+    this.emailQueue = new EmailQueue(this.mailService)
   }
 
   async create(projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count'>) {
@@ -379,15 +384,14 @@ export class ProjectService {
     >
   ) {
     return runTransaction(async (session) => {
-      // Tạo project với các giá trị mặc định
       const project = await this.projectModel.create(
         [
           {
-            name: projectData.name, // Bắt buộc
-            description: projectData.description || '', // Có thể trống
-            major: projectData.major, // Bắt buộc
-            field: projectData.field, // Bắt buộc
-            campus: projectData.campus, // Bắt buộc
+            name: projectData.name,  
+            description: projectData.description || '',  
+            major: projectData.major,  
+            field: projectData.field,  
+            campus: projectData.campus,  
             category: projectData.category,
             supervisor: projectData.supervisor || [],
             members: [],
@@ -681,6 +685,62 @@ export class ProjectService {
       }
     })
   }
+
+  async approveProject(projectId: string, status: PROJECT_STATUS, userEmail: string) {
+  return runTransaction(async (session) => {
+    console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
+
+    // Log a sample project to check structure
+    const sampleProject = await this.projectModel.findOne().lean().exec()
+    console.log('Sample project structure:', sampleProject)
+
+    // Find the project using multiple approaches
+    console.log('Attempting direct ID query...')
+    const directQuery = await this.projectModel.findById(projectId).session(session)
+    console.log(directQuery ? 'Project found' : 'No project found')
+
+    let project = directQuery
+
+    if (!project && Types.ObjectId.isValid(projectId)) {
+      console.log('Attempting ObjectId query...')
+      project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
+      console.log(project ? 'Project found with ObjectId' : 'No project found')
+    }
+
+    if (!project) {
+      console.log('❌ Project not found')
+      return { message: 'Project not found' }
+    }
+
+    // Update project status
+    project.status = status
+    await project.save({ session })
+    console.log(`✅ Project status updated to ${status}`)
+
+    // Commit transaction
+    await session.commitTransaction()
+
+    // Send notification email
+    this.emailQueue.addEmailJob({
+      to: userEmail,
+      subject: `Project Status Updated: ${status}`,
+      templateName: 'project-status-update',
+      context: {
+        projectTitle: project.name,
+        status,
+        year: new Date().getFullYear(),
+        start_url: process.env.CLIENT_URL
+      }
+    })
+
+    console.log(`📧 Notification email sent to ${userEmail}`)
+
+    return { message: 'Project status updated successfully', project }
+  })
+}
+
+
+
 }
 
 export default new ProjectService()

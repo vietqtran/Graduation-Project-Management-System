@@ -111,4 +111,15 @@ export class ProjectController {
       return ResponseHandler.sendError(res, error)
     }
   })
+
+  approveIdea = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const dto = req.body
+      const tokenPayload = getUser(req)
+      const response = await this.projectService.approveProject(dto.projectId, dto.status, tokenPayload.email)
+      return ResponseHandler.sendSuccess(res, response, 'Approve project successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 }
