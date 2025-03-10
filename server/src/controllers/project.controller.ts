@@ -116,7 +116,7 @@ export class ProjectController {
     try {
       const dto = req.body
       const tokenPayload = getUser(req)
-      const response = await this.projectService.approveProject(dto.projectId, dto.status, tokenPayload.email)
+      const response = await this.projectService.approveIdea(dto.projectId, dto.status, tokenPayload.email)
       return ResponseHandler.sendSuccess(res, response, 'Approve project successfully')
     } catch (error) {
       return ResponseHandler.sendError(res, error)

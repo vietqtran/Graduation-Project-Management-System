@@ -2,9 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { useState, useCallback} from 'react'
-import { toast } from 'sonner'
 import instance from '@/utils/axios'
+import { useCallback, useState } from 'react'
+import { toast } from 'sonner'
 
 interface ProjectIdea {
   _id: string
@@ -30,7 +30,7 @@ const [loadingId, setLoadingId] = useState<string | null>(null) // ID của proj
 
     setLoadingId(id) // Đánh dấu project đang xử lý
     try {
-      const response = await instance.patch('/project/approve-idea', { id }, { withCredentials: true })
+      const response = await instance.patch('/project/approve-idea', { id, status: "APPROVED" }, { withCredentials: true })
       if (response.status === 200) {
         toast.success('Idea accepted successfully')
       }
