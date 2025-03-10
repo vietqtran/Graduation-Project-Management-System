@@ -5,8 +5,9 @@ const router = Router()
 const requestController = new RequestController()
 
 router.get('/get-all-requests', requestController.getAllRequests)
-router.post('/create', requestController.createRequest)
+router.post('/create-request', requestController.createRequest)
 router.post('/approve/:id', requestController.approveRequest)
 router.post('/deny/:id', requestController.denyRequest)
-
+router.delete('/delete-request/:id', requestController.deleteRequest)
+router.get('/get-request-by-id/:id', requestController.getRequestById)
 export { router as requestRoutes }

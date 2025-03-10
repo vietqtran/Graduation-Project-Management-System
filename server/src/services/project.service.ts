@@ -446,30 +446,49 @@ export class ProjectService {
     })
   }
 
-  async updateTopic(projectId: string, updateData: StaffUpdateProjectDto, tokenPayload: TokenPayload) {
+  async updateTopic(
+    projectId: string,
+    updateData: Partial<Omit<IProject, '_id' | 'created_by' | 'created_at' | 'updated_at'>>,
+    tokenPayload: TokenPayload
+  ) {
     return runTransaction(async (session) => {
-      const project = await this.projectModel.findOne({ _id: projectId, status: null }).session(session)
+      const project = await this.projectModel.findOne({ _id: projectId }).session(session)
 
       if (!project) {
-        throw new HttpException('Project not found or project has a status other than null', 404)
+        throw new HttpException('Project not found', 404)
       }
 
-      project.name = updateData.name
-      project.major = updateData.major
-      project.field = updateData.field
-      project.campus = updateData.campus
-      project.category = updateData.category
-      project.status = updateData.status
-      project.stage = updateData.stage
-      project.slow_count = updateData.slow_count
-      project.members = updateData.members
-      project.supervisor = updateData.supervisor
-      project.leader = updateData.leader
-      project.description = updateData.description ?? ''
-      project.updated_by = tokenPayload._id
-      project.updated_at = new Date()
+      // Cập nhật thông tin project
+      const updatedProject = await this.projectModel.updateOne(
+        { _id: projectId },
+        {
+          $set: {
+            name: updateData.name ?? project.name,
+            description: updateData.description ?? project.description,
+            major: updateData.major ?? project.major,
+            field: updateData.field ?? project.field,
+            campus: updateData.campus ?? project.campus,
+            category: updateData.category ?? project.category,
+            supervisor: updateData.supervisor ?? project.supervisor,
+            members: updateData.members ?? project.members,
+            documents: updateData.documents ?? project.documents,
+            histories: updateData.histories ?? project.histories,
+            tasks: updateData.tasks ?? project.tasks,
+            mark: updateData.mark ?? project.mark,
+            slow_count: updateData.slow_count ?? project.slow_count,
+            status: updateData.status ?? project.status,
+            stage: updateData.stage ?? project.stage,
+            updated_by: tokenPayload._id,
+            updated_at: new Date()
+          }
+        },
+        { session }
+      )
 
-      await project.save({ session })
+      if (updatedProject.matchedCount === 0) {
+        throw new HttpException('Failed to update project', 400)
+      }
+
       return { message: 'Project updated successfully' }
     })
   }
@@ -477,7 +496,7 @@ export class ProjectService {
   async getTopicDetail(projectId: string) {
     return runTransaction(async (session) => {
       const project = await this.projectModel
-        .findOne({ _id: projectId, status: null })
+        .findOne({ _id: projectId })
         .populate({ path: 'major', select: '_id name' })
         .populate({ path: 'field', select: '_id name' })
         .populate({ path: 'campus', select: '_id name' })
@@ -486,34 +505,34 @@ export class ProjectService {
         .populate({ path: 'members', select: '_id display_name username email avatar' })
         .populate({ path: 'created_by', select: '_id display_name username email avatar' })
         .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
-        .select(
-          'name major field campus mark category status stage slow_count members supervisor leader created_by updated_by description created_at updated_at'
-        )
         .session(session)
 
       if (!project) {
-        throw new HttpException('Project not found or project has a status other than null', 404)
+        throw new HttpException('Project not found', 404)
       }
 
       return {
         _id: project._id,
         name: project.name,
+        description: project.description, // Thêm description vào response
         major: project.major,
         field: project.field,
         campus: project.campus,
-        mark: project.mark,
         category: project.category,
         status: project.status,
         stage: project.stage,
+        mark: project.mark,
         slow_count: project.slow_count,
         members: project.members,
         supervisor: project.supervisor,
         leader: project.leader,
-        description: project.description,
         created_by: project.created_by,
         updated_by: project.updated_by,
         created_at: project.created_at,
-        updated_at: project.updated_at
+        updated_at: project.updated_at,
+        histories: project.histories, // Thêm lịch sử cập nhật nếu cần
+        documents: project.documents, // Trả về tài liệu nếu cần
+        tasks: project.tasks // Trả về danh sách task nếu cần
       }
     })
   }

@@ -1,8 +1,5 @@
-import React from 'react'
-import StatusGroupPage from './_components/ui/StatusGroupPage'
+import ManageGroupsPage from './_components/ui/TrackingGroupStatus'
 
-const page = () => {
-  return <StatusGroupPage />
+export default function page() {
+  return <ManageGroupsPage />
 }
-
-export default page

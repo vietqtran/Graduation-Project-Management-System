@@ -1,22 +1,32 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
-import { FaEdit, FaTrashAlt, FaInfoCircle } from 'react-icons/fa'
 import instance from '@/utils/axios'
+import Image from 'next/image'
+import React, { useEffect, useState } from 'react'
+import { FaEdit, FaInfoCircle, FaTrashAlt } from 'react-icons/fa'
+import { toast } from 'sonner'
+import TopicModal from './TopicModal'
+import ConfirmModal from './ConfirmModal'
 
 export interface Project {
   _id: string
   name: string
   description: string
-  majorId?: string // Thêm `majorId` để lọc
+  majorId?: string
+  major: { _id: string; name: string }[]
+  field: { _id: string; name: string }[]
+  document: string
+  campus: { _id: string; name: string } | null
+  category: string
 }
+
 interface TopicListProps {
   selectedMajorId: string | null
   searchTerm: string
   sortOrder: string
   filterField: string
   refresh: boolean
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const parseDescription = (desc: string) => {
@@ -41,16 +51,24 @@ const parseDescription = (desc: string) => {
   }
 }
 
-const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sortOrder, filterField, refresh }) => {
+const TopicList: React.FC<TopicListProps> = ({
+  selectedMajorId,
+  searchTerm,
+  sortOrder,
+  filterField,
+  refresh,
+  setRefresh
+}) => {
   const [topics, setTopics] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(true)
-
+  const [selectedTopic, setSelectedTopic] = useState<Project | null>(null)
+  const [modalType, setModalType] = useState<'update' | 'detail' | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string | null }>({ id: null })
   useEffect(() => {
     const fetchTopics = async () => {
       try {
         const response = await instance.get('/project/get-project-with-null-status', { withCredentials: true })
-        console.log(response.data)
         if (response.data.data.length > 0) {
           setTopics(response.data.data)
           setHasData(true)
@@ -68,7 +86,6 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
     fetchTopics()
   }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
 
-  // **Lọc topics theo `selectedMajorId`, `searchTerm`, và `filterField`**
   let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.majorId === selectedMajorId) : topics
   filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
   if (filterField !== 'all') {
@@ -77,6 +94,47 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
 
   // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
+
+  const handleDelete = async (id: string) => {
+    setConfirmDelete({ id })
+  }
+
+  const confirmDeleteTopic = async () => {
+    if (!confirmDelete.id) return
+
+    try {
+      await instance.delete(`/project/delete-topic/${confirmDelete.id}`, { withCredentials: true })
+      toast.success('Topic deleted successfully!')
+      setRefresh(!refresh)
+    } catch (error) {
+      console.error('Error deleting topic:', error)
+      toast.error('Failed to delete topic.')
+    } finally {
+      setConfirmDelete({ id: null })
+    }
+  }
+
+  const handleEdit = (topic: Project) => {
+    setSelectedTopic(topic)
+    setModalType('update')
+  }
+
+  const handleDetail = async (id: string) => {
+    try {
+      const response = await instance.get(`/project/detail-topic/${id}`, { withCredentials: true })
+      console.log('Detailed Topic Response:', response.data)
+      setSelectedTopic(response.data)
+      setModalType('detail')
+    } catch (error) {
+      console.error('Error fetching topic details:', error)
+      toast.error('Failed to fetch topic details.')
+    }
+  }
+
+  const closeModal = () => {
+    setSelectedTopic(null)
+    setModalType(null)
+  }
 
   return (
     <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
@@ -87,7 +145,6 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
       ) : hasData && filteredTopics.length > 0 ? (
         filteredTopics.map((topic) => {
           const { mainDescription, requirements, prerequisites, guidelines } = parseDescription(topic.description)
-
           return (
             <div key={topic._id} className='p-3 border rounded-lg bg-gray-100 w-full relative'>
               <h3 className='font-medium text-lg'>{topic.name}</h3>
@@ -102,15 +159,22 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
                 <strong>Guidelines:</strong> {guidelines}
               </p>
 
-              {/* Các icon sửa, xóa và chi tiết */}
               <div className='absolute top-2 right-2 flex gap-3'>
-                <button className='text-blue-500 hover:text-blue-700' title='Edit'>
+                <button className='text-blue-500 hover:text-blue-700' title='Edit' onClick={() => handleEdit(topic)}>
                   <FaEdit size={20} />
                 </button>
-                <button className='text-red-500 hover:text-red-700' title='Delete'>
+                <button
+                  className='text-red-500 hover:text-red-700'
+                  title='Delete'
+                  onClick={() => handleDelete(topic._id)}
+                >
                   <FaTrashAlt size={20} />
                 </button>
-                <button className='text-green-500 hover:text-green-700' title='Detail'>
+                <button
+                  className='text-green-500 hover:text-green-700'
+                  title='Detail'
+                  onClick={() => handleDetail(topic._id)}
+                >
                   <FaInfoCircle size={20} />
                 </button>
               </div>
@@ -123,6 +187,16 @@ const TopicList: React.FC<TopicListProps> = ({ selectedMajorId, searchTerm, sort
           <p className='text-gray-500 mt-2'>No Data for {selectedMajorId}</p>
         </div>
       )}
+
+      {modalType && selectedTopic && (
+        <TopicModal topic={selectedTopic} type={modalType} onClose={closeModal} onSubmit={() => setRefresh(!refresh)} />
+      )}
+
+      <ConfirmModal
+        isOpen={!!confirmDelete.id}
+        onClose={() => setConfirmDelete({ id: null })}
+        onConfirm={confirmDeleteTopic}
+      />
     </div>
   )
 }
