@@ -10,7 +10,8 @@ import { s3Routes } from './s3.route'
 import { userRoutes } from './user.route'
 import { ideaRoutes } from './idea.route'
 import { taskRoutes } from './task.route'
-
+import { inviteRoutes } from './invite.route'
+import { supervisorRoutes } from './supervisor.route'
 const routes = {
   authRoutes,
   userRoutes,
@@ -23,7 +24,9 @@ const routes = {
   publicRoutes,
   documentRoutes,
   ideaRoutes,
-  taskRoutes
+  taskRoutes,
+  inviteRoutes,
+  supervisorRoutes
 }
 
 export default routes

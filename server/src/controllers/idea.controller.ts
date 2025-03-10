@@ -32,4 +32,24 @@ export class IdeaController {
       next(error)
     }
   })
+  getIdeaSupervisor = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projects = await this.ideaService.getIdeaSupervisor()
+      ResponseHandler.sendSuccess(res, projects)
+    } catch (error) {
+      console.error('Error in getIdeaSupervisor controller:', error)
+      next(error)
+    }
+  })
+  deleteIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const projectId = req.query.projectId as string
+      const userId = req.query.userId as string
+      await this.ideaService.deleteIdea(projectId, userId)
+      ResponseHandler.sendSuccess(res, null, 'Idea deleted successfully')
+    } catch (error) {
+      console.error('Error in deleteIdea controller:', error)
+      next(error)
+    }
+  })
 }

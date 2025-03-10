@@ -93,4 +93,21 @@ export class IdeaService {
       }
     })
   }
+  async getIdeaSupervisor() {
+    const IdeaOfSupervisor = await this.projectModel.find({ category: 2 }).populate('supervisor')
+    return IdeaOfSupervisor
+  }
+  async deleteIdea(projectId: string, userId: string) {
+    return runTransaction(async (session) => {
+      const project = await this.projectModel.findOne({ _id: projectId }).session(session).exec()
+      if (project?.leader !== userId) {
+        throw new HttpException('You are not the leader of this idea', 400)
+      }
+      await this.projectModel.deleteOne({ _id: projectId }).session(session).exec()
+      await this.userModel
+        .updateOne({ _id: userId }, { $set: { status: USER_STATUS.UN_GROUPED } })
+        .session(session)
+        .exec()
+    })
+  }
 }
