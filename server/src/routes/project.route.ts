@@ -29,9 +29,9 @@ router.post(
 
 router.post('/create-project-as-topic', projectController.createProjectAsTopic)
 router.get('/get-project-with-null-status', projectController.getProjectsWithNullStatus)
-router.get('/get-topic-detail', projectController.getTopicDetail)
-router.post('/update-topic', projectController.updateTopic)
-router.delete('/delete-topic', projectController.deleteTopic)
+router.get('/detail-topic/:id', projectController.getTopicDetail)
+router.patch('/update-topic/:id', projectController.updateTopic)
+router.delete('/delete-topic/:id', projectController.deleteTopic)
 router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
 router.get('/get-project-leader-for-supervisor', projectController.getProjectLeaderForSupervisor)
 export { router as projectRoutes }
