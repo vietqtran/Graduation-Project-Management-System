@@ -545,11 +545,9 @@ export class ProjectService {
     return runTransaction(async (session) => {
       console.log('🔍 Supervisor ID from token:', supervisorId)
 
-      // Log a sample project to see structure
       const sampleProject = await this.projectModel.findOne().lean().exec()
       console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
 
-      // Try multiple query approaches and log results
       console.log('Attempting string query...')
       const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
       console.log(`String query found ${stringQuery.length} projects`)
@@ -563,7 +561,6 @@ export class ProjectService {
 
       let projects: any[] = []
 
-      // Handle valid ObjectId supervisor query
       if (Types.ObjectId.isValid(supervisorId)) {
         const objectId = new Types.ObjectId(supervisorId)
         console.log('Attempting ObjectId query...')
@@ -577,11 +574,9 @@ export class ProjectService {
           .exec()
         console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
 
-        // Combine both ObjectId and string-based queries to a single array
         projects = [...projects, ...objectIdQuery, ...arrayObjectIdQuery]
       }
 
-      // Direct MongoDB query to compare
       console.log('Attempting raw MongoDB query...')
       const rawQuery = await this.projectModel.collection
         .find({
@@ -590,10 +585,8 @@ export class ProjectService {
         .toArray()
       console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
 
-      // Combine raw query results into the projects array
       projects = [...projects, ...rawQuery]
 
-      // Your original query with all the populates
       const populatedProjects = await this.projectModel
         .find({
           $or: [
@@ -611,7 +604,7 @@ export class ProjectService {
         .populate('supervisor')
         .populate('major')
         .populate('field')
-        .populate('campus')
+        .populate({ path: 'campus', select: 'name _id' })
         .populate({
           path: 'members',
           populate: [

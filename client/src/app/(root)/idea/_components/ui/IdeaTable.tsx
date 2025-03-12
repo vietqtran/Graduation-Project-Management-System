@@ -10,8 +10,8 @@ interface ProjectIdea {
   _id: string
   name: string
   field: string
+  major: string
   description: string
-  status: string
   created_at: string
   updated_at: string
   campus: string

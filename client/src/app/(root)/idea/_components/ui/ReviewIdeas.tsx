@@ -11,7 +11,7 @@ export interface ProjectIdea {
   _id: string
   name: string
   field: string
-  status: 'planning' | 'in-progress' | 'completed'
+  major: string
   campus: string
   description: string
   created_at: string
@@ -22,6 +22,7 @@ export interface ProjectIdea {
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
+  const [originalIdeas, setOriginalIdeas] = useState<ProjectIdea[]>([]) 
   const [filteredIdeas, setFilteredIdeas] = useState<ProjectIdea[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(false)
@@ -34,11 +35,7 @@ const ReviewIdeas = () => {
       try {
         const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
         if (response.data.data && response.data.data.length > 0) {
-          const projectsWithPriority = response.data.data.map((project: ProjectIdea) => ({
-            ...project,
-            priority: determinePriority(project)
-          }))
-          console.log(projectsWithPriority)
+          setOriginalIdeas(response.data.data);
           setFilteredIdeas(response.data.data)
           setHasData(true)
         } else {
@@ -54,13 +51,6 @@ const ReviewIdeas = () => {
     fetchProjectIdeas()
   }, [])
 
-  const determinePriority = (project: ProjectIdea): 'low' | 'medium' | 'high' => {
-    if (project.status === 'completed') return 'low'
-    if (project.status === 'in-progress') return 'medium'
-    return 'high'
-  }
-
-  // Pagination logic
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentIdeas = filteredIdeas.slice(startIndex, startIndex + itemsPerPage)
@@ -69,7 +59,7 @@ const ReviewIdeas = () => {
     <div className='p-6 space-y-4'>
       <div className='flex gap-4 items-center mb-6 flex-wrap'>
         <div className='flex-grow max-w-[500px]'>
-          <ProjectSearchAndFilter onFilteredProjects={setFilteredIdeas} />
+          <ProjectSearchAndFilter projects={originalIdeas} onFilteredProjects={setFilteredIdeas} />
         </div>
         <div className='text-yellow-500 font-semibold'>Available Slots: {availableSlots}</div>
       </div>

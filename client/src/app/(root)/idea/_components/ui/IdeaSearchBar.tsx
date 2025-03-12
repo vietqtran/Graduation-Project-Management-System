@@ -12,7 +12,7 @@ export interface ProjectIdea {
   _id: string
   name: string
   field: string
-  status: 'planning' | 'in-progress' | 'completed'
+  major: string
   campus: string
   description: string
   created_at: string
@@ -28,9 +28,9 @@ interface ProjectSearchAndFilterProps {
 
 const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ projects = [], onFilteredProjects }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [fieldFilter, setFieldFilter] = useState<string | null>(null)
   const [campusFilter, setCampusFilter] = useState<string | null>(null)
+  const [majorFilter, setMajorFilter] = useState<string | null>(null)
   const [majors, setMajors] = useState<Array<{ _id: string, name: string }> | null>(null)
   const [fields, setFields] = useState<Array<{ _id: string, name: string }> | null>(null)
   const [campuses, setCampuses] = useState<Array<{ _id: string, name: string }> | null>(null)
@@ -58,7 +58,7 @@ useEffect(() => {
       (project) =>
         (project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           project.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (statusFilter ? project.status === statusFilter : true) &&
+        (majorFilter ? project.major === majorFilter : true) &&
         (fieldFilter ? project.field === fieldFilter : true) &&
         (campusFilter ? project.campus === campusFilter : true)
     )
@@ -69,7 +69,7 @@ useEffect(() => {
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm('')
-    setStatusFilter(null)
+    setMajorFilter(null)
     setFieldFilter(null)
     setCampusFilter(null)
     onFilteredProjects(projects)
@@ -111,9 +111,9 @@ useEffect(() => {
             </div>
 
             <div className='grid gap-2'>
-              <Select value={statusFilter || ''} onValueChange={(value) => setStatusFilter(value)}>
+              <Select value={majorFilter || ''} onValueChange={(value) => setMajorFilter(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder='Status' />
+                  <SelectValue placeholder='Major' />
                 </SelectTrigger>
                 <SelectContent>
                   {majors?.map((major) => (
