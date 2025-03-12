@@ -16,6 +16,7 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
+  leader: string
   priority?: 'low' | 'medium' | 'high'
 }
 
@@ -33,7 +34,6 @@ const ReviewIdeas = () => {
       try {
         const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
         if (response.data.data && response.data.data.length > 0) {
-          // Add priority to the projects (you might want to adjust this based on your actual data)
           const projectsWithPriority = response.data.data.map((project: ProjectIdea) => ({
             ...project,
             priority: determinePriority(project)

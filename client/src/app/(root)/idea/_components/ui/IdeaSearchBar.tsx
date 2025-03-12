@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Filter, Search } from 'lucide-react'
-
+import instance from '@/utils/axios'
 // Import ProjectIdea type from ReviewIdeas
 export interface ProjectIdea {
   _id: string
@@ -17,6 +17,7 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
+  leader: string
   priority?: 'low' | 'medium' | 'high'
 }
 
@@ -30,24 +31,35 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [fieldFilter, setFieldFilter] = useState<string | null>(null)
   const [campusFilter, setCampusFilter] = useState<string | null>(null)
+  const [majors, setMajors] = useState<Array<{ _id: string, name: string }> | null>(null)
+  const [fields, setFields] = useState<Array<{ _id: string, name: string }> | null>(null)
+  const [campuses, setCampuses] = useState<Array<{ _id: string, name: string }> | null>(null)
 
-  // Get unique fields, statuses, and campuses for dropdown
-  const fields = [...new Set(projects.map((p) => p.field))]
-  const statuses = [...new Set(projects.map((p) => p.status))]
-  const campuses = [...new Set(projects.map((p) => p.campus))]
+useEffect(() => {
+  const fetchFilterData = async () => {
+    try {
+      const fieldsResponse = await instance.get('/public/fields', { withCredentials: true });
+      const majorsResponse = await instance.get('/public/majors', { withCredentials: true });
+      const campusesResponse = await instance.get('/public/campuses', { withCredentials: true });
 
-  // Filter logic
+      setFields(fieldsResponse.data.data);  
+      setMajors(majorsResponse.data.data);
+      setCampuses(campusesResponse.data.data);
+    } catch (error) {
+      console.error('Error fetching filter data:', error);
+    }
+  };
+
+  fetchFilterData();
+}, []);
+
   const applyFilters = () => {
     const filteredProjects = projects.filter(
       (project) =>
-        // Search term filter (name or description)
         (project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           project.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        // Status filter
         (statusFilter ? project.status === statusFilter : true) &&
-        // Field filter
         (fieldFilter ? project.field === fieldFilter : true) &&
-        // Campus filter
         (campusFilter ? project.campus === campusFilter : true)
     )
 
@@ -104,9 +116,9 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
                   <SelectValue placeholder='Status' />
                 </SelectTrigger>
                 <SelectContent>
-                  {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {majors?.map((major) => (
+                    <SelectItem key={major._id} value={major.name}>
+                      {major.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -117,9 +129,9 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
                   <SelectValue placeholder='Field' />
                 </SelectTrigger>
                 <SelectContent>
-                  {fields.map((field) => (
-                    <SelectItem key={field} value={field}>
-                      {field}
+                  {fields?.map((field) => (
+                    <SelectItem key={field._id} value={field.name}>
+                      {field.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -130,9 +142,9 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
                   <SelectValue placeholder='Campus' />
                 </SelectTrigger>
                 <SelectContent>
-                  {campuses.map((campus) => (
-                    <SelectItem key={campus} value={campus}>
-                      {campus}
+                  {campuses?.map((campus) => (
+                    <SelectItem key={campus._id} value={campus.name}>
+                      {campus.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

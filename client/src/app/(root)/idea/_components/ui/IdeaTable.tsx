@@ -10,11 +10,12 @@ interface ProjectIdea {
   _id: string
   name: string
   field: string
-  description: string // Add this line
+  description: string
   status: string
   created_at: string
   updated_at: string
   campus: string
+  leader: string
 }
 
 interface IdeaTableProps {
@@ -23,24 +24,31 @@ interface IdeaTableProps {
 }
 
 const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
-const [loadingId, setLoadingId] = useState<string | null>(null) // ID của project đang xử lý
+  const [loadingId, setLoadingId] = useState<string | null>(null)
 
-  const handleAccept = useCallback(async (id: string) => {
-    if (!id || loadingId) return // Ngăn gọi API nếu không có ID hoặc đang xử lý
+  const handleAccept = useCallback(
+    async (id: string) => {
+      if (!id || loadingId) return
 
-    setLoadingId(id) // Đánh dấu project đang xử lý
-    try {
-      const response = await instance.patch('/project/approve-idea', { id, status: "APPROVED" }, { withCredentials: true })
-      if (response.status === 200) {
-        toast.success('Idea accepted successfully')
+      setLoadingId(id)
+      try {
+        const response = await instance.patch(
+          '/project/approve-idea',
+          { id, status: 'APPROVED' },
+          { withCredentials: true }
+        )
+        if (response.status === 200) {
+          toast.success('Idea accepted successfully')
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to accept idea')
+      } finally {
+        setLoadingId(null)
       }
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to accept idea')
-    } finally {
-      setLoadingId(null) // Reset trạng thái sau khi API hoàn thành
-    }
-  }, [loadingId])
+    },
+    [loadingId]
+  )
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
       <Table className='min-w-full bg-white'>
@@ -48,7 +56,9 @@ const [loadingId, setLoadingId] = useState<string | null>(null) // ID của proj
           <TableRow className='bg-gray-100'>
             <TableHead className='w-12 text-center'>#</TableHead>
             <TableHead>Project Name</TableHead>
-            <TableHead>Team Name</TableHead>
+            <TableHead>Created day</TableHead>
+            <TableHead>Campus</TableHead>
+            <TableHead>Created by</TableHead>
             <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -57,7 +67,9 @@ const [loadingId, setLoadingId] = useState<string | null>(null) // ID của proj
             <TableRow key={idea._id} className='hover:bg-gray-50'>
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
-              <TableCell>{idea._id}</TableCell>
+              <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{idea.campus}</TableCell>
+              <TableCell>{idea.leader}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
                 <Button variant='default' onClick={() => handleAccept(idea._id)}>
                   Accept
