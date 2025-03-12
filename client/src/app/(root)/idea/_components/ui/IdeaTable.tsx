@@ -5,17 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import instance from '@/utils/axios'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
+import IdeaDetail from './IdeaDetail'
 
 interface ProjectIdea {
   _id: string
   name: string
   field: string
   major: string
+  campus: string
   description: string
   created_at: string
   updated_at: string
-  campus: string
-  leader: string
+  status: string
+  leader: Array<string>
 }
 
 interface IdeaTableProps {
@@ -25,6 +27,13 @@ interface IdeaTableProps {
 
 const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [selectedIdea, setSelectedIdea] = useState<ProjectIdea | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = (idea: ProjectIdea) => {
+    setSelectedIdea(idea)
+    setIsModalOpen(true)
+  }
 
   const handleAccept = useCallback(
     async (id: string) => {
@@ -64,24 +73,40 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
         </TableHeader>
         <TableBody>
           {ideas.map((idea, index) => (
-            <TableRow key={idea._id} className='hover:bg-gray-50'>
+            <TableRow key={idea._id} onClick={() => handleRowClick(idea)} className='hover:bg-gray-50 cursor-pointer'>
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
               <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{idea.campus}</TableCell>
-              <TableCell>{idea.leader}</TableCell>
+              <TableCell>{JSON.stringify(idea.campus)}</TableCell>
+              <TableCell>idea leader</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                <Button variant='default' onClick={() => handleAccept(idea._id)}>
-                  Accept
-                </Button>
-                <Button variant='destructive' onClick={() => toast.success('Idea reject successfully')}>
-                  Reject
-                </Button>
+                {idea.status === 'CREATED' ? (
+                  <>
+                    <Button variant='default' onClick={() => handleAccept(idea._id)}>
+                      Accept
+                    </Button>
+                    <Button variant='destructive' onClick={() => toast.success('Idea rejected successfully')}>
+                      Reject
+                    </Button>
+                  </>
+                ) : (
+                  <span className='text-gray-500 italic'>
+                    {idea.status === 'APPROVED' ? (
+                      <div className='text-green-500 font-semibold'>APPROVED</div>
+                    ) : idea.status === 'REJECTED' ? (
+                      <div className='text-red-500 font-semibold'>REJECTED</div>
+                    ) : (
+                      <div className='text-gray-500 italic'>No action available</div>
+                    )}
+                  </span>
+                )}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <IdeaDetail idea={selectedIdea} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }

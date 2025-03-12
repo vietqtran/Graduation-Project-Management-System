@@ -17,8 +17,8 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
-  leader: string
-  priority?: 'low' | 'medium' | 'high'
+  status: string
+  leader: Array<string>
 }
 
 interface ProjectSearchAndFilterProps {
@@ -31,27 +31,27 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
   const [fieldFilter, setFieldFilter] = useState<string | null>(null)
   const [campusFilter, setCampusFilter] = useState<string | null>(null)
   const [majorFilter, setMajorFilter] = useState<string | null>(null)
-  const [majors, setMajors] = useState<Array<{ _id: string, name: string }> | null>(null)
-  const [fields, setFields] = useState<Array<{ _id: string, name: string }> | null>(null)
-  const [campuses, setCampuses] = useState<Array<{ _id: string, name: string }> | null>(null)
+  const [majors, setMajors] = useState<Array<{ _id: string; name: string }> | null>(null)
+  const [fields, setFields] = useState<Array<{ _id: string; name: string }> | null>(null)
+  const [campuses, setCampuses] = useState<Array<{ _id: string; name: string }> | null>(null)
 
-useEffect(() => {
-  const fetchFilterData = async () => {
-    try {
-      const fieldsResponse = await instance.get('/public/fields', { withCredentials: true });
-      const majorsResponse = await instance.get('/public/majors', { withCredentials: true });
-      const campusesResponse = await instance.get('/public/campuses', { withCredentials: true });
+  useEffect(() => {
+    const fetchFilterData = async () => {
+      try {
+        const fieldsResponse = await instance.get('/public/fields', { withCredentials: true })
+        const majorsResponse = await instance.get('/public/majors', { withCredentials: true })
+        const campusesResponse = await instance.get('/public/campuses', { withCredentials: true })
 
-      setFields(fieldsResponse.data.data);  
-      setMajors(majorsResponse.data.data);
-      setCampuses(campusesResponse.data.data);
-    } catch (error) {
-      console.error('Error fetching filter data:', error);
+        setFields(fieldsResponse.data.data)
+        setMajors(majorsResponse.data.data)
+        setCampuses(campusesResponse.data.data)
+      } catch (error) {
+        console.error('Error fetching filter data:', error)
+      }
     }
-  };
 
-  fetchFilterData();
-}, []);
+    fetchFilterData()
+  }, [])
 
   const applyFilters = () => {
     const filteredProjects = projects.filter(

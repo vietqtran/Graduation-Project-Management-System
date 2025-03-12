@@ -16,13 +16,13 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
-  leader: string
-  priority?: 'low' | 'medium' | 'high'
+  status: string
+  leader: Array<string>
 }
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const [originalIdeas, setOriginalIdeas] = useState<ProjectIdea[]>([]) 
+  const [originalIdeas, setOriginalIdeas] = useState<ProjectIdea[]>([])
   const [filteredIdeas, setFilteredIdeas] = useState<ProjectIdea[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(false)
@@ -34,8 +34,8 @@ const ReviewIdeas = () => {
     const fetchProjectIdeas = async () => {
       try {
         const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
-        if (response.data.data && response.data.data.length > 0) {
-          setOriginalIdeas(response.data.data);
+        if (response.data) {
+          setOriginalIdeas(response.data.data)
           setFilteredIdeas(response.data.data)
           setHasData(true)
         } else {
