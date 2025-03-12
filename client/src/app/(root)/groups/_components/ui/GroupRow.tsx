@@ -44,7 +44,7 @@ const GroupRow: React.FC = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true})
+        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
         const groupInfo = response.data.data.filter((group: Group) => group.status !== null)
         setGroups(groupInfo)
         console.log(response.data.data)
@@ -55,7 +55,6 @@ const GroupRow: React.FC = () => {
 
     fetchGroups()
   }, [])
-
 
   const toggleGroup = (groupId: number) => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId)
