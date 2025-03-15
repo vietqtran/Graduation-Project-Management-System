@@ -1,53 +1,59 @@
-import * as React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import React from 'react'
+import { ProjectIdea } from './ReviewIdeas'
 
-const DetailIdea: React.FC = () => {
-  const ideaDetails = [
-    { label: 'Title', value: 'Innovative Project' },
-    { label: 'Description', value: 'This is a groundbreaking idea that aims to revolutionize the industry.' },
-    { label: 'Author', value: 'John Doe' },
-    { label: 'Date', value: 'February 25, 2025' },
-    { label: 'Category', value: 'Technology' },
-    { label: 'Impact', value: 'High' },
-    { label: 'Investment Needed', value: '$500,000' },
-    { label: 'Stage', value: 'Prototype' },
-    { label: 'Target Audience', value: 'Startups & Enterprises' },
-    { label: 'Market Size', value: '$10B' },
-    { label: 'Team Members', value: '5' },
-    { label: 'Timeline', value: '6 months' },
-    { label: 'Key Challenges', value: 'Market adoption & funding' }
-  ]
+interface IdeaDetailProps {
+  idea: ProjectIdea | null
+  isOpen: boolean
+  onClose: () => void
+}
+
+const IdeaDetail: React.FC<IdeaDetailProps> = ({ idea, isOpen, onClose }) => {
+  if (!isOpen || !idea) return null
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant='outline'>View Idea Details</Button>
-      </DialogTrigger>
-      <DialogContent className='max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle className='text-center text-xl font-bold text-blue-600'>Detail Idea</DialogTitle>
-        </DialogHeader>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className='w-1/3 font-bold text-gray-700'>Field</TableHead>
-              <TableHead className='text-gray-700'>Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ideaDetails.map((detail, index) => (
-              <TableRow key={index}>
-                <TableCell className='font-bold text-gray-600'>{detail.label}:</TableCell>
-                <TableCell className='text-gray-600'>{detail.value}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </DialogContent>
-    </Dialog>
+    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50' onClick={onClose}>
+      <div className='bg-white mt-20 p-8 rounded-lg shadow-lg w-[50vw] h-[80vh] ' onClick={(e) => e.stopPropagation()}>
+        <div className='flex justify-between items-center border-b pb-4 mb-4'>
+          <h2 className='text-2xl font-bold'>{idea.name}</h2>
+          <Button variant='secondary' onClick={onClose}>
+            Close
+          </Button>
+        </div>
+
+        <div className='grid grid-cols-2 gap-6'>
+          <div>
+            <p className='text-gray-600'>
+              <strong>Field:</strong> {JSON.stringify(idea.field)}
+            </p>
+            <p className='text-gray-600'>
+              <strong>Major:</strong> {JSON.stringify(idea.major)}
+            </p>
+            <p className='text-gray-600'>
+              <strong>Description:</strong> {idea.description}
+            </p>
+          </div>
+
+          <div>
+            <p className='text-gray-600'>
+              <strong>Campus:</strong> {JSON.stringify(idea.campus)}
+            </p>
+            <p className='text-gray-600'>
+              <strong>Created At:</strong> {new Date(idea.created_at).toLocaleDateString()}
+            </p>
+            <p className='text-gray-600'>
+              <strong>Status:</strong>{' '}
+              <span
+                className={idea.status === 'APPROVED' ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
+              >
+                {idea.status}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
-export default DetailIdea
+export default IdeaDetail
