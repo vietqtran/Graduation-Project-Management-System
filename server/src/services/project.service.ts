@@ -13,7 +13,7 @@ import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/hel
 
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import  { IParameter } from '@/models/parameter.model'
+import { IParameter } from '@/models/parameter.model'
 import { MailService } from './mail.service'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
