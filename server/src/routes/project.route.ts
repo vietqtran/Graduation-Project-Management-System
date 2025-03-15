@@ -1,13 +1,14 @@
-import { ProjectController } from '@/controllers/project.controller'
 import {
   StaffGetDetailProjectDto,
-  staffGetListAvailableStudentsDto,
-  staffGetListAvailableSupervisorsDto,
   StaffGetListProjectsDto,
-  StaffUpdateProjectDto
+  StaffUpdateProjectDto,
+  staffGetListAvailableStudentsDto,
+  staffGetListAvailableSupervisorsDto
 } from '@/dtos/project/staff-manage-projects.dto'
-import { validateDto } from '@/middlewares/validate.middleware'
+
+import { ProjectController } from '@/controllers/project.controller'
 import { Router } from 'express'
+import { validateDto } from '@/middlewares/validate.middleware'
 
 const router = Router()
 const projectController = new ProjectController()
@@ -34,5 +35,9 @@ router.patch('/update-topic/:id', projectController.updateTopic)
 router.delete('/delete-topic/:id', projectController.deleteTopic)
 router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
 router.get('/get-project-leader-for-supervisor', projectController.getProjectLeaderForSupervisor)
+
+// Add new route for getting project members
+router.get('/:projectId/members', (req, res, next) => projectController.getProjectMembers(req, res, next))
+
 router.patch('/approve-idea/:id', projectController.approveIdea)
 export { router as projectRoutes }

@@ -1,26 +1,22 @@
-import { FilterQuery, Model, mongo, UpdateQuery } from 'mongoose'
+import { Model, Types } from 'mongoose'
+import { PROJECT_STATUS, USER_STATUS } from '@/constants/status'
 import ProjectModel, { IProject } from '@/models/project.model'
-
-import { HttpException } from '@/shared/exceptions/http.exception'
-import { EmailQueue } from '@/queues/email.queue'
-import { runTransaction } from '@/helpers/transaction-helper'
 import {
   StaffGetDetailProjectDto,
-  staffGetListAvailableStudentsDto,
-  staffGetListAvailableSupervisorsDto,
   StaffGetListProjectsDto,
-  StaffUpdateProjectDto
+  StaffUpdateProjectDto,
+  staffGetListAvailableStudentsDto,
+  staffGetListAvailableSupervisorsDto
 } from '@/dtos/project/staff-manage-projects.dto'
-import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
-import { create } from 'domain'
-import { deserialize } from 'v8'
-import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/helpers/date-helper'
 import UserModel, { IUser } from '@/models/user.model'
-import ParameterModel, { IParameter } from '@/models/parameter.model'
-import { convertType } from '@/helpers/convert-type-helper'
-import { MailService } from '@/services/mail.service'
-import { USER_STATUS, PROJECT_STATUS } from '@/constants/status'
-import { Types } from 'mongoose'
+import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/helpers/date-helper'
+
+import { EmailQueue } from '@/queues/email.queue'
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { IParameter } from '@/models/parameter.model'
+import { MailService } from './mail.service'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
+import { runTransaction } from '@/helpers/transaction-helper'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -686,6 +682,18 @@ export class ProjectService {
         console.error('❌ Error in getProjectLeadersBySupervisor:', error)
       }
     })
+  }
+
+  async getProjectMembers(projectId: string) {
+    const project = await ProjectModel.findById(projectId)
+      .populate('members', 'username email avatar')
+      .select('members')
+
+    if (!project) {
+      throw new HttpException('Project not found', 404)
+    }
+
+    return project.members
   }
 
   async approveIdea(projectId: string, status: PROJECT_STATUS, userEmail: string) {
