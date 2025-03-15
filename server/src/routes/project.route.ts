@@ -39,4 +39,5 @@ router.get('/get-project-leader-for-supervisor', projectController.getProjectLea
 // Add new route for getting project members
 router.get('/:projectId/members', (req, res, next) => projectController.getProjectMembers(req, res, next))
 
+router.patch('/approve-idea/:id', projectController.approveIdea)
 export { router as projectRoutes }
