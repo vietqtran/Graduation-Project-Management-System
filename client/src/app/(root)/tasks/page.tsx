@@ -9,14 +9,18 @@ import BoardLayout from './_components/layouts/BoardLayout'
 import ColumnComponent from './_components/ui/Column'
 import SimpleBar from 'simplebar-react'
 import instance from '@/utils/axios'
-import { useProject } from '@/hooks'
+import { useProject, useRouter, useSearchParams } from '@/hooks'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import TaskDrawer from './_components/ui/TaskDrawer' // Adjust path as needed
 
 const BoardPage = () => {
   const { project } = useProject()
   const [columns, setColumns] = useState<Column[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const taskId = useSearchParams().get('id')
+  const { replace } = useRouter()
 
   useEffect(() => {
     fetchColumns()
@@ -36,19 +40,35 @@ const BoardPage = () => {
       setTasks(res.data.data.filter((task: Task) => !task.is_archived))
     }
   }
+  const fetchTaskDetails = async () => {
+    try {
+      if (!taskId) {
+        return
+      }
+      const res = await instance.get(`/board/tasks/${taskId}`, { withCredentials: true })
+      setSelectedTask(res.data.data)
+    } catch (error) {
+      console.error('Failed to fetch task details', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTaskDetails()
+  }, [taskId])
 
   const handleAddColumn = async () => {
     if (!project?._id) return
-
     await instance.post(
       `/board/project/${project._id}/columns`,
-      {
-        title: 'New Column',
-        project: project._id
-      },
+      { title: 'New Column', project: project._id },
       { withCredentials: true }
     )
     fetchColumns()
+  }
+
+  const handleTaskClick = async (taskId: string) => {
+    await fetchTaskDetails()
+    replace(`/tasks?id=${taskId}`)
   }
 
   const onDragEnd = async (result: DropResult) => {
@@ -62,7 +82,6 @@ const BoardPage = () => {
       const newColumns = [...columns]
       const [movedColumn] = newColumns.splice(source.index, 1)
       newColumns.splice(destination.index, 0, movedColumn)
-
       setColumns(newColumns)
 
       try {
@@ -91,16 +110,12 @@ const BoardPage = () => {
     const updatedTask = { ...movedTask, column: destColumn }
     const taskIndex = newTasks.findIndex((task) => task._id === draggableId)
     newTasks[taskIndex] = updatedTask
-
     setTasks(newTasks)
 
     try {
       await instance.post(
         `/board/tasks/${draggableId}/move`,
-        {
-          destinationColumnId: destination.droppableId,
-          position: destination.index
-        },
+        { destinationColumnId: destination.droppableId, position: destination.index },
         { withCredentials: true }
       )
     } catch (error) {
@@ -108,16 +123,14 @@ const BoardPage = () => {
       setTasks(originalTasks)
       console.error('Failed to move task:', error)
     }
+    await fetchTasks()
   }
 
   return (
     <BoardLayout>
       <BoardHeader />
       <SimpleBar
-        style={{
-          maxHeight: 'calc(100vh - 112px)',
-          minHeight: 'calc(100vh - 112px)'
-        }}
+        style={{ maxHeight: 'calc(100vh - 112px)', minHeight: 'calc(100vh - 112px)' }}
         className='w-full z-0 select-none overflow-auto'
       >
         <DragDropContext onDragEnd={onDragEnd}>
@@ -137,6 +150,8 @@ const BoardPage = () => {
                       index={index}
                       onUpdate={fetchColumns}
                       onTaskUpdate={fetchTasks}
+                      onTaskOpen={handleTaskClick}
+                      editingTask={taskId}
                     />
                   ))}
                   {provided.placeholder}
@@ -156,6 +171,19 @@ const BoardPage = () => {
           </div>
         </DragDropContext>
       </SimpleBar>
+      {selectedTask && (
+        <>
+          <div className='fixed inset-0 z-[110] h-screen w-screen bg-black/50'></div>
+          <TaskDrawer
+            task={selectedTask}
+            onClose={() => {
+              replace('/tasks')
+              setSelectedTask(null)
+            }}
+            onUpdate={fetchTasks}
+          />
+        </>
+      )}
     </BoardLayout>
   )
 }

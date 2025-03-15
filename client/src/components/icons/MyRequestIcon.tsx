@@ -6,9 +6,9 @@ const MyRequestIcon = () => {
       <g
         fill='none'
         stroke='currentColor'
-        stroke-linecap='round'
-        stroke-linejoin='round'
-        stroke-width='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        strokeWidth='1.5'
         color='currentColor'
       >
         <path d='m2 5l6.913 3.925c2.526 1.433 3.648 1.433 6.174 0L22 5' />

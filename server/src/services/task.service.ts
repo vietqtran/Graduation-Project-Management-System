@@ -1,9 +1,19 @@
-import mongoose from 'mongoose'
-import { TaskModel, ITask } from '../models/task.model'
-import { HttpException } from '@/shared/exceptions/http.exception'
 import { ColumnModel, IColumn } from '@/models/column.model'
+import { ITask, TaskModel } from '../models/task.model'
+
+import { EmailQueue } from '@/queues/email.queue'
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { MailService } from './mail.service'
+import mongoose from 'mongoose'
 
 export class TaskService {
+  private readonly emailQueue: EmailQueue
+  private readonly mailService: MailService
+
+  constructor() {
+    this.emailQueue = new EmailQueue(this.mailService)
+  }
+
   async createTask(taskData: Partial<ITask>, userId: string): Promise<ITask> {
     const session = await mongoose.startSession()
     session.startTransaction()
@@ -49,12 +59,18 @@ export class TaskService {
 
   async getTaskById(taskId: string): Promise<ITask> {
     const task = await TaskModel.findById(taskId)
-      .populate('assignees', 'name email avatar')
-      .populate('created_by', 'name email')
-      .populate('comments.user', 'name email avatar')
-      .populate('column', 'title')
-      .populate('documents')
-      .populate('resources')
+      .populate('assignees', '_id name email avatar')
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'created_by',
+          select: '_id username email avatar'
+        }
+      })
+    // .populate('created_by', 'name email')
+    // .populate('column', 'title')
+    // .populate('documents')
+    // .populate('resources')
 
     if (!task) {
       throw new HttpException('Task not found', 404)
@@ -63,15 +79,51 @@ export class TaskService {
     return task
   }
 
-  async updateTask(taskId: string, updateData: Partial<ITask>, userId: string): Promise<ITask> {
+  async updateTask(taskId: string, updateData: Partial<ITask>, userEmail: string): Promise<ITask> {
+    const oldTask = await TaskModel.findById(taskId)
     const task = await TaskModel.findOneAndUpdate(
       { _id: taskId },
-      { ...updateData, updated_at: new Date() },
-      { new: true, runValidators: true }
+      {
+        ...updateData,
+        updated_at: new Date(),
+        start_date: updateData.start_date ? new Date(updateData.start_date) : undefined,
+        due_date: updateData.due_date ? new Date(updateData.due_date) : undefined
+      },
+      {
+        new: true,
+        runValidators: true
+      }
     )
+      .populate('assignees', '_id username email avatar')
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'created_by',
+          select: '_id username email avatar'
+        }
+      })
 
     if (!task) {
       throw new HttpException('Task not found', 404)
+    }
+    const toEmails =
+      (task.assignees as { _id: string; email: string }[]).map((assignee) =>
+        !oldTask?.assignees.includes(assignee._id) ? assignee.email : null
+      ) ?? []
+    if (toEmails.length) {
+      this.emailQueue.addEmailJob({
+        to: [...toEmails],
+        subject: 'Task assigned',
+        templateName: 'task-assigned',
+        context: {
+          assignerName: userEmail,
+          dueDate: task.due_date,
+          taskDescription: task.description,
+          taskTitle: task.name,
+          year: new Date().getFullYear(),
+          taskUrl: `${process.env.CLIENT_URL}/tasks?id=${task._id}`
+        }
+      })
     }
 
     return task
@@ -175,20 +227,26 @@ export class TaskService {
     }
   }
 
-  async addComment(taskId: string, comment: { text: string }, userId: string): Promise<ITask> {
+  async addComment(taskId: string, text: string, userId: string): Promise<ITask> {
     const task = await TaskModel.findByIdAndUpdate(
       taskId,
       {
         $push: {
           comments: {
-            text: comment.text,
-            user: userId,
+            content: text,
+            created_by: userId,
             created_at: new Date()
           }
         }
       },
       { new: true }
-    ).populate('comments.user', 'name email avatar')
+    ).populate({
+      path: 'comments',
+      populate: {
+        path: 'created_by',
+        select: '_id username email avatar'
+      }
+    })
 
     if (!task) {
       throw new HttpException('Task not found', 404)
