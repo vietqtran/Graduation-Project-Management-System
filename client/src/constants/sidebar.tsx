@@ -8,7 +8,7 @@ import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
 import SubmitTopicIcon from '@/components/icons/SubmitTopicIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
-import { Users } from 'lucide-react'
+import { ChartNoAxesGantt, FolderKanban, Newspaper, User, Users } from 'lucide-react'
 import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
 import TeamIcon from '@/components/icons/TeamIcon'
 import MyRequestIcon from '@/components/icons/MyRequestIcon'
@@ -24,6 +24,11 @@ export const SIDEBAR_LINKS = [
     href: '/project',
     label: 'Project',
     icon: <ProjectIcon />
+  },
+  {
+    href: '/news',
+    label: 'News Center',
+    icon: <Newspaper />
   },
   {
     href: '/documents',
@@ -68,12 +73,12 @@ export const SIDEBAR_LINKS = [
   {
     href: '/management/deadlines',
     label: 'Deadlines Management',
-    icon: <Users />
+    icon: <ChartNoAxesGantt />
   },
   {
     href: '/management/students',
     label: 'Student Management',
-    icon: <Users />
+    icon: <User />
   },
   {
     href: '/management/teachers',
@@ -83,7 +88,12 @@ export const SIDEBAR_LINKS = [
   {
     href: '/management/projects',
     label: 'Projects Management',
-    icon: <Users />
+    icon: <FolderKanban />
+  },
+  {
+    href: '/management/news',
+    label: 'News Management',
+    icon: <Newspaper />
   },
   {
     href: '/create-idea',

@@ -326,7 +326,7 @@ const ProjectDetailsPage = ({ id }: { id: string | string[] | undefined }) => {
             <Button variant='outline' onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button onClick={() => router.push(`/management/projects/edit/${id}`)}>Edit Project</Button>
+            <Button onClick={() => router.push(`/management/projects/${id}/edit`)}>Edit Project</Button>
           </div>
         </div>
       )}
