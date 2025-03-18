@@ -1,6 +1,8 @@
 import 'reflect-metadata'
 
 import express, { Application, NextFunction, Request, Response } from 'express'
+import http from 'http'
+import { Server as SocketIOServer } from 'socket.io'
 
 import { PassportConfig } from './configs/passport.config'
 import RouteList from 'route-list'
@@ -15,14 +17,25 @@ import session from 'express-session'
 
 class App {
   public app: Application
+  public server: http.Server
+  public io: SocketIOServer
 
   constructor() {
     this.app = express()
+    this.server = http.createServer(this.app)
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: process.env.CLIENT_URL,
+        credentials: true
+      }
+    })
+    
     this.app.use(cookieParser())
     this.connectDb()
     this.initializeMiddlewares()
     this.initializeRoutes()
     this.initializePassport()
+    this.initializeSocketIO()
     this.app.use(errorHandler)
   }
 
@@ -80,6 +93,29 @@ class App {
 
     RouteList.printRoutes(routesMap)
   }
+
+  private initializeSocketIO(): void {
+    this.io.on('connection', (socket) => {
+      console.log('User connected:', socket.id)
+
+      socket.on('join-board', (projectId: string) => {
+        socket.join(`board-${projectId}`)
+        console.log(`User ${socket.id} joined board: ${projectId}`)
+      })
+
+      socket.on('leave-board', (projectId: string) => {
+        socket.leave(`board-${projectId}`)
+        console.log(`User ${socket.id} left board: ${projectId}`)
+      })
+
+      socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id)
+      })
+    })
+    
+    // Make io accessible globally
+    this.app.set('io', this.io)
+  }
 }
 
-export default new App().app
+export default new App().server

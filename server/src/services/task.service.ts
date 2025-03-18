@@ -5,13 +5,25 @@ import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
 import mongoose from 'mongoose'
+import { Server as SocketIOServer } from 'socket.io'
 
 export class TaskService {
   private readonly emailQueue: EmailQueue
   private readonly mailService: MailService
+  private io: SocketIOServer | null = null
 
   constructor() {
     this.emailQueue = new EmailQueue(this.mailService)
+    // Get io instance if available
+    if (global.app) {
+      this.io = global.app.get('io')
+    }
+  }
+
+  private emitBoardUpdate(projectId: string, event: string, data: any): void {
+    if (this.io) {
+      this.io.to(`board-${projectId}`).emit(event, data)
+    }
   }
 
   async createTask(taskData: Partial<ITask>, userId: string): Promise<ITask> {
@@ -40,6 +52,16 @@ export class TaskService {
       )
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (taskData.project) {
+        this.emitBoardUpdate(
+          taskData.project.toString(), 
+          'task-created', 
+          { task: newTask[0], columnId: taskData.column }
+        )
+      }
+      
       return newTask[0]
     } catch (error) {
       await session.abortTransaction()
@@ -106,6 +128,16 @@ export class TaskService {
     if (!task) {
       throw new HttpException('Task not found', 404)
     }
+    
+    // Emit socket event
+    if (task.project) {
+      this.emitBoardUpdate(
+        task.project.toString(), 
+        'task-updated', 
+        { task }
+      )
+    }
+    
     const toEmails =
       (task.assignees as { _id: string; email: string }[]).map((assignee) =>
         !oldTask?.assignees.includes(assignee._id) ? assignee.email : null
@@ -138,6 +170,9 @@ export class TaskService {
       if (!task) {
         throw new HttpException('Task not found', 404)
       }
+      
+      const projectId = task.project
+      const columnId = task.column
 
       await TaskModel.deleteOne({ _id: taskId }).session(session)
 
@@ -150,6 +185,15 @@ export class TaskService {
       ).session(session)
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (projectId) {
+        this.emitBoardUpdate(
+          projectId.toString(), 
+          'task-deleted', 
+          { taskId, columnId }
+        )
+      }
     } catch (error) {
       await session.abortTransaction()
       throw error
@@ -170,6 +214,7 @@ export class TaskService {
 
       const sourceColumnId = task.column?.toString()
       const oldPosition = task.position
+      const projectId = task.project
 
       if (sourceColumnId === destinationColumnId) {
         if (oldPosition < newPosition) {
@@ -218,6 +263,21 @@ export class TaskService {
       ).session(session)
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (projectId) {
+        this.emitBoardUpdate(
+          projectId.toString(), 
+          'task-moved', 
+          { 
+            task: updatedTask, 
+            fromColumnId: sourceColumnId, 
+            toColumnId: destinationColumnId,
+            newPosition
+          }
+        )
+      }
+      
       return updatedTask!
     } catch (error) {
       await session.abortTransaction()
@@ -289,6 +349,21 @@ export class TaskService {
 }
 
 export class ColumnService {
+  private io: SocketIOServer | null = null
+
+  constructor() {
+    // Get io instance if available
+    if (global.app) {
+      this.io = global.app.get('io')
+    }
+  }
+
+  private emitBoardUpdate(projectId: string, event: string, data: any): void {
+    if (this.io) {
+      this.io.to(`board-${projectId}`).emit(event, data)
+    }
+  }
+
   async createColumn(columnData: Partial<IColumn>, userId: string): Promise<IColumn> {
     const session = await mongoose.startSession()
     session.startTransaction()
@@ -315,6 +390,16 @@ export class ColumnService {
       )
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (columnData.project) {
+        this.emitBoardUpdate(
+          columnData.project.toString(), 
+          'column-created', 
+          { column: newColumn[0] }
+        )
+      }
+      
       return newColumn[0]
     } catch (error) {
       await session.abortTransaction()
@@ -344,6 +429,15 @@ export class ColumnService {
     if (!column) {
       throw new HttpException('Column not found', 404)
     }
+    
+    // Emit socket event
+    if (column.project) {
+      this.emitBoardUpdate(
+        column.project.toString(), 
+        'column-updated', 
+        { column }
+      )
+    }
 
     return column
   }
@@ -357,6 +451,8 @@ export class ColumnService {
       if (!column) {
         throw new HttpException('Column not found', 404)
       }
+      
+      const projectId = column.project
 
       await TaskModel.deleteMany({ column: columnId }).session(session)
 
@@ -371,6 +467,15 @@ export class ColumnService {
       ).session(session)
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (projectId) {
+        this.emitBoardUpdate(
+          projectId.toString(), 
+          'column-deleted', 
+          { columnId }
+        )
+      }
     } catch (error) {
       await session.abortTransaction()
       throw error
@@ -422,6 +527,16 @@ export class ColumnService {
       ).session(session)
 
       await session.commitTransaction()
+      
+      // Emit socket event
+      if (projectId) {
+        this.emitBoardUpdate(
+          projectId.toString(),
+          'column-moved',
+          { column: updatedColumn, oldPosition, newPosition }
+        )
+      }
+      
       return updatedColumn!
     } catch (error) {
       await session.abortTransaction()

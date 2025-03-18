@@ -2,7 +2,8 @@
 
 import type { Column, Task } from '@/types/task.type'
 import { DragDropContext, type DropResult, Droppable } from '@hello-pangea/dnd'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { io, Socket } from 'socket.io-client'
 
 import BoardHeader from './_components/layouts/BoardHeader'
 import BoardLayout from './_components/layouts/BoardLayout'
@@ -12,7 +13,8 @@ import instance from '@/utils/axios'
 import { useProject, useRouter, useSearchParams } from '@/hooks'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import TaskDrawer from './_components/ui/TaskDrawer' // Adjust path as needed
+import TaskDrawer from './_components/ui/TaskDrawer'
+import { toast } from 'sonner'
 
 const BoardPage = () => {
   const { project } = useProject()
@@ -21,10 +23,82 @@ const BoardPage = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const taskId = useSearchParams().get('id')
   const { replace } = useRouter()
+  const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    fetchColumns()
-    fetchTasks()
+    // Initialize socket connection
+    if (project?._id) {
+      socketRef.current = io('http://localhost:8080', {
+        withCredentials: true
+      })
+
+      // Join board room
+      socketRef.current.emit('join-board', project._id)
+
+      // Listen for task events
+      socketRef.current.on('task-created', ({ task }) => {
+        setTasks(prev => [...prev, task])
+        toast.success(`New task "${task.name}" created`)
+      })
+
+      socketRef.current.on('task-updated', ({ task }) => {
+        setTasks(prev => prev.map(t => t._id === task._id ? task : t))
+        // Also update selected task if it's being viewed
+        if (selectedTask && selectedTask._id === task._id) {
+          setSelectedTask(task)
+        }
+      })
+
+      socketRef.current.on('task-deleted', ({ taskId }) => {
+        setTasks(prev => prev.filter(t => t._id !== taskId))
+        // Close drawer if the deleted task is being viewed
+        if (selectedTask && selectedTask._id === taskId) {
+          replace('/tasks')
+          setSelectedTask(null)
+        }
+      })
+
+      socketRef.current.on('task-moved', ({ task }) => {
+        setTasks(prev => {
+          const updated = prev.filter(t => t._id !== task._id)
+          return [...updated, task]
+        })
+      })
+
+      // Listen for column events
+      socketRef.current.on('column-created', ({ column }) => {
+        setColumns(prev => [...prev, column])
+        toast.success(`New column "${column.title}" added`)
+      })
+
+      socketRef.current.on('column-updated', ({ column }) => {
+        setColumns(prev => prev.map(c => c._id === column._id ? column : c))
+      })
+
+      socketRef.current.on('column-deleted', ({ columnId }) => {
+        setColumns(prev => prev.filter(c => c._id !== columnId))
+        // Remove tasks in this column
+        setTasks(prev => prev.filter(t => t.column._id !== columnId))
+      })
+
+      socketRef.current.on('column-moved', ({ column }) => {
+        setColumns(prev => {
+          const updated = prev.filter(c => c._id !== column._id)
+          return [...updated, column].sort((a, b) => a.position - b.position)
+        })
+      })
+
+      fetchColumns()
+      fetchTasks()
+    }
+
+    // Cleanup
+    return () => {
+      if (socketRef.current && project?._id) {
+        socketRef.current.emit('leave-board', project._id)
+        socketRef.current.disconnect()
+      }
+    }
   }, [project?._id])
 
   const fetchColumns = async () => {
