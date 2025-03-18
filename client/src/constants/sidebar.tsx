@@ -46,7 +46,7 @@ export const SIDEBAR_LINKS = [
     icon: <TaskIcon />
   },
   {
-    href: '/idea/idea-list',
+    href: '/idea',
     label: 'Idea',
     icon: <IdeaIcon />
   },

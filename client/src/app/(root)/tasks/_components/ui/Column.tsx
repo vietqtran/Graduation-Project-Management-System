@@ -1,5 +1,3 @@
-// src/components/ui/Column.tsx
-
 import { Column, Task } from '@/types/task.type'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import React, { memo, useCallback } from 'react'
@@ -9,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import SimpleBar from 'simplebar-react'
 import TaskComponent from './Task'
 import instance from '@/utils/axios'
-import useClickOutside from '@/hooks/useClickOutside'
 
 interface ColumnProps {
   column: Column
@@ -17,23 +14,31 @@ interface ColumnProps {
   index: number
   onUpdate: () => void
   onTaskUpdate: () => void
+  onTaskOpen: (taskId: string) => void // Added for drawer
+  editingTask: string | null
 }
 
-const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate, onTaskUpdate }) => {
+const ColumnComponent: React.FC<ColumnProps> = ({
+  column,
+  tasks,
+  index,
+  onUpdate,
+  onTaskUpdate,
+  onTaskOpen,
+  editingTask
+}) => {
   const [title, setTitle] = React.useState(column.title)
   const [isEditing, setIsEditing] = React.useState(false)
+
   const handleUpdateTitle = useCallback(
     async (newTitle: string) => {
       if (!newTitle) return
       await instance.patch(`/board/columns/${column._id}`, { title: newTitle }, { withCredentials: true })
       onUpdate()
-      setTimeout(() => {
-        setIsEditing(false)
-      }, 200)
+      setTimeout(() => setIsEditing(false), 200)
     },
     [column.title]
   )
-  const ref = useClickOutside<HTMLDivElement>(() => handleUpdateTitle(title))
 
   return (
     <Draggable draggableId={column._id} index={index}>
@@ -41,29 +46,23 @@ const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          style={{
-            position: 'relative',
-            ...provided.draggableProps.style
-          }}
-          className={`min-w-72 max-h-[calc(100vh-140px)] h-full flex flex-col rounded-lg shadow-md mr-3 border bg-neutral-200 ${
+          style={{ position: 'relative', ...provided.draggableProps.style }}
+          className={`min-w-72 max-w-72 max-h-[calc(100vh-140px)] h-full flex flex-col rounded-lg shadow-md mr-3 border bg-neutral-200 ${
             snapshot.isDragging ? 'ring-2 ring-blue-500' : ''
           }`}
         >
-          <div
-            {...provided.dragHandleProps}
-            className='w-full flex-shrink-0 flex items-center gap-2 justify-between'
-            ref={ref}
-          >
+          <div {...provided.dragHandleProps} className='w-full flex-shrink-0 flex items-center gap-2 justify-between'>
             {isEditing ? (
               <Input
                 autoFocus
                 value={title}
+                onBlur={() => handleUpdateTitle(title)}
                 onChange={(e) => setTitle(e.target.value)}
-                className='font-semibold flex-1 outline-offset-0 !ring-0 text-sm bg-transparent border-none outline-none w-full'
+                className='font-semibold flex-1 outline-offset-0 h-11 !ring-0 text-sm bg-transparent border-none outline-none w-full'
               />
             ) : (
               <div
-                className='px-3 py-2 font-semibold whitespace-nowrap truncate line-clamp-1 text-sm bg-transparent border-none outline-none w-full'
+                className='px-3 py-3 font-semibold whitespace-nowrap truncate line-clamp-1 text-sm bg-transparent border-none outline-none w-full'
                 onClick={() => setIsEditing(true)}
               >
                 <p className='max-w-full truncate'>{column.title}</p>
@@ -80,7 +79,14 @@ const ColumnComponent: React.FC<ColumnProps> = ({ column, tasks, index, onUpdate
                 >
                   <div className='px-2 gap-1.5 flex flex-col min-h-[5px]'>
                     {tasks.map((task, index) => (
-                      <TaskComponent key={task._id} task={task} index={index} onUpdate={onTaskUpdate} />
+                      <TaskComponent
+                        key={task._id}
+                        task={task}
+                        index={index}
+                        onUpdate={onTaskUpdate}
+                        onOpen={onTaskOpen} // Pass to trigger drawer
+                        isEditing={editingTask === task._id}
+                      />
                     ))}
                     {provided.placeholder}
                   </div>

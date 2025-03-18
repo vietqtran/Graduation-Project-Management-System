@@ -2,9 +2,10 @@ import { User } from './user.type'
 
 export interface Comment {
   _id: string
-  text: string
-  user: User
+  content: string
+  created_by: User
   created_at: string
+  updated_at: string
 }
 
 export interface TaskLabel {
@@ -20,7 +21,6 @@ export interface Task {
   type: 'milestone' | 'task'
   start_date?: string
   due_date?: string
-  due_time?: string
   created_by: User
   labels: TaskLabel[]
   is_completed: boolean

@@ -2,18 +2,22 @@
 
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import * as React from 'react'
+import instance from '@/utils/axios'
+import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
+import IdeaDetail from './IdeaDetail'
 
 interface ProjectIdea {
   _id: string
   name: string
   field: string
-  description: string // Add this line
-  status: string
+  major: string
+  campus: string
+  description: string
   created_at: string
   updated_at: string
-  campus: string
+  status: string
+  leader: Array<string>
 }
 
 interface IdeaTableProps {
@@ -22,6 +26,38 @@ interface IdeaTableProps {
 }
 
 const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
+  const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [selectedIdea, setSelectedIdea] = useState<ProjectIdea | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleRowClick = (idea: ProjectIdea) => {
+    setSelectedIdea(idea)
+    setIsModalOpen(true)
+  }
+
+  const handleAccept = useCallback(
+    async (id: string) => {
+      if (!id || loadingId) return
+
+      setLoadingId(id)
+      try {
+        const response = await instance.patch(
+          '/project/approve-idea',
+          { id, status: 'APPROVED' },
+          { withCredentials: true }
+        )
+        if (response.status === 200) {
+          toast.success('Idea accepted successfully')
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to accept idea')
+      } finally {
+        setLoadingId(null)
+      }
+    },
+    [loadingId]
+  )
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
       <Table className='min-w-full bg-white'>
@@ -29,28 +65,48 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
           <TableRow className='bg-gray-100'>
             <TableHead className='w-12 text-center'>#</TableHead>
             <TableHead>Project Name</TableHead>
-            <TableHead>Team Name</TableHead>
+            <TableHead>Created day</TableHead>
+            <TableHead>Campus</TableHead>
+            <TableHead>Created by</TableHead>
             <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {ideas.map((idea, index) => (
-            <TableRow key={idea._id} className='hover:bg-gray-50'>
+            <TableRow key={idea._id} onClick={() => handleRowClick(idea)} className='hover:bg-gray-50 cursor-pointer'>
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
-              <TableCell>{idea._id}</TableCell>
+              <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{JSON.stringify(idea.campus)}</TableCell>
+              <TableCell>idea leader</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                <Button variant='default' onClick={() => toast.success('Idea accepted successfully')}>
-                  Accept
-                </Button>
-                <Button variant='destructive' onClick={() => toast.success('Idea reject successfully')}>
-                  Reject
-                </Button>
+                {idea.status === 'CREATED' ? (
+                  <>
+                    <Button variant='default' onClick={() => handleAccept(idea._id)}>
+                      Accept
+                    </Button>
+                    <Button variant='destructive' onClick={() => toast.success('Idea rejected successfully')}>
+                      Reject
+                    </Button>
+                  </>
+                ) : (
+                  <span className='text-gray-500 italic'>
+                    {idea.status === 'APPROVED' ? (
+                      <div className='text-green-500 font-semibold'>APPROVED</div>
+                    ) : idea.status === 'REJECTED' ? (
+                      <div className='text-red-500 font-semibold'>REJECTED</div>
+                    ) : (
+                      <div className='text-gray-500 italic'>No action available</div>
+                    )}
+                  </span>
+                )}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <IdeaDetail idea={selectedIdea} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }

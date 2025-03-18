@@ -3,12 +3,11 @@
 import React, { useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-import CommunityIcon from '@/components/icons/CommunityIcon'
+import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
 import { SIDEBAR_LINKS } from '@/constants/sidebar'
 import { usePathname } from '@/hooks'
-import { Button } from '@/components/ui/button'
 
 const SideBar = () => {
   const [isExpanse, setIsExpanse] = useState(true)
@@ -16,7 +15,7 @@ const SideBar = () => {
 
   return (
     <aside
-      className={`w-full z-[9999] box-content transition-all ease-linear duration-100 shadow-md bg-background border-r h-screen sticky left-0 top-0 ${isExpanse ? 'max-w-80' : 'max-w-16'}`}
+      className={`w-full z-[100] box-content transition-all ease-linear duration-100 shadow-md bg-background border-r h-screen sticky left-0 top-0 ${isExpanse ? 'max-w-80' : 'max-w-16'}`}
     >
       <div className='size-full relative'>
         <div className='absolute top-12 -right-3'>
@@ -72,30 +71,6 @@ const SideBar = () => {
                   </TooltipProvider>
                 )
               })}
-            </div>
-
-            <div className='p-2 w-full flex flex-col'>
-              <Link
-                href={'/community'}
-                className={`p-2 w-full rounded-md gap-2 duration-100 ease-linear cursor-pointer flex h-12 items-center ${isExpanse ? '' : 'justify-center'} ${pathName === '/community' ? 'bg-blue-500 text-white' : 'bg-background hover:bg-neutral-300'}`}
-              >
-                <CommunityIcon />
-                {isExpanse && <span className='font-medium'>Community</span>}
-              </Link>
-
-              <div
-                className={`${isExpanse ? 'px-2 flex gap-2 items-center justify-start' : 'px-0 grid place-items-center '} py-2`}
-              >
-                <div className='size-10 min-w-10 rounded-full border overflow-hidden'>
-                  <Image src={'https://i.pravatar.cc/300'} width={100} height={100} alt='' className='size-full' />
-                </div>
-                {isExpanse && (
-                  <div className='flex flex-col flex-1'>
-                    <p className='line-clamp-1 font-medium'>Trần Quốc Việt</p>
-                    <p className='line-clamp-1 text-secondary'>viettqhe170367@fpt.edu.vn</p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

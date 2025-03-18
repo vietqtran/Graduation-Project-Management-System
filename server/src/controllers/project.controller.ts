@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from 'express'
 
 import { ProjectService } from '@/services/project.service'
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
-import { asyncHandler } from '@/helpers/async-handler'
 import { StaffGetListProjectsDto } from '@/dtos/project/staff-manage-projects.dto'
+import { asyncHandler } from '@/helpers/async-handler'
 import { getUser } from '@/helpers/auth-helper'
 
 export class ProjectController {
@@ -107,6 +107,27 @@ export class ProjectController {
       const leaders = await this.projectService.getProjectLeadersBySupervisor(tokenPayload._id)
 
       return ResponseHandler.sendSuccess(res, leaders, 'Get leaders from projects successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
+
+  async getProjectMembers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { projectId } = req.params
+      const members = await this.projectService.getProjectMembers(projectId)
+      ResponseHandler.sendSuccess(res, members, 'Project members retrieved successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  }
+  approveIdea = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const dto = req.body
+      const tokenPayload = getUser(req)
+      const response = await this.projectService.approveIdea(dto.projectId, dto.status, tokenPayload.email)
+      return ResponseHandler.sendSuccess(res, response, 'Approve project successfully')
     } catch (error) {
       return ResponseHandler.sendError(res, error)
     }

@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express'
-import { TaskService, ColumnService } from '../services/task.service'
+import { ColumnService, TaskService } from '../services/task.service'
+import { NextFunction, Request, Response } from 'express'
+
 import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { asyncHandler } from '@/helpers/async-handler'
 import { getUser } from '@/helpers/auth-helper'
@@ -51,10 +52,10 @@ export class TaskController {
     try {
       const { taskId } = req.params
       const user = getUser(req)
-      const userId = user._id
+      const userEmail = user.email
       const updateData = req.body
 
-      const task = await this.taskService.updateTask(taskId, updateData, userId)
+      const task = await this.taskService.updateTask(taskId, updateData, userEmail)
 
       ResponseHandler.sendSuccess(res, task, 'Task updated successfully')
     } catch (error) {
@@ -92,12 +93,11 @@ export class TaskController {
 
   async addComment(req: Request, res: Response, next: NextFunction) {
     try {
-      const { taskId } = req.params
       const user = getUser(req)
       const userId = user._id
-      const { text } = req.body
+      const { taskId, text } = req.body
 
-      const task = await this.taskService.addComment(taskId, { text }, userId)
+      const task = await this.taskService.addComment(taskId, text, userId)
 
       ResponseHandler.sendSuccess(res, task, 'Comment added successfully')
     } catch (error) {

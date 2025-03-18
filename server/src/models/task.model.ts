@@ -1,10 +1,11 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
-import { IResource } from './resource.model'
-import { IUser } from './user.model'
 import { CommentSchema, IComment } from './comment.model'
-import { IUploadDocument } from './document.model'
-import { IProject } from './project.model'
+import mongoose, { Document, Model, Schema } from 'mongoose'
+
 import { IColumn } from './column.model'
+import { IProject } from './project.model'
+import { IResource } from './resource.model'
+import { IUploadDocument } from './document.model'
+import { IUser } from './user.model'
 
 export interface ITask extends Document {
   name: string
@@ -13,9 +14,9 @@ export interface ITask extends Document {
   type: 'milestone' | 'task'
   start_date?: Date
   due_date?: Date
-  due_time?: string
   created_by: IUser['_id']
   labels: {
+    _id: string
     text: string
     color: string
   }[]
@@ -88,15 +89,6 @@ const TaskSchema = new Schema<ITask>(
         message: 'Due date must be after or equal to start date'
       }
     },
-    due_time: {
-      type: String,
-      validate: {
-        validator: function (value: string) {
-          return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)
-        },
-        message: 'Time must be in format HH:MM'
-      }
-    },
     created_by: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -109,6 +101,10 @@ const TaskSchema = new Schema<ITask>(
     },
     labels: [
       {
+        _id: {
+          type: String,
+          ref: 'Label'
+        },
         text: {
           type: String,
           trim: true,

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import MemberProfileModal from './MemberProfileModal'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectItem } from '@/components/ui/select'
 import * as Progress from '@radix-ui/react-progress'
 import { SelectContent } from '@radix-ui/react-select'
+import instance from '@/utils/axios'
 
 interface Member {
   id: number
-  name: string
-  role: string
+  username: string
+  role: Array<string>
   progress: number
   tasksCompleted: number
   status: string
@@ -27,29 +28,6 @@ interface Group {
   members: Member[]
 }
 
-const groups: Group[] = [
-  {
-    id: 1,
-    name: 'Group A',
-    status: 'Active',
-    progress: 80,
-    members: [
-      { id: 1, name: 'Alice', role: 'Leader', progress: 90, tasksCompleted: 10, status: 'Active' },
-      { id: 2, name: 'Bob', role: 'Member', progress: 70, tasksCompleted: 7, status: 'Active' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Group B',
-    status: 'Pending',
-    progress: 60,
-    members: [
-      { id: 3, name: 'Charlie', role: 'Leader', progress: 75, tasksCompleted: 8, status: 'Pending' },
-      { id: 4, name: 'David', role: 'Member', progress: 50, tasksCompleted: 5, status: 'Pending' }
-    ]
-  }
-]
-
 const ProgressBar = ({ progress }: { progress: number }) => (
   <Progress.Root className='relative w-full h-2 bg-gray-200 rounded overflow-hidden'>
     <Progress.Indicator className='h-full bg-blue-500 transition-all' style={{ width: `${progress}%` }} />
@@ -61,6 +39,22 @@ const GroupRow: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('All')
+  const [groups, setGroups] = useState<Group[]>([])
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
+        const groupInfo = response.data.data.filter((group: Group) => group.status !== null)
+        setGroups(groupInfo)
+        console.log(response.data.data)
+      } catch (error) {
+        console.error('Error fetching groups:', error)
+      }
+    }
+
+    fetchGroups()
+  }, [])
 
   const toggleGroup = (groupId: number) => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId)
@@ -130,8 +124,8 @@ const GroupRow: React.FC = () => {
                       <TableBody>
                         {group.members.map((member) => (
                           <TableRow key={member.id}>
-                            <TableCell>{member.name}</TableCell>
-                            <TableCell>{member.role}</TableCell>
+                            <TableCell>{member.username}</TableCell>
+                            <TableCell>{JSON.stringify(member.role)}</TableCell>
                             <TableCell>
                               <ProgressBar progress={member.progress} />
                             </TableCell>
