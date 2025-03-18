@@ -37,12 +37,12 @@ const BoardPage = () => {
 
       // Listen for task events
       socketRef.current.on('task-created', ({ task }) => {
-        setTasks(prev => [...prev, task])
+        setTasks((prev) => [...prev, task])
         toast.success(`New task "${task.name}" created`)
       })
 
       socketRef.current.on('task-updated', ({ task }) => {
-        setTasks(prev => prev.map(t => t._id === task._id ? task : t))
+        setTasks((prev) => prev.map((t) => (t._id === task._id ? task : t)))
         // Also update selected task if it's being viewed
         if (selectedTask && selectedTask._id === task._id) {
           setSelectedTask(task)
@@ -50,7 +50,7 @@ const BoardPage = () => {
       })
 
       socketRef.current.on('task-deleted', ({ taskId }) => {
-        setTasks(prev => prev.filter(t => t._id !== taskId))
+        setTasks((prev) => prev.filter((t) => t._id !== taskId))
         // Close drawer if the deleted task is being viewed
         if (selectedTask && selectedTask._id === taskId) {
           replace('/tasks')
@@ -59,31 +59,31 @@ const BoardPage = () => {
       })
 
       socketRef.current.on('task-moved', ({ task }) => {
-        setTasks(prev => {
-          const updated = prev.filter(t => t._id !== task._id)
+        setTasks((prev) => {
+          const updated = prev.filter((t) => t._id !== task._id)
           return [...updated, task]
         })
       })
 
       // Listen for column events
       socketRef.current.on('column-created', ({ column }) => {
-        setColumns(prev => [...prev, column])
+        setColumns((prev) => [...prev, column])
         toast.success(`New column "${column.title}" added`)
       })
 
       socketRef.current.on('column-updated', ({ column }) => {
-        setColumns(prev => prev.map(c => c._id === column._id ? column : c))
+        setColumns((prev) => prev.map((c) => (c._id === column._id ? column : c)))
       })
 
       socketRef.current.on('column-deleted', ({ columnId }) => {
-        setColumns(prev => prev.filter(c => c._id !== columnId))
+        setColumns((prev) => prev.filter((c) => c._id !== columnId))
         // Remove tasks in this column
-        setTasks(prev => prev.filter(t => t.column._id !== columnId))
+        setTasks((prev) => prev.filter((t) => t.column._id !== columnId))
       })
 
       socketRef.current.on('column-moved', ({ column }) => {
-        setColumns(prev => {
-          const updated = prev.filter(c => c._id !== column._id)
+        setColumns((prev) => {
+          const updated = prev.filter((c) => c._id !== column._id)
           return [...updated, column].sort((a, b) => a.position - b.position)
         })
       })

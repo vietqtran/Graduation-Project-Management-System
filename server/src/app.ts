@@ -29,7 +29,7 @@ class App {
         credentials: true
       }
     })
-    
+
     this.app.use(cookieParser())
     this.connectDb()
     this.initializeMiddlewares()
@@ -112,7 +112,7 @@ class App {
         console.log('User disconnected:', socket.id)
       })
     })
-    
+
     // Make io accessible globally
     this.app.set('io', this.io)
   }
