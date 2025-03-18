@@ -154,12 +154,16 @@ export class InviteService {
       }
       if (user.roles && user.roles?.includes('student')) {
         if (project.members.length >= maxMember) {
+          invite.status = InviteStatus.REJECTED
+          await invite.save({ session })
           throw new HttpException('Project has reached the maximum number of members', 400)
         } else {
           project.members.push(user._id)
         }
       } else if (user.roles && user.roles?.includes('supervisor')) {
         if (project.supervisor.length >= maxSupervisor) {
+          invite.status = InviteStatus.REJECTED
+          await invite.save({ session })
           throw new HttpException('Project has reached the maximum number of supervisors', 400)
         } else {
           project.supervisor.push(user._id)

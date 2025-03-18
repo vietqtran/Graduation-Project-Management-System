@@ -116,7 +116,8 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
       }
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
-        toast.error(error.response.data.message)
+        const errorMessage = error.response.data.error.message.split('name: ')[1] || error.response.data.error.message
+        toast.error(errorMessage)
       } else {
         toast.error('An unexpected error occurred')
       }
@@ -262,7 +263,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
 
             {/* Project Name */}
             <div className='mt-4'>
-              <label className='font-semibold text-gray-700'>Project Name</label>
+              <label className='font-semibold text-gray-700'>New Idea Name</label>
               <input
                 type='text'
                 name='name'
@@ -275,7 +276,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
 
             {/* Description */}
             <div className='mt-4'>
-              <label className='font-semibold text-gray-700'>Description</label>
+              <label className='font-semibold text-gray-700'>New Description</label>
               <textarea
                 name='description'
                 value={formData.description}
