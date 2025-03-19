@@ -1,11 +1,16 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAppSelector } from '@/hooks'
 import { Field } from '@/types/field.type'
 import { Major } from '@/types/major.type'
 import { Campus } from '@/types/campus.type'
 import { useRouter } from '@/hooks/useRouter'
+import useMajor from '@/hooks/public/useMajor'
+import useField from '@/hooks/public/useField'
+import useCampus from '@/hooks/public/useCampus'
 import instance from '@/utils/axios'
+import { AxiosError } from 'axios'
+import { toast } from 'sonner'
 interface Error {
   [key: string]: string | undefined
 }
@@ -22,44 +27,19 @@ export default function CreateIdea() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Error>({})
 
-  const [majors, setMajors] = useState<Major[]>([])
-  const [fields, setFields] = useState<Field[]>([])
-  const [campuses, setCampuses] = useState<Campus[]>([])
-
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const router = useRouter()
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Lấy dữ liệu majors
-        const majorResponse = await instance.get('/public/majors', { withCredentials: true })
-        if (Array.isArray(majorResponse.data.data)) {
-          setMajors(majorResponse.data.data)
-        } else {
-          console.error('Invalid data format for majors', majorResponse.data)
-        }
+  const { campuses, isLoading: isLoadingCampuses, error: campusError } = useCampus()
+  const { majors, isLoading: isLoadingMajors, error: majorError } = useMajor()
+  const { fields, isLoading: isLoadingFields, error: fieldError } = useField()
 
-        // Lấy dữ liệu fields
-        const fieldResponse = await instance.get('/public/fields')
-        if (Array.isArray(fieldResponse.data.data)) {
-          setFields(fieldResponse.data.data)
-        } else {
-          console.error('Invalid data format for fields', fieldResponse.data)
-        }
+  if (isLoadingCampuses || isLoadingMajors || isLoadingFields) {
+    return <p>Loading...</p>
+  }
 
-        // Lấy dữ liệu campuses
-        const campusResponse = await instance.get('/public/campuses')
-        if (Array.isArray(campusResponse.data.data)) {
-          setCampuses(campusResponse.data.data)
-        } else {
-          console.error('Invalid data format for campuses', campusResponse.data)
-        }
-      } catch (error) {
-        console.error('Error fetching data for dropdowns:', error)
-      }
-    }
-    fetchData()
-  }, [])
+  if (campusError || majorError || fieldError) {
+    return <p>Error loading data</p>
+  }
 
   // Handle input change for fields and majors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -88,7 +68,7 @@ export default function CreateIdea() {
     // Kiểm tra các trường bắt buộc
     const newErrors: Error = {}
     if (!formData.name) newErrors.name = 'Project name is required'
-    if (!formData.description) newErrors.description = 'Description is required'
+    // if (!formData.description) newErrors.description = 'Description is required'
     if (formData.majors.length === 0) newErrors.majors = 'At least one major is required'
     if (formData.fields.length === 0) newErrors.fields = 'At least one field is required'
     if (!formData.campus) newErrors.campus = 'Campus is required'
@@ -119,8 +99,13 @@ export default function CreateIdea() {
       setFormData({ name: '', description: '', majors: [], fields: [], campus: '' })
       setErrors({}) // Xóa lỗi sau khi submit thành công
       setShowSuccessModal(true) // Show the success modal
-    } catch (err) {
-      console.error('Error creating idea:', err)
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        const errorMessage = error.response.data.error.message.split('name: ')[1] || 'Validation error'
+        toast.error(errorMessage)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -153,7 +138,6 @@ export default function CreateIdea() {
       {/* Description */}
       <div className='mt-4'>
         <label className='font-semibold text-gray-700'>Description </label>
-        <label className='text-red-500'>*</label>
         <textarea
           name='description'
           value={formData.description}
@@ -161,7 +145,7 @@ export default function CreateIdea() {
           className={`w-full border p-2 rounded-md mt-1 h-24 ${errors.description ? 'border-red-500' : ''}`}
           placeholder='Describe your idea'
         ></textarea>
-        {errors.description && <p className='text-red-500 text-sm'>{errors.description}</p>}
+        {/* {errors.description && <p className='text-red-500 text-sm'>{errors.description}</p>} */}
       </div>
 
       {/* Field and Major Checkboxes */}
@@ -171,19 +155,20 @@ export default function CreateIdea() {
         <label className='font-semibold text-gray-700'>Field </label>
         <label className='text-red-500'>*</label>
         <div className='space-y-2'>
-          {fields.map((field: Field) => (
-            <div key={field._id} className='flex items-center'>
-              <input
-                type='checkbox'
-                name='fields'
-                value={field._id}
-                checked={formData.fields.includes(field._id)}
-                onChange={handleChange}
-                className='mr-2'
-              />
-              <label>{field.name}</label>
-            </div>
-          ))}
+          {fields &&
+            fields.map((field: Field) => (
+              <div key={field._id} className='flex items-center'>
+                <input
+                  type='checkbox'
+                  name='fields'
+                  value={field._id}
+                  checked={formData.fields.includes(field._id)}
+                  onChange={handleChange}
+                  className='mr-2'
+                />
+                <label>{field.name}</label>
+              </div>
+            ))}
         </div>
         {errors.fields && <p className='text-red-500 text-sm'>{errors.fields}</p>}
       </div>
@@ -193,19 +178,20 @@ export default function CreateIdea() {
         <label className='font-semibold text-gray-700'>Major </label>
         <label className='text-red-500'>*</label>
         <div className='space-y-2'>
-          {majors.map((major: Major) => (
-            <div key={major._id} className='flex items-center'>
-              <input
-                type='checkbox'
-                name='majors'
-                value={major._id}
-                checked={formData.majors.includes(major._id)}
-                onChange={handleChange}
-                className='mr-2'
-              />
-              <label>{major.name}</label>
-            </div>
-          ))}
+          {majors &&
+            majors.map((major: Major) => (
+              <div key={major._id} className='flex items-center'>
+                <input
+                  type='checkbox'
+                  name='majors'
+                  value={major._id}
+                  checked={formData.majors.includes(major._id)}
+                  onChange={handleChange}
+                  className='mr-2'
+                />
+                <label>{major.name}</label>
+              </div>
+            ))}
         </div>
         {errors.majors && <p className='text-red-500 text-sm'>{errors.majors}</p>}
       </div>
@@ -221,11 +207,12 @@ export default function CreateIdea() {
           className={`w-full border p-2 rounded-md mt-1 ${errors.campus ? 'border-red-500' : ''}`}
         >
           <option value=''>Select Campus</option>
-          {campuses.map((campus: Campus) => (
-            <option key={campus._id} value={campus._id}>
-              {campus.name}
-            </option>
-          ))}
+          {campuses &&
+            campuses.map((campus: Campus) => (
+              <option key={campus._id} value={campus._id}>
+                {campus.name}
+              </option>
+            ))}
         </select>
         {errors.campus && <p className='text-red-500 text-sm'>{errors.campus}</p>}
       </div>
