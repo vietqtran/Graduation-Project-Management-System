@@ -10,6 +10,7 @@ import { User } from '@/types/user.type'
 import { Project } from '@/types/project.type'
 import { Invite } from '@/types/invite.type'
 import { AxiosError } from 'axios'
+import { get } from 'http'
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
@@ -17,27 +18,27 @@ const MyRequest = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const { getInviteByUserId, acceptInvite, rejectInvite } = useInvite()
 
-  useEffect(() => {
-    const fetchInvites = async () => {
-      try {
-        if (user?._id) {
-          const response = await getInviteByUserId(user._id)
-          if (response?.success) {
-            setInvites(response.data)
-          }
-        } else {
-          toast.error('User ID is not available')
+  const fetchInvites = async () => {
+    try {
+      if (user?._id) {
+        const response = await getInviteByUserId(user._id)
+        if (response?.success) {
+          setInvites(response.data)
         }
-      } catch (error: unknown) {
-        if (error instanceof AxiosError && error.response) {
-          toast.error(error.response.data.message)
-        } else {
-          toast.error('An unexpected error occurred')
-        }
+      } else {
+        toast.error('User ID is not available')
+      }
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
       }
     }
+  }
+  useEffect(() => {   
     fetchInvites()
-  }, [user, getInviteByUserId, acceptInvite, rejectInvite])
+  }, [getInviteByUserId])
 
   const getInviteType = (roles: string[]) => {
     if (roles.includes('student')) {
@@ -52,7 +53,7 @@ const MyRequest = () => {
   const handleAcceptInvite = async (inviteId: string) => {
     try {
       await acceptInvite(inviteId)
-      setInvites((prevInvites) => prevInvites.filter((invite) => invite._id !== inviteId))
+      fetchInvites()
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
         toast.error(error.response.data.message)
@@ -65,7 +66,7 @@ const MyRequest = () => {
   const handleRejectInvite = async (inviteId: string) => {
     try {
       await rejectInvite(inviteId)
-      setInvites((prevInvites) => prevInvites.filter((invite) => invite._id !== inviteId))
+      fetchInvites()
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
         toast.error(error.response.data.message)
@@ -105,17 +106,17 @@ const MyRequest = () => {
               </tr>
             </thead>
             <tbody>
-              {invites.length > 0 ? (
+              {invites?.length > 0 ? (
                 invites.map((invite, index) => (
-                  <tr key={invite._id} className='border-t hover:bg-gray-50'>
+                  <tr key={invite?._id} className='border-t hover:bg-gray-50'>
                     <td className='border p-3'>{index + 1}</td>
                     <td
                       className='border p-3 text-blue-600 hover:underline cursor-pointer'
-                      onClick={() => handleProjectClick(invite.project)}
+                      onClick={() => handleProjectClick(invite?.project)}
                     >
-                      {invite.project.name}
+                      {invite?.project?.name}
                     </td>
-                    <td className='border p-3'>{invite.project.description}</td>
+                    <td className='border p-3'>{invite?.project?.description}</td>
                     <td className='border p-3'>{getInviteType(user?.roles || [])}</td>
                     <td className='border p-3 text-center'>
                       {invite.status === 'approved' ? (
@@ -126,13 +127,13 @@ const MyRequest = () => {
                         <>
                           <button
                             className='bg-purple-500 text-white px-4 py-1 rounded-md hover:bg-purple-600 mr-2'
-                            onClick={() => handleAcceptInvite(invite._id)}
+                            onClick={() => handleAcceptInvite(invite?._id)}
                           >
                             Agree
                           </button>
                           <button
                             className='bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600'
-                            onClick={() => handleRejectInvite(invite._id)}
+                            onClick={() => handleRejectInvite(invite?._id)}
                           >
                             Reject
                           </button>
@@ -140,7 +141,7 @@ const MyRequest = () => {
                       )}
                     </td>
                     <td className='border p-3'>
-                      {invite.updated_at ? new Date(invite.updated_at).toLocaleDateString() : 'N/A'}
+                      {invite.updated_at ? new Date(invite?.updated_at).toLocaleDateString() : 'N/A'}
                     </td>
                   </tr>
                 ))
@@ -160,44 +161,44 @@ const MyRequest = () => {
       {selectedProject && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center'>
           <div className='bg-white p-6 rounded-md shadow-lg'>
-            <h3 className='text-2xl font-bold text-purple-700'>{selectedProject.name}</h3>
+            <h3 className='text-2xl font-bold text-purple-700'>{selectedProject?.name}</h3>
             <div className='mt-4 grid grid-cols-2 gap-4'>
               <div>
                 <p className='font-bold'>Description</p>
-                <p className='italic'>{selectedProject.description}</p>
+                <p className='italic'>{selectedProject?.description}</p>
               </div>
               <div>
                 <p className='font-bold'>Campus</p>
-                <p className='italic'>{selectedProject.campus.name}</p>
+                <p className='italic'>{selectedProject?.campus?.name}</p>
               </div>
               <div>
                 <p className='font-bold'>Field</p>
-                <p className='italic'>{selectedProject.field?.map((f: Field) => f.name).join(', ')}</p>
+                <p className='italic'>{selectedProject?.field?.map((f: Field) => f.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Major</p>
-                <p className='italic'>{selectedProject.major?.map((m: Major) => m.name).join(', ')}</p>
+                <p className='italic'>{selectedProject?.major?.map((m: Major) => m.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Total Members</p>
-                <p>{selectedProject.members.length} members</p>
+                <p>{selectedProject?.members?.length} members</p>
               </div>
             </div>
             <div className='mt-6'>
               <p className='font-bold'>Members</p>
               <div className='mt-2'>
-                {selectedProject.members.map((member: User) => (
-                  <div key={member._id} className='flex items-center gap-3'>
+                {selectedProject?.members.map((member: User) => (
+                  <div key={member?._id} className='flex items-center gap-3'>
                     <Avatar className='w-12 h-12'>
-                      <AvatarImage src={member.avatar} alt='User Avatar' />
+                      <AvatarImage src={member?.avatar} alt='User Avatar' />
                       <AvatarFallback>
-                        {member.first_name[0]}
-                        {member.last_name[0]}
+                        {member?.first_name[0]}
+                        {member?.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className='font-semibold'>{member.display_name}</p>
-                      <p className='text-sm text-gray-600'>{member.email}</p>
+                      <p className='font-semibold'>{member?.display_name}</p>
+                      <p className='text-sm text-gray-600'>{member?.email}</p>
                     </div>
                   </div>
                 ))}

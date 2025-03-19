@@ -39,7 +39,7 @@ export class InviteService {
     try {
       const { from_user, to_user, project } = inviteData
       const existingUser = await this.userModel.findOne({ email: to_user }).session(session)
-      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session)
+      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session);
       if (!existingUser) {
         throw new HttpException('User with the provided email does not exist', 404) // Kiểm tra xem user đã tồn tại trong ứng dụng chưa
       }
@@ -184,9 +184,18 @@ export class InviteService {
         throw new HttpException('User not found', 404)
       }
       if (user.roles && user.roles?.includes('student')) {
+        const userInProject = await this.projectModel.findOne({
+          members: { $in: [user._id] }
+        })
+        if (userInProject) {
+          invite.status = InviteStatus.REJECTED
+          await invite.save({ session })
+          throw new HttpException('Please leave the current group before joining another one', 400)
+        }
         if (project.members.length >= maxMember) {
           invite.status = InviteStatus.REJECTED
           await invite.save({ session })
+
           throw new HttpException('Project has reached the maximum number of members', 400)
         } else {
           project.members.push(user._id)
@@ -195,6 +204,7 @@ export class InviteService {
         if (project.supervisor.length >= maxSupervisor) {
           invite.status = InviteStatus.REJECTED
           await invite.save({ session })
+
           throw new HttpException('Project has reached the maximum number of supervisors', 400)
         } else {
           project.supervisor.push(user._id)

@@ -29,6 +29,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showChangeModal, setShowChangeModal] = useState(false)
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [formData, setFormData] = useState({
     name: project?.name || '',
     description: project?.description || ''
@@ -125,6 +126,44 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
       setLoading(false)
     }
   }
+  const handleLeaveGroupClick = () => {
+    setShowLeaveConfirmation(true) // Hiển thị modal xác nhận
+  }
+  const confirmLeaveGroup = async () => {
+    if (!project || !user) return
+    setLoading(true)
+    setShowLeaveConfirmation(false) // Đóng modal xác nhận
+    try {
+      // Gọi API để rời nhóm
+      const response = await instance.patch(
+        `/projects/leave-group/?projectId=${project._id}&userId=${user._id}`,
+        {},
+        { withCredentials: true }
+      )
+  
+      if (response.data.success) {
+        // Cập nhật lại state sau khi người dùng rời nhóm
+        setIdea((prevIdea) => {
+          if (!prevIdea) return prevIdea;
+          return {
+            ...prevIdea,
+            members: prevIdea.members.filter((member) => member._id !== user._id),
+          };
+        })
+        toast.success('You have successfully left the group!')
+      } else {
+        toast.error('Failed to leave the group')
+      }
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className='p-6 max-w-6xl mx-auto'>
       <h2 className='text-2xl font-bold text-purple-700'>My Group</h2>
@@ -142,8 +181,10 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                 Created at: {idea?.created_at ? new Date(idea.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
-            {user?._id === idea?.leader?._id && (
+            
               <div className='flex gap-3 p-6 ml-auto'>
+              {user?._id === idea?.leader?._id && (
+                <>
                 <Button
                   onClick={handleChangeIdeaClick}
                   className='border border-purple-600 text-purple-600 hover:bg-purple-400 hover:text-white bg-transparent'
@@ -157,8 +198,18 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                 >
                   {loading ? 'Deleting...' : 'Delete Idea'}
                 </Button>
+                </>
+                 )}
+                 <Button
+              onClick={handleLeaveGroupClick}
+              className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
+              disabled={loading}
+            >
+              {loading ? 'Leaving...' : 'Leave Group'}
+            </Button>
               </div>
-            )}
+           
+            
           </div>
           <div className='mt-4 grid grid-cols-2 gap-4'>
             <div>
@@ -172,18 +223,18 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             <div>
               <p className='font-bold'>Field</p>
               <div className='flex flex-wrap gap-2'>
-                {idea?.field.map((f: Field) => <FieldBadge key={f._id} name={f.name} description={f.description} />)}
+                {idea?.field.map((f: Field) => <FieldBadge key={f?._id} name={f?.name} description={f?.description} />)}
               </div>
             </div>
             <div>
               <p className='font-bold'>Major</p>
               <div className='flex flex-wrap gap-2'>
-                {idea?.major.map((m: Major) => <MajorBadge key={m._id} name={m.name} description={m.description} />)}
+                {idea?.major.map((m: Major) => <MajorBadge key={m?._id} name={m?.name} description={m?.description} />)}
               </div>
             </div>
             <div>
               <p className='font-bold'>Total Members</p>
-              <p>{idea?.members.length} members</p>
+              <p>{idea?.members?.length} members</p>
             </div>
             <div>
               <p className='font-bold'>Available Slot</p>
@@ -194,20 +245,20 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             <p className='font-bold'>Members</p>
             <div className='mt-2 flex items-center gap-3'>
               {idea?.members.map((member: User) => (
-                <div key={member._id} className='flex items-center gap-3'>
+                <div key={member?._id} className='flex items-center gap-3'>
                   <Avatar className='w-12 h-12'>
-                    <AvatarImage src={member.avatar} alt='User Avatar' />
+                    <AvatarImage src={member?.avatar} alt='User Avatar' />
                     <AvatarFallback>
-                      {member.first_name[0]}
-                      {member.last_name[0]}
+                      {member?.first_name[0]}
+                      {member?.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className='flex items-center gap-3'>
-                      <p className='font-semibold'>{member.display_name}</p>
-                      {member._id === idea.leader._id && <LeaderStar />}
+                      <p className='font-semibold'>{member?.display_name}</p>
+                      {member?._id === idea?.leader?._id && <LeaderStar />}
                     </div>
-                    <p className='text-sm text-gray-600'>{member.email}</p>
+                    <p className='text-sm text-gray-600'>{member?.email}</p>
                   </div>
                 </div>
               ))}
@@ -217,20 +268,20 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             <p className='font-bold'>Supervisor</p>
             <div className='mt-2 flex items-center gap-3'>
               {idea?.supervisor.map((sup: User) => (
-                <div key={sup._id} className='flex items-center gap-3'>
+                <div key={sup?._id} className='flex items-center gap-3'>
                   <Avatar className='w-12 h-12'>
-                    <AvatarImage src={sup.avatar} alt='User Avatar' />
+                    <AvatarImage src={sup?.avatar} alt='User Avatar' />
                     <AvatarFallback>
-                      {sup.first_name[0]}
-                      {sup.last_name[0]}
+                      {sup?.first_name[0]}
+                      {sup?.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className='flex items-center gap-3'>
-                      <p className='font-semibold'>{sup.display_name}</p>
-                      {sup._id === idea.leader._id && <LeaderStar />}
+                      <p className='font-semibold'>{sup?.display_name}</p>
+                      {sup?._id === idea?.leader?._id && <LeaderStar />}
                     </div>
-                    <p className='text-sm text-gray-600'>{sup.email}</p>
+                    <p className='text-sm text-gray-600'>{sup?.email}</p>
                   </div>
                 </div>
               ))}
@@ -342,8 +393,31 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           </div>
         </div>
       )}
+      {showLeaveConfirmation && (
+  <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+    <div className='bg-white p-6 rounded-md'>
+      <h3 className='text-lg font-semibold'>Are you sure you want to leave this group?</h3>
+      <div className='mt-4 flex gap-4'>
+        <Button
+          onClick={confirmLeaveGroup}
+          className='border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent'
+        >
+          Yes, Leave
+        </Button>
+        <Button
+          onClick={() => setShowLeaveConfirmation(false)}
+          className='border border-gray-500 text-gray-500 hover:bg-gray-400 hover:text-white bg-transparent'
+        >
+          Cancel
+        </Button>
+      </div>
     </div>
+  </div>
+)}
+    </div>   
   )
+  
 }
+
 
 export default IdeaAndTeam

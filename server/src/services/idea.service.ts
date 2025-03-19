@@ -24,7 +24,10 @@ export class IdeaService {
     if (missingFields.length > 0) {
       throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
-
+    const user = await this.userModel.findById(ideaData.leader)
+    if (!user?.roles?.includes('student')) {
+      throw new HttpException('This action is only available for students', 404)
+    }
     const existingIdea = await this.projectModel.findOne({
       members: { $in: [ideaData.leader] } // Kiểm tra xem userId có nằm trong mảng members không
     })
@@ -149,4 +152,6 @@ export class IdeaService {
       return project
     })
   }
+  
 }
+
