@@ -4,6 +4,7 @@ import 'simplebar-react/dist/simplebar.min.css'
 import type { Metadata } from 'next'
 import { Roboto } from 'next/font/google'
 import StoreProvider from '@/components/providers/StoreProvider'
+import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 
 const dmSans = Roboto({
@@ -26,8 +27,10 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning={true}>
       <body className={`antialiased ${dmSans.className}`}>
-        <StoreProvider>{children}</StoreProvider>
-        <Toaster richColors position='bottom-center' />
+        <ThemeProvider attribute='class' defaultTheme='light' enableSystem>
+          <StoreProvider>{children}</StoreProvider>
+          <Toaster richColors position='bottom-center' />
+        </ThemeProvider>
       </body>
     </html>
   )

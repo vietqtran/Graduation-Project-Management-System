@@ -1,15 +1,17 @@
 'use client'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import React, { useEffect, useState } from 'react'
-import useInvite from '@/hooks/useInvite'
+
+import { AxiosError } from 'axios'
+import { Field } from '@/types/field.type'
+import { Invite } from '@/types/invite.type'
+import { Major } from '@/types/major.type'
+import { Project } from '@/types/project.type'
+import { User } from '@/types/user.type'
 import { toast } from 'sonner'
 import { useAppSelector } from '@/hooks'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Field } from '@/types/field.type'
-import { Major } from '@/types/major.type'
-import { User } from '@/types/user.type'
-import { Project } from '@/types/project.type'
-import { Invite } from '@/types/invite.type'
-import { AxiosError } from 'axios'
+import useInvite from '@/hooks/useInvite'
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
@@ -17,27 +19,28 @@ const MyRequest = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const { getInviteByUserId, acceptInvite, rejectInvite } = useInvite()
 
-  useEffect(() => {
-    const fetchInvites = async () => {
-      try {
-        if (user?._id) {
-          const response = await getInviteByUserId(user._id)
-          if (response?.success) {
-            setInvites(response.data)
-          }
-        } else {
-          toast.error('User ID is not available')
+  const fetchInvites = async () => {
+    try {
+      if (user?._id) {
+        const response = await getInviteByUserId(user._id)
+        if (response?.success) {
+          setInvites(response.data)
         }
-      } catch (error: unknown) {
-        if (error instanceof AxiosError && error.response) {
-          toast.error(error.response.data.message)
-        } else {
-          toast.error('An unexpected error occurred')
-        }
+      } else {
+        toast.error('User ID is not available')
+      }
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('An unexpected error occurred')
       }
     }
+  }
+
+  useEffect(() => {
     fetchInvites()
-  }, [user, getInviteByUserId, acceptInvite, rejectInvite])
+  }, [])
 
   const getInviteType = (roles: string[]) => {
     if (roles.includes('student')) {
@@ -52,7 +55,7 @@ const MyRequest = () => {
   const handleAcceptInvite = async (inviteId: string) => {
     try {
       await acceptInvite(inviteId)
-      setInvites((prevInvites) => prevInvites.filter((invite) => invite._id !== inviteId))
+      await fetchInvites()
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
         toast.error(error.response.data.message)

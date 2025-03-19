@@ -1,16 +1,16 @@
+import InviteModel, { IInvite } from '@/models/invite.model'
+import ProjectModel, { IProject } from '@/models/project.model'
+import UserModel, { IUser } from '@/models/user.model'
 import mongoose, { Model } from 'mongoose'
 
-import InviteModel, { IInvite } from '@/models/invite.model'
-import { InviteDto } from '@/dtos/invite/invite.dto'
-import { HttpException } from '@/shared/exceptions/http.exception'
-import { runTransaction } from '@/helpers/transaction-helper'
-import { InviteStatus } from '@/constants/invite-status-enum'
-import UserModel, { IUser } from '@/models/user.model'
-import ProjectModel, { IProject } from '@/models/project.model'
-import { USER_STATUS } from '@/constants/status'
 import { EmailQueue } from '@/queues/email.queue'
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { InviteDto } from '@/dtos/invite/invite.dto'
+import { InviteStatus } from '@/constants/invite-status-enum'
 import { MailService } from './mail.service'
+import { USER_STATUS } from '@/constants/status'
 import { format } from 'date-fns'
+import { runTransaction } from '@/helpers/transaction-helper'
 
 export class InviteService {
   private readonly inviteModel: Model<IInvite>
@@ -56,7 +56,7 @@ export class InviteService {
         }
         const checkInOtherProject = await this.projectModel
           .findOne({
-            members: { $in: [existingUser?._id] }
+            members: { $in: [existingUser._id] }
           })
           .session(session)
         if (checkInOtherProject) {
