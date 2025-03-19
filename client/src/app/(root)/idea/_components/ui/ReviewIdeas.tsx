@@ -10,14 +10,15 @@ import ProjectSearchAndFilter from './IdeaSearchBar'
 export interface ProjectIdea {
   _id: string
   name: string
-  field: string
-  major: string
-  campus: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
   description: string
   created_at: string
   updated_at: string
-  status: string
-  leader: Array<string>
+  status: number
+  leader: { username: string; _id: string } // Modify to match the structure of the leader object
+  username: string
 }
 
 const ReviewIdeas = () => {
@@ -26,14 +27,14 @@ const ReviewIdeas = () => {
   const [filteredIdeas, setFilteredIdeas] = useState<ProjectIdea[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(false)
+  const [availableSlots, setAvailableSlots] = useState(0)
 
   const itemsPerPage = 5
-  const availableSlots = 10
 
   useEffect(() => {
     const fetchProjectIdeas = async () => {
       try {
-        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
+        const response = await instance.get('/project/get-projects-to-review', { withCredentials: true })
         if (response.data) {
           setOriginalIdeas(response.data.data)
           setFilteredIdeas(response.data.data)
@@ -48,8 +49,22 @@ const ReviewIdeas = () => {
       }
     }
 
+    const fetchAvailableSlots = async () => {
+      try {
+        const response = await instance.get('/project/get-available-slots', { withCredentials: true })
+        if (response.data) {
+          setAvailableSlots(response.data.data.availableSlot)
+          console.log(response.data.data.availableSlot)
+        }
+      } catch (error) {
+        console.error('Error fetching available slots:', error)
+      }
+    }
+
+    fetchAvailableSlots()
+
     fetchProjectIdeas()
-  }, [])
+  }, [setFilteredIdeas, filteredIdeas])
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -68,7 +83,7 @@ const ReviewIdeas = () => {
         <div className='text-center text-gray-500'>Loading...</div>
       ) : hasData && filteredIdeas.length > 0 ? (
         <>
-          <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
+          <IdeaTable ideas={currentIdeas} startIndex={startIndex} setFilteredIdeas={setFilteredIdeas} />
           <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </>
       ) : (

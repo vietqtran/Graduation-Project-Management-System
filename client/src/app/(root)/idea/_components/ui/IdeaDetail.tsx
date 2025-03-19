@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import { ProjectIdea } from './ReviewIdeas'
+import { STATUS_MASTER } from '@/constants/status'
 
 interface IdeaDetailProps {
   idea: ProjectIdea | null
@@ -24,10 +25,10 @@ const IdeaDetail: React.FC<IdeaDetailProps> = ({ idea, isOpen, onClose }) => {
         <div className='grid grid-cols-2 gap-6'>
           <div>
             <p className='text-gray-600'>
-              <strong>Field:</strong> {JSON.stringify(idea.field)}
+              <strong>Field:</strong> {idea.field[0].name}
             </p>
             <p className='text-gray-600'>
-              <strong>Major:</strong> {JSON.stringify(idea.major)}
+              <strong>Major:</strong> {idea.major[0].name}
             </p>
             <p className='text-gray-600'>
               <strong>Description:</strong> {idea.description}
@@ -36,7 +37,7 @@ const IdeaDetail: React.FC<IdeaDetailProps> = ({ idea, isOpen, onClose }) => {
 
           <div>
             <p className='text-gray-600'>
-              <strong>Campus:</strong> {JSON.stringify(idea.campus)}
+              <strong>Campus:</strong> {idea.campus.name}
             </p>
             <p className='text-gray-600'>
               <strong>Created At:</strong> {new Date(idea.created_at).toLocaleDateString()}
@@ -44,9 +45,13 @@ const IdeaDetail: React.FC<IdeaDetailProps> = ({ idea, isOpen, onClose }) => {
             <p className='text-gray-600'>
               <strong>Status:</strong>{' '}
               <span
-                className={idea.status === 'APPROVED' ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
+                className={
+                  STATUS_MASTER[idea.status] === 'APPROVED'
+                    ? 'text-green-500 font-semibold'
+                    : 'text-red-500 font-semibold'
+                }
               >
-                {idea.status}
+                {STATUS_MASTER[idea.status]}
               </span>
             </p>
           </div>

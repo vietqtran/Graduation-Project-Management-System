@@ -6,26 +6,29 @@ import instance from '@/utils/axios'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import IdeaDetail from './IdeaDetail'
+import { STATUS_MASTER } from '@/constants/status'
 
 interface ProjectIdea {
   _id: string
   name: string
-  field: string
-  major: string
-  campus: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
   description: string
   created_at: string
   updated_at: string
-  status: string
-  leader: Array<string>
+  status: number
+  leader: { username: string; _id: string } // Modify to match the structure of the leader object
+  username: string
 }
 
 interface IdeaTableProps {
   ideas: ProjectIdea[]
   startIndex: number
+  setFilteredIdeas: React.Dispatch<React.SetStateAction<ProjectIdea[]>>
 }
 
-const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
+const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex, setFilteredIdeas }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [selectedIdea, setSelectedIdea] = useState<ProjectIdea | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -36,18 +39,25 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
   }
 
   const handleAccept = useCallback(
-    async (id: string) => {
+    async (id: string, event: React.MouseEvent) => {
+      event.stopPropagation()
       if (!id || loadingId) return
 
       setLoadingId(id)
+
       try {
         const response = await instance.patch(
-          '/project/approve-idea',
-          { id, status: 'APPROVED' },
+          `/project/approve-idea/${id}`,
+          { projectId: id, status: STATUS_MASTER.APPROVED },
           { withCredentials: true }
         )
+
         if (response.status === 200) {
           toast.success('Idea accepted successfully')
+
+          setFilteredIdeas((prevIdeas) => {
+            return prevIdeas.map((idea) => (idea._id === id ? { ...idea, status: STATUS_MASTER.APPROVED } : idea))
+          })
         }
       } catch (error) {
         console.error(error)
@@ -56,8 +66,40 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
         setLoadingId(null)
       }
     },
-    [loadingId]
+    [loadingId, setFilteredIdeas]
   )
+
+  const handleReject = useCallback(
+    async (id: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      if (!id || loadingId) return
+
+      setLoadingId(id)
+
+      try {
+        const response = await instance.patch(
+          `/project/approve-idea/${id}`,
+          { projectId: id, status: STATUS_MASTER.REJECTED },
+          { withCredentials: true }
+        )
+
+        if (response.status === 200) {
+          toast.success('Idea accepted successfully')
+
+          setFilteredIdeas((prevIdeas) => {
+            return prevIdeas.map((idea) => (idea._id === id ? { ...idea, status: STATUS_MASTER.REJECTED } : idea))
+          })
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to reject idea')
+      } finally {
+        setLoadingId(null)
+      }
+    },
+    [loadingId, setFilteredIdeas]
+  )
+
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
       <Table className='min-w-full bg-white'>
@@ -66,7 +108,7 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
             <TableHead className='w-12 text-center'>#</TableHead>
             <TableHead>Project Name</TableHead>
             <TableHead>Created day</TableHead>
-            <TableHead>Campus</TableHead>
+            <TableHead>Major - Campus - Field</TableHead>
             <TableHead>Created by</TableHead>
             <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
@@ -77,23 +119,25 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
               <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{JSON.stringify(idea.campus)}</TableCell>
-              <TableCell>idea leader</TableCell>
+              <TableCell>
+                {idea.major[0]?.name}, {idea.campus?.name}, {idea.field[0]?.name}
+              </TableCell>
+              <TableCell>{idea.leader?.username}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                {idea.status === 'CREATED' ? (
+                {STATUS_MASTER[idea.status] === 'PENDING' ? (
                   <>
-                    <Button variant='default' onClick={() => handleAccept(idea._id)}>
+                    <Button variant='default' onClick={(event) => handleAccept(idea._id, event)}>
                       Accept
                     </Button>
-                    <Button variant='destructive' onClick={() => toast.success('Idea rejected successfully')}>
+                    <Button variant='destructive' onClick={(event) => handleReject(idea._id, event)}>
                       Reject
                     </Button>
                   </>
                 ) : (
                   <span className='text-gray-500 italic'>
-                    {idea.status === 'APPROVED' ? (
-                      <div className='text-green-500 font-semibold'>APPROVED</div>
-                    ) : idea.status === 'REJECTED' ? (
+                    {STATUS_MASTER[idea.status] === 'APPROVED' ? (
+                      <div className='text-green-700 font-semibold'>APPROVED</div>
+                    ) : STATUS_MASTER[idea.status] === 'REJECTED' ? (
                       <div className='text-red-500 font-semibold'>REJECTED</div>
                     ) : (
                       <div className='text-gray-500 italic'>No action available</div>
