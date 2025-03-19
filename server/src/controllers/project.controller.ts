@@ -101,6 +101,21 @@ export class ProjectController {
     }
   })
 
+  getProjectsToReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const supervisorId = tokenPayload._id
+      console.log('Token payload:', tokenPayload)
+      console.log('Supervisor ID from token:', supervisorId)
+
+      const projects = await this.projectService.getProjectsToReview(supervisorId)
+      ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  })
+
   getProjectLeaderForSupervisor = asyncHandler(async (req: Request, res: Response) => {
     try {
       const tokenPayload = getUser(req)
@@ -122,12 +137,23 @@ export class ProjectController {
       next(error)
     }
   }
-  approveIdea = asyncHandler(async (req: Request, res: Response) => {
+
+  approveIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const dto = req.body
+      const { projectId, status } = req.body
       const tokenPayload = getUser(req)
-      const response = await this.projectService.approveIdea(dto.projectId, dto.status, tokenPayload.email)
+      const response = await this.projectService.approveIdea(projectId, status, tokenPayload._id)
       return ResponseHandler.sendSuccess(res, response, 'Approve project successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
+
+  checkAvailableSlot = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const response = await this.projectService.checkAvailableSlot(tokenPayload._id)
+      return ResponseHandler.sendSuccess(res, response, 'Check available slot successfully')
     } catch (error) {
       return ResponseHandler.sendError(res, error)
     }

@@ -1,3 +1,4 @@
+import { emailRegex, semesterRegex } from '@/constants/regex'
 import mongoose, { Document, Model, Schema } from 'mongoose'
 
 import { ICampus } from './campus.model'
@@ -5,7 +6,7 @@ import { IField } from './field.model'
 import { IMajor } from './major.model'
 import { IProject } from './project.model'
 import { USER_STATUS } from '@/constants/status'
-import { emailRegex, semesterRegex } from '@/constants/regex'
+import { getCurrentSemester } from '@/helpers/date-helper'
 
 export interface IUser extends Document {
   email: string
@@ -66,7 +67,7 @@ export const UserSchema = new Schema<IUser>(
         default: ['user']
       }
     ],
-    status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.ACTIVATED },
+    status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.UN_GROUPED },
     code: {
       type: String,
       unique: true,
@@ -99,8 +100,9 @@ export const UserSchema = new Schema<IUser>(
     },
     planned_semester: {
       type: String,
-      required: [true, 'Semester of Capstone Project is required'],
-      match: semesterRegex
+      required: [false, 'Semester of Capstone Project is required'],
+      match: semesterRegex,
+      default: getCurrentSemester()
     }
   },
   {

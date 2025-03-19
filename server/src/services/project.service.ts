@@ -1,5 +1,5 @@
 import { Model, Types } from 'mongoose'
-import { PROJECT_STATUS, USER_STATUS } from '@/constants/status'
+import { PROJECT_STATUS, STATUS_MASTER, USER_STATUS } from '@/constants/status'
 import ProjectModel, { IProject } from '@/models/project.model'
 import {
   StaffGetDetailProjectDto,
@@ -331,7 +331,7 @@ export class ProjectService {
   }
 
   async staffGetListAvailableStudents(body: staffGetListAvailableStudentsDto) {
-    const { search = '' } = body
+    const { search = '', projectId } = body
     const currentSemester = getCurrentSemester()
     return runTransaction(async (session) => {
       const students = await this.userModel
@@ -339,7 +339,9 @@ export class ProjectService {
           roles: 'student',
           planned_semester: currentSemester,
           status: USER_STATUS.UN_GROUPED,
-          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          //if projectId is truthy, filter by projectId
+          ...(projectId && { project: { $ne: projectId } })
         })
         .select('display_name username email avatar')
         .session(session)
@@ -349,13 +351,14 @@ export class ProjectService {
   }
 
   async staffGetListAvailableSupervisors(body: staffGetListAvailableSupervisorsDto) {
-    const { search = '' } = body
+    const { search = '', projectId } = body
     return runTransaction(async (session) => {
       const supervisors = await this.userModel
         .find({
           roles: 'supervisor',
           status: USER_STATUS.AVAILABLE,
-          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          ...(projectId && { project: { $ne: projectId } })
         })
         .select('display_name username email avatar')
         .session(session)
@@ -548,6 +551,116 @@ export class ProjectService {
 
       // Truy vấn theo chuỗi
       console.log('Attempting string query...')
+      const stringQuery = await this.projectModel
+        .find({ supervisor: supervisorId, status: STATUS_MASTER.APPROVED })
+        .lean()
+        .exec()
+      console.log(`String query found ${stringQuery.length} projects`)
+      projects = [...projects, ...stringQuery]
+
+      // Truy vấn theo mảng string
+      console.log('Attempting array string query...')
+      const arrayStringQuery = await this.projectModel
+        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
+        .lean()
+        .exec()
+      console.log(`Array string query found ${arrayStringQuery.length} projects`)
+      projects = [...projects, ...arrayStringQuery]
+
+      // Kiểm tra nếu supervisorId hợp lệ (ObjectId)
+      if (Types.ObjectId.isValid(supervisorId)) {
+        const objectId = new Types.ObjectId(supervisorId)
+
+        console.log('Attempting ObjectId query...')
+        const objectIdQuery = await this.projectModel
+          .find({ supervisor: objectId, status: STATUS_MASTER.APPROVED })
+          .lean()
+          .exec()
+        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
+        projects = [...projects, ...objectIdQuery]
+
+        console.log('Attempting array ObjectId query...')
+        const arrayObjectIdQuery = await this.projectModel
+          .find({ supervisor: { $in: [objectId] }, status: STATUS_MASTER.APPROVED })
+          .lean()
+          .exec()
+        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
+        projects = [...projects, ...arrayObjectIdQuery]
+      }
+
+      console.log('Attempting raw MongoDB query...')
+      const rawQuery = await this.projectModel.collection
+        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
+        .toArray()
+      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
+      projects = [...projects, ...rawQuery]
+
+      // Truy vấn với populate
+      console.log('Attempting populated query...')
+      const populatedProjects = await this.projectModel
+        .find({
+          $or: [
+            { supervisor: supervisorId, status: STATUS_MASTER.APPROVED },
+            { supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED },
+            ...(Types.ObjectId.isValid(supervisorId)
+              ? [
+                  { supervisor: new Types.ObjectId(supervisorId), status: STATUS_MASTER.APPROVED },
+                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] }, status: STATUS_MASTER.APPROVED }
+                ]
+              : [])
+          ]
+        })
+        .populate('leader')
+        .populate('supervisor')
+        .populate('major')
+        .populate('field')
+        .populate('campus')
+        .populate({
+          path: 'members',
+          populate: [
+            { path: 'major', select: 'name' },
+            { path: 'field', select: 'name' }
+          ]
+        })
+        .populate({
+          path: 'documents',
+          populate: { path: 'user', select: 'display_name email' }
+        })
+        .session(session)
+        .exec()
+      console.log(`Populated projects found: ${populatedProjects.length}`)
+      projects = [...projects, ...populatedProjects]
+
+      if (!projects || projects.length === 0) {
+        console.log('No projects found for supervisor after all query attempts')
+        return []
+      }
+
+      // Loại bỏ project trùng lặp dựa trên _id
+      const uniqueProjects = Array.from(
+        new Map(
+          projects
+            .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
+            .map((p) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
+        ).values()
+      )
+
+      console.log(`Final unique projects count: ${uniqueProjects.length}`)
+      return uniqueProjects
+    })
+  }
+
+  async getProjectsToReview(supervisorId: string) {
+    return runTransaction(async (session) => {
+      console.log('🔍 Supervisor ID from token:', supervisorId)
+
+      const sampleProject = await this.projectModel.findOne().lean().exec()
+      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
+
+      let projects: any[] = []
+
+      // Truy vấn theo chuỗi
+      console.log('Attempting string query...')
       const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
       console.log(`String query found ${stringQuery.length} projects`)
       projects = [...projects, ...stringQuery]
@@ -696,82 +809,80 @@ export class ProjectService {
     return project.members
   }
 
-  async approveIdea(projectId: string, status: PROJECT_STATUS, userEmail: string) {
+  async approveIdea(projectId: string, status: STATUS_MASTER, userId: string) {
     return runTransaction(async (session) => {
       console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
 
-      try {
-        // Log a sample project to check structure
-        const sampleProject = await this.projectModel.findOne().lean().exec()
-        console.log('Sample project structure:', sampleProject)
-      } catch (error) {
-        console.error('❌ Error fetching sample project:', error)
-      }
-
-      let project = null
-
-      try {
-        console.log('Attempting direct ID query...')
-        project = await this.projectModel.findById(projectId).session(session)
-        console.log(project ? '✅ Project found' : '⚠️ No project found')
-      } catch (error) {
-        console.error('❌ Error in direct ID query:', error)
-      }
-
-      if (!project && Types.ObjectId.isValid(projectId)) {
-        try {
-          console.log('Attempting ObjectId query...')
-          project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
-          console.log(project ? '✅ Project found with ObjectId' : '⚠️ No project found')
-        } catch (error) {
-          console.error('❌ Error in ObjectId query:', error)
-        }
-      }
-
+      const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
       if (!project) {
-        console.log('❌ Project not found')
-        return { message: 'Project not found' }
+        console.log('Project not found:', projectId)
+        throw new HttpException('Project not found', 404)
       }
 
-      try {
-        // Update project status
-        project.status = status
-        await project.save({ session })
-        console.log(`✅ Project status updated to ${status}`)
-      } catch (error) {
-        console.error('❌ Error updating project status:', error)
-        await session.abortTransaction()
-        return { message: 'Failed to update project status' }
-      }
-
-      try {
-        // Commit transaction
-        await session.commitTransaction()
-        console.log('✅ Transaction committed successfully')
-      } catch (error) {
-        console.error('❌ Error committing transaction:', error)
-        return { message: 'Transaction failed' }
-      }
-
-      try {
-        // Send notification email
-        this.emailQueue.addEmailJob({
-          to: userEmail,
-          subject: `Project Status Updated: ${status}`,
-          templateName: 'project-status-update',
-          context: {
-            projectTitle: project.name,
-            status,
-            year: new Date().getFullYear(),
-            start_url: process.env.CLIENT_URL
+      const updatedProject = await this.projectModel.updateOne(
+        { _id: new Types.ObjectId(projectId) },
+        {
+          $set: {
+            status: status,
+            updated_by: userId,
+            updated_at: new Date()
           }
-        })
-        console.log(`📧 Notification email sent to ${userEmail}`)
-      } catch (error) {
-        console.error('❌ Error sending email notification:', error)
+        },
+        { session }
+      )
+
+      if (updatedProject.matchedCount === 0) {
+        throw new HttpException('Failed to update project', 400)
       }
+
+      console.log(`✅ Project status updated to ${status}`)
+
+      await this.emailQueue.addEmailJob({
+        to: userId,
+        subject: `Project Status Updated: ${status}`,
+        templateName: 'project-status-update',
+        context: {
+          projectTitle: project.name,
+          status,
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      })
+      console.log(`📧 Notification email sent to ${userId}`)
+
+      await session.commitTransaction()
+      console.log('✅ Transaction committed successfully')
 
       return { message: 'Project status updated successfully', project }
+    })
+  }
+
+  async checkAvailableSlot(userId: string) {
+    return runTransaction(async (session) => {
+      const countSlot = await this.projectModel
+        .countDocuments({
+          status: STATUS_MASTER.APPROVED,
+          updated_by: userId
+        })
+        .session(session)
+
+      const availableSlot = 5 - countSlot
+
+      await this.emailQueue.addEmailJob({
+        to: userId,
+        subject: `available slot`,
+        templateName: 'available slot',
+        context: {
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      })
+      console.log(`📧 Notification email available slot sent to ${userId}`)
+
+      await session.commitTransaction()
+      console.log('✅ Transaction committed successfully')
+
+      return { message: 'Count available slot successfully', availableSlot }
     })
   }
 }

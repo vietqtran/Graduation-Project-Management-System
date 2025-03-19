@@ -163,10 +163,18 @@ export class staffGetListAvailableStudentsDto {
   @IsOptional()
   @IsString({ message: 'Semester must be a string' })
   search?: string
+
+  @IsOptional()
+  @IsMongoId({ message: 'Invalid project ID format' })
+  projectId?: string
 }
 
 export class staffGetListAvailableSupervisorsDto {
   @IsOptional()
   @IsString({ message: 'Semester must be a string' })
   search?: string
+
+  @IsOptional()
+  @IsMongoId({ message: 'Invalid project ID format' })
+  projectId?: string
 }
