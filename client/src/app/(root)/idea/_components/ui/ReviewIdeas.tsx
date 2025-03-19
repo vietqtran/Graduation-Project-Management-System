@@ -16,7 +16,7 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
-  status: string
+  status: number
   leader: { username: string; _id: string }  // Modify to match the structure of the leader object
   username: string
 }

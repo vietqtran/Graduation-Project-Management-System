@@ -17,7 +17,7 @@ export interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
-  status: string
+  status: number
   leader: { username: string; _id: string }  // Modify to match the structure of the leader object
   username: string
 }
@@ -61,8 +61,8 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
         (project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           project.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (majorFilter ? project.major.some((major) => major.name === majorFilter) : true) &&
-        (fieldFilter ? project.major.some((field) => field.name === fieldFilter) : true) &&
-        (campusFilter ? project.major.some((campus) => campus.name === campusFilter) : true)
+        (fieldFilter ? project.field.some((field) => field.name === fieldFilter) : true) &&
+        (campusFilter ? project.campus.name === campusFilter : true) 
     )
 
     onFilteredProjects(filteredProjects)

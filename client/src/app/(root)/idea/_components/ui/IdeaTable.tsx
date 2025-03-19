@@ -6,6 +6,7 @@ import instance from '@/utils/axios'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import IdeaDetail from './IdeaDetail'
+import { STATUS_MASTER } from '@/constants/status'
 
 interface ProjectIdea {
   _id: string
@@ -16,7 +17,7 @@ interface ProjectIdea {
   description: string
   created_at: string
   updated_at: string
-  status: string
+  status: number
   leader: { username: string; _id: string }  // Modify to match the structure of the leader object
   username: string
 }
@@ -82,7 +83,7 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
               <TableCell>{idea.major[0]?.name}, {idea.campus?.name}, {idea.field[0]?.name}</TableCell>
               <TableCell>{idea.leader?.username}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
-                {idea.status === 'CREATED' ? (
+                {STATUS_MASTER[idea.status] === 'PENDING' ? (
                   <>
                     <Button variant='default' onClick={() => handleAccept(idea._id)}>
                       Accept
@@ -93,9 +94,9 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
                   </>
                 ) : (
                   <span className='text-gray-500 italic'>
-                    {idea.status === 'APPROVED' ? (
+                    {STATUS_MASTER[idea.status] === 'APPROVED' ? (
                       <div className='text-green-500 font-semibold'>APPROVED</div>
-                    ) : idea.status === 'REJECTED' ? (
+                    ) : STATUS_MASTER[idea.status] === 'REJECTED' ? (
                       <div className='text-red-500 font-semibold'>REJECTED</div>
                     ) : (
                       <div className='text-gray-500 italic'>No action available</div>
