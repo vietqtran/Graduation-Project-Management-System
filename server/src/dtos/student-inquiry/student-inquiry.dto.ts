@@ -9,7 +9,7 @@ export class StudentCreateInquiryDto {
   content: string
 }
 
-const validFields = ['created_at', 'updated_at']
+const validFields = ['created_at', 'answered_at']
 
 export class StudentGetListInquiriesDto {
   @IsOptional()
@@ -20,20 +20,19 @@ export class StudentGetListInquiriesDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'Page must be a number' })
   @Min(1, { message: 'Page must be at least 1' })
-  page?: number = 1
+  page: number = 1
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'Limit must be a number' })
   @Min(1, { message: 'Limit must be at least 1' })
-  @Max(100, { message: 'Limit cannot exceed 100' })
-  limit?: number = 10
+//   @Max(100, { message: 'Limit cannot exceed 100' })
+  limit: number = 10
 
   //a object to store sort options (suitable for sort by mongoose)
   @IsOptional()
   @IsObject({ message: 'Sort must be an object' })
   @ValidateNested()
-  @Type(() => Object)
   @Transform(({ value }) => processSortObject(value, { created_at: -1 }, validFields)) // ✅ Xử lý `sort` trước khi vào service
   sort?: SortObject
 }

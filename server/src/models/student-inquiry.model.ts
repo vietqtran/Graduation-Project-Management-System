@@ -11,6 +11,7 @@ export interface IStudentInquiry extends Document {
     answered_by: IUser['_id']
     created_at: Date
     updated_at: Date
+    answered_at: Date
 }
 
 export const StudentInquirySchema = new Schema<IStudentInquiry>({
@@ -41,6 +42,9 @@ export const StudentInquirySchema = new Schema<IStudentInquiry>({
     answered_by: {
         type: Schema.Types.ObjectId,
         ref: 'User'
+    },
+    answered_at: {
+        type: Date
     }
 }, {
     timestamps: {
