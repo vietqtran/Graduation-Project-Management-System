@@ -67,7 +67,7 @@ export const UserSchema = new Schema<IUser>(
         default: ['user']
       }
     ],
-    status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.ACTIVATED },
+    status: { type: Number, enum: USER_STATUS, required: false, default: USER_STATUS.UN_GROUPED },
     code: {
       type: String,
       unique: true,
