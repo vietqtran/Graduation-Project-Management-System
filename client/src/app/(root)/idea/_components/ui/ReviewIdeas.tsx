@@ -10,15 +10,17 @@ import ProjectSearchAndFilter from './IdeaSearchBar'
 export interface ProjectIdea {
   _id: string
   name: string
-  field: string
-  major: string
-  campus: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
   description: string
   created_at: string
   updated_at: string
   status: string
-  leader: Array<string>
+  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  username: string
 }
+
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)

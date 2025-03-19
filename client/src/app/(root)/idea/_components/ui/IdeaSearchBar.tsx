@@ -11,15 +11,17 @@ import instance from '@/utils/axios'
 export interface ProjectIdea {
   _id: string
   name: string
-  field: string
-  major: string
-  campus: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
   description: string
   created_at: string
   updated_at: string
   status: string
-  leader: Array<string>
+  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  username: string
 }
+
 
 interface ProjectSearchAndFilterProps {
   projects?: ProjectIdea[]
@@ -58,9 +60,9 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
       (project) =>
         (project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           project.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (majorFilter ? project.major === majorFilter : true) &&
-        (fieldFilter ? project.field === fieldFilter : true) &&
-        (campusFilter ? project.campus === campusFilter : true)
+        (majorFilter ? project.major.some((major) => major.name === majorFilter) : true) &&
+        (fieldFilter ? project.major.some((field) => field.name === fieldFilter) : true) &&
+        (campusFilter ? project.major.some((campus) => campus.name === campusFilter) : true)
     )
 
     onFilteredProjects(filteredProjects)

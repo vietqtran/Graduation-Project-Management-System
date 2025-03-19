@@ -10,15 +10,17 @@ import IdeaDetail from './IdeaDetail'
 interface ProjectIdea {
   _id: string
   name: string
-  field: string
-  major: string
-  campus: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
   description: string
   created_at: string
   updated_at: string
   status: string
-  leader: Array<string>
+  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  username: string
 }
+
 
 interface IdeaTableProps {
   ideas: ProjectIdea[]
@@ -66,7 +68,7 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
             <TableHead className='w-12 text-center'>#</TableHead>
             <TableHead>Project Name</TableHead>
             <TableHead>Created day</TableHead>
-            <TableHead>Campus</TableHead>
+            <TableHead>Major - Campus - Field</TableHead>
             <TableHead>Created by</TableHead>
             <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
@@ -77,8 +79,8 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
               <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{JSON.stringify(idea.campus)}</TableCell>
-              <TableCell>idea leader</TableCell>
+              <TableCell>{idea.major[0]?.name}, {idea.campus?.name}, {idea.field[0]?.name}</TableCell>
+              <TableCell>{idea.leader?.username}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
                 {idea.status === 'CREATED' ? (
                   <>
