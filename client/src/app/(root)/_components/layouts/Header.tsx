@@ -1,11 +1,13 @@
 import { LogOut, User } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useAppSelector, useAuth } from '@/hooks'
 
 import Image from 'next/image'
-import { useAuth } from '@/hooks'
+import { RootState } from '@/types/store.type'
 
 const Header = () => {
   const { logOut } = useAuth()
+  const { user } = useAppSelector((state: RootState) => state.auth)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -33,7 +35,13 @@ const Header = () => {
             className='cursor-pointer size-10 min-w-10 rounded-full border overflow-hidden'
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <Image src={'https://i.pravatar.cc/300'} width={100} height={100} alt='avatar' className='size-full' />
+            <Image
+              src={user?.avatar || 'https://i.pravatar.cc/300'}
+              width={100}
+              height={100}
+              alt='avatar'
+              className='size-full'
+            />
           </div>
 
           {isDropdownOpen && (

@@ -1,8 +1,11 @@
 'use client'
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
+import React, { useState } from 'react'
+
+import { AxiosError } from 'axios'
+import { Button } from '@/components/ui/button'
 import { Field } from '@/types/field.type'
 import FieldBadge from '@/components/common/FieldBadge'
 import LeaderStar from '@/components/common/LeaderStar'
@@ -10,12 +13,11 @@ import { Major } from '@/types/major.type'
 import MajorBadge from '@/components/common/MajorBadge'
 import { Project } from '@/types/project.type'
 import { User } from '@/types/user.type'
-import { useRouter } from '@/hooks/useRouter'
-import useInvite from '@/hooks/useInvite'
 import instance from '@/utils/axios'
-import { useAppSelector } from '@/hooks'
 import { toast } from 'sonner'
-import { AxiosError } from 'axios'
+import { useAppSelector } from '@/hooks'
+import useInvite from '@/hooks/useInvite'
+import { useRouter } from '@/hooks/useRouter'
 
 interface IdeaDetailsProps {
   project: Project | null
@@ -39,6 +41,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
     if (email && project?._id) {
       if (user?._id) {
         await sendInvite(user._id, email, project._id) // Gọi hàm sendInvite từ hook
+        setEmail('')
       } else {
         toast.error('User not found')
       }

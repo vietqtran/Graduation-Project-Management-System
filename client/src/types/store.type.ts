@@ -6,6 +6,7 @@ export interface User {
   last_name: string
   roles: string[]
   project?: string
+  avatar: string
 }
 
 export interface AuthState {
