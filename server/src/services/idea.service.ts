@@ -104,10 +104,15 @@ export class IdeaService {
         throw new HttpException('You are not the leader of this idea', 400)
       }
       await this.projectModel.deleteOne({ _id: projectId }).session(session).exec()
-      await this.userModel
-        .updateOne({ _id: userId }, { $set: { status: USER_STATUS.UN_GROUPED } })
-        .session(session)
-        .exec()
+      if (project.members && project.members.length > 0) {
+        await this.userModel
+          .updateMany(
+            { _id: { $in: (project.members as IUser[]).map((member: IUser) => member._id) } },
+            { $set: { status: USER_STATUS.UN_GROUPED } },
+            { session }
+          )
+          .exec()
+      }
     })
   }
   async changeIdea(projectId: string, updateIdea: UpdateIdeaDto, userId: string): Promise<IProject> {

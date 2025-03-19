@@ -7,18 +7,24 @@ import { runTransaction } from '@/helpers/transaction-helper'
 import { InviteStatus } from '@/constants/invite-status-enum'
 import UserModel, { IUser } from '@/models/user.model'
 import ProjectModel, { IProject } from '@/models/project.model'
-import e from 'express'
 import { USER_STATUS } from '@/constants/status'
+import { EmailQueue } from '@/queues/email.queue'
+import { MailService } from './mail.service'
+import { format } from 'date-fns'
 
 export class InviteService {
   private readonly inviteModel: Model<IInvite>
   private readonly userModel: Model<IUser>
   private readonly projectModel: Model<IProject>
+  private readonly emailQueue: EmailQueue
+  private readonly mailService: MailService
 
   constructor() {
     this.inviteModel = InviteModel
     this.userModel = UserModel
     this.projectModel = ProjectModel
+    this.mailService = new MailService()
+    this.emailQueue = new EmailQueue(this.mailService)
   }
   async sendInvite(inviteData: InviteDto) {
     const maxNumberOfSupervisorJoin = 5
@@ -83,6 +89,19 @@ export class InviteService {
         existingInvite.set('updated_at', new Date())
         await existingInvite.save({ session }) // Mongoose sẽ tự động cập nhật `updated_at`
         await session.commitTransaction()
+        const fromUser = await this.userModel.findById(from_user).session(session)
+        this.emailQueue.addEmailJob({
+          to: existingUser.email, // Gửi đến người được mời
+          subject: 'You have been invited to join a project',
+          templateName: 'invite-project', // Tên template sẽ được sử dụng
+          context: {
+            from_user_name: fromUser?.display_name,
+            to_user_name: existingUser.display_name,
+            project_name: existingProject.name, // Tên dự án
+            inviteUrl: `${process.env.CLIENT_URL}/my-request`, // URL mời tham gia
+            sentTime: format(new Date(), 'h:mm a dd/MM/yyyy') // Thời gian gửi
+          }
+        })
         return existingInvite
       } else {
         const createInvite = await this.inviteModel.create(
@@ -100,6 +119,19 @@ export class InviteService {
           throw new HttpException("Can't create invite", 500)
         }
         await session.commitTransaction()
+        const fromUser = await this.userModel.findById(from_user).session(session)
+        this.emailQueue.addEmailJob({
+          to: existingUser.email, // Gửi đến người được mời
+          subject: 'You have been invited to join a project',
+          templateName: 'invite-project', // Tên template sẽ được sử dụng
+          context: {
+            from_user_name: fromUser?.display_name,
+            to_user_name: existingUser.display_name,
+            project_name: existingProject.name, // Tên dự án
+            inviteUrl: `${process.env.CLIENT_URL}/my-request`, // URL mời tham gia
+            sentTime: format(new Date(), 'h:mm a dd/MM/yyyy') // Thời gian gửi
+          }
+        })
         return createInvite[0]
       }
     } catch (error) {
