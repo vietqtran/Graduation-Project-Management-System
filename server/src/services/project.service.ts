@@ -548,6 +548,116 @@ export class ProjectService {
 
       // Truy vấn theo chuỗi
       console.log('Attempting string query...')
+      const stringQuery = await this.projectModel
+        .find({ supervisor: supervisorId, status: STATUS_MASTER.APPROVED })
+        .lean()
+        .exec()
+      console.log(`String query found ${stringQuery.length} projects`)
+      projects = [...projects, ...stringQuery]
+
+      // Truy vấn theo mảng string
+      console.log('Attempting array string query...')
+      const arrayStringQuery = await this.projectModel
+        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
+        .lean()
+        .exec()
+      console.log(`Array string query found ${arrayStringQuery.length} projects`)
+      projects = [...projects, ...arrayStringQuery]
+
+      // Kiểm tra nếu supervisorId hợp lệ (ObjectId)
+      if (Types.ObjectId.isValid(supervisorId)) {
+        const objectId = new Types.ObjectId(supervisorId)
+
+        console.log('Attempting ObjectId query...')
+        const objectIdQuery = await this.projectModel
+          .find({ supervisor: objectId, status: STATUS_MASTER.APPROVED })
+          .lean()
+          .exec()
+        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
+        projects = [...projects, ...objectIdQuery]
+
+        console.log('Attempting array ObjectId query...')
+        const arrayObjectIdQuery = await this.projectModel
+          .find({ supervisor: { $in: [objectId] }, status: STATUS_MASTER.APPROVED })
+          .lean()
+          .exec()
+        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
+        projects = [...projects, ...arrayObjectIdQuery]
+      }
+
+      console.log('Attempting raw MongoDB query...')
+      const rawQuery = await this.projectModel.collection
+        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
+        .toArray()
+      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
+      projects = [...projects, ...rawQuery]
+
+      // Truy vấn với populate
+      console.log('Attempting populated query...')
+      const populatedProjects = await this.projectModel
+        .find({
+          $or: [
+            { supervisor: supervisorId, status: STATUS_MASTER.APPROVED },
+            { supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED },
+            ...(Types.ObjectId.isValid(supervisorId)
+              ? [
+                  { supervisor: new Types.ObjectId(supervisorId), status: STATUS_MASTER.APPROVED },
+                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] }, status: STATUS_MASTER.APPROVED }
+                ]
+              : [])
+          ]
+        })
+        .populate('leader')
+        .populate('supervisor')
+        .populate('major')
+        .populate('field')
+        .populate('campus')
+        .populate({
+          path: 'members',
+          populate: [
+            { path: 'major', select: 'name' },
+            { path: 'field', select: 'name' }
+          ]
+        })
+        .populate({
+          path: 'documents',
+          populate: { path: 'user', select: 'display_name email' }
+        })
+        .session(session)
+        .exec()
+      console.log(`Populated projects found: ${populatedProjects.length}`)
+      projects = [...projects, ...populatedProjects]
+
+      if (!projects || projects.length === 0) {
+        console.log('No projects found for supervisor after all query attempts')
+        return []
+      }
+
+      // Loại bỏ project trùng lặp dựa trên _id
+      const uniqueProjects = Array.from(
+        new Map(
+          projects
+            .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
+            .map((p) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
+        ).values()
+      )
+
+      console.log(`Final unique projects count: ${uniqueProjects.length}`)
+      return uniqueProjects
+    })
+  }
+
+  async getProjectsToReview(supervisorId: string) {
+    return runTransaction(async (session) => {
+      console.log('🔍 Supervisor ID from token:', supervisorId)
+
+      const sampleProject = await this.projectModel.findOne().lean().exec()
+      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
+
+      let projects: any[] = []
+
+      // Truy vấn theo chuỗi
+      console.log('Attempting string query...')
       const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
       console.log(`String query found ${stringQuery.length} projects`)
       projects = [...projects, ...stringQuery]

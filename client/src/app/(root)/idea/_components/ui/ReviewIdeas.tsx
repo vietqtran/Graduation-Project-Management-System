@@ -34,7 +34,7 @@ const ReviewIdeas = () => {
   useEffect(() => {
     const fetchProjectIdeas = async () => {
       try {
-        const response = await instance.get('/project/get-projects-by-supervisor', { withCredentials: true })
+        const response = await instance.get('/project/get-projects-to-review', { withCredentials: true })
         if (response.data) {
           setOriginalIdeas(response.data.data)
           setFilteredIdeas(response.data.data)

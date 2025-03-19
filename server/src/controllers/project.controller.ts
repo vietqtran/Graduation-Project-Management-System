@@ -101,6 +101,21 @@ export class ProjectController {
     }
   })
 
+  getProjectsToReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const supervisorId = tokenPayload._id
+      console.log('Token payload:', tokenPayload)
+      console.log('Supervisor ID from token:', supervisorId)
+
+      const projects = await this.projectService.getProjectsToReview(supervisorId)
+      ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')
+    } catch (error) {
+      ResponseHandler.sendError(res, error)
+      next(error)
+    }
+  })
+
   getProjectLeaderForSupervisor = asyncHandler(async (req: Request, res: Response) => {
     try {
       const tokenPayload = getUser(req)

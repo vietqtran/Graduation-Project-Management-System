@@ -34,6 +34,7 @@ router.get('/detail-topic/:id', projectController.getTopicDetail)
 router.patch('/update-topic/:id', projectController.updateTopic)
 router.delete('/delete-topic/:id', projectController.deleteTopic)
 router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
+router.get('/get-projects-to-review', projectController.getProjectsToReview)
 router.get('/get-project-leader-for-supervisor', projectController.getProjectLeaderForSupervisor)
 
 // Add new route for getting project members
