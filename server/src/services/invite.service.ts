@@ -39,7 +39,7 @@ export class InviteService {
     try {
       const { from_user, to_user, project } = inviteData
       const existingUser = await this.userModel.findOne({ email: to_user }).session(session)
-      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session);
+      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session)
       if (!existingUser) {
         throw new HttpException('User with the provided email does not exist', 404) // Kiểm tra xem user đã tồn tại trong ứng dụng chưa
       }
