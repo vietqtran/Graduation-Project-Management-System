@@ -17,10 +17,9 @@ export interface ProjectIdea {
   created_at: string
   updated_at: string
   status: number
-  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  leader: { username: string; _id: string } // Modify to match the structure of the leader object
   username: string
 }
-
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -28,9 +27,9 @@ const ReviewIdeas = () => {
   const [filteredIdeas, setFilteredIdeas] = useState<ProjectIdea[]>([])
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(false)
+  const [availableSlots, setAvailableSlots] = useState(0)
 
   const itemsPerPage = 5
-  const availableSlots = 10
 
   useEffect(() => {
     const fetchProjectIdeas = async () => {
@@ -50,8 +49,22 @@ const ReviewIdeas = () => {
       }
     }
 
+    const fetchAvailableSlots = async () => {
+      try {
+        const response = await instance.get('/project/get-available-slots', { withCredentials: true })
+        if (response.data) {
+          setAvailableSlots(response.data.data.availableSlot)
+          console.log(response.data.data.availableSlot)
+        }
+      } catch (error) {
+        console.error('Error fetching available slots:', error)
+      }
+    }
+
+    fetchAvailableSlots()
+
     fetchProjectIdeas()
-  }, [])
+  }, [setFilteredIdeas, filteredIdeas])
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage

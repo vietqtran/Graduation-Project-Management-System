@@ -124,14 +124,23 @@ export class ProjectController {
   }
 
   approveIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { projectId, status } = req.body;
-    const tokenPayload = getUser(req);
-    const response = await this.projectService.approveIdea(projectId, status, tokenPayload._id);
-    return ResponseHandler.sendSuccess(res, response, 'Approve project successfully');
-  } catch (error) {
-    return ResponseHandler.sendError(res, error);
-  }
-});
+    try {
+      const { projectId, status } = req.body
+      const tokenPayload = getUser(req)
+      const response = await this.projectService.approveIdea(projectId, status, tokenPayload._id)
+      return ResponseHandler.sendSuccess(res, response, 'Approve project successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 
+  checkAvailableSlot = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const response = await this.projectService.checkAvailableSlot(tokenPayload._id)
+      return ResponseHandler.sendSuccess(res, response, 'Check available slot successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 }

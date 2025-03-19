@@ -40,4 +40,5 @@ router.get('/get-project-leader-for-supervisor', projectController.getProjectLea
 router.get('/:projectId/members', (req, res, next) => projectController.getProjectMembers(req, res, next))
 
 router.patch('/approve-idea/:id', projectController.approveIdea)
+router.get('/get-available-slots', projectController.checkAvailableSlot)
 export { router as projectRoutes }

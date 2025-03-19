@@ -696,53 +696,82 @@ export class ProjectService {
     return project.members
   }
 
- async approveIdea(projectId: string, status: STATUS_MASTER, userId: string) {
-  return runTransaction(async (session) => {
-    console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`);
-    
-    const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session);
-    if (!project) {
-      console.log('Project not found:', projectId);
-      throw new HttpException('Project not found', 404);
-    }
+  async approveIdea(projectId: string, status: STATUS_MASTER, userId: string) {
+    return runTransaction(async (session) => {
+      console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
 
-    const updatedProject = await this.projectModel.updateOne(
-      { _id: new Types.ObjectId(projectId) },
-      {
-        $set: {
-          status: status,
-          updated_by: userId,
-          updated_at: new Date()
-        }
-      },
-      { session }
-    );
-
-    if (updatedProject.matchedCount === 0) {
-      throw new HttpException('Failed to update project', 400);
-    }
-
-    console.log(`✅ Project status updated to ${status}`);
-
-    await this.emailQueue.addEmailJob({
-      to: userId,
-      subject: `Project Status Updated: ${status}`,
-      templateName: 'project-status-update',
-      context: {
-        projectTitle: project.name,
-        status,
-        year: new Date().getFullYear(),
-        start_url: process.env.CLIENT_URL
+      const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
+      if (!project) {
+        console.log('Project not found:', projectId)
+        throw new HttpException('Project not found', 404)
       }
-    });
-    console.log(`📧 Notification email sent to ${userId}`);
 
-    await session.commitTransaction();
-    console.log('✅ Transaction committed successfully');
+      const updatedProject = await this.projectModel.updateOne(
+        { _id: new Types.ObjectId(projectId) },
+        {
+          $set: {
+            status: status,
+            updated_by: userId,
+            updated_at: new Date()
+          }
+        },
+        { session }
+      )
 
-    return { message: 'Project status updated successfully', project };
-  });
-}
+      if (updatedProject.matchedCount === 0) {
+        throw new HttpException('Failed to update project', 400)
+      }
+
+      console.log(`✅ Project status updated to ${status}`)
+
+      await this.emailQueue.addEmailJob({
+        to: userId,
+        subject: `Project Status Updated: ${status}`,
+        templateName: 'project-status-update',
+        context: {
+          projectTitle: project.name,
+          status,
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      })
+      console.log(`📧 Notification email sent to ${userId}`)
+
+      await session.commitTransaction()
+      console.log('✅ Transaction committed successfully')
+
+      return { message: 'Project status updated successfully', project }
+    })
+  }
+
+  async checkAvailableSlot(userId: string) {
+    return runTransaction(async (session) => {
+      const countSlot = await this.projectModel
+        .countDocuments({
+          status: STATUS_MASTER.APPROVED,
+          updated_by: userId
+        })
+        .session(session)
+
+      const availableSlot = 5 - countSlot
+
+      await this.emailQueue.addEmailJob({
+        to: userId,
+        subject: `available slot`,
+        templateName: 'available slot',
+        context: {
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      })
+      console.log(`📧 Notification email available slot sent to ${userId}`)
+
+      await session.commitTransaction()
+      console.log('✅ Transaction committed successfully')
+
+      return { message: 'Count available slot successfully', availableSlot }
+    })
+  }
 }
 
 export default new ProjectService()

@@ -18,10 +18,9 @@ export interface ProjectIdea {
   created_at: string
   updated_at: string
   status: number
-  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  leader: { username: string; _id: string } // Modify to match the structure of the leader object
   username: string
 }
-
 
 interface ProjectSearchAndFilterProps {
   projects?: ProjectIdea[]
@@ -62,13 +61,12 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
           project.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (majorFilter ? project.major.some((major) => major.name === majorFilter) : true) &&
         (fieldFilter ? project.field.some((field) => field.name === fieldFilter) : true) &&
-        (campusFilter ? project.campus.name === campusFilter : true) 
+        (campusFilter ? project.campus.name === campusFilter : true)
     )
 
     onFilteredProjects(filteredProjects)
   }
 
-  // Reset all filters
   const resetFilters = () => {
     setSearchTerm('')
     setMajorFilter(null)
@@ -86,7 +84,6 @@ const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ project
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value)
-            // Optional: immediate filtering as user types
             const filteredProjects = projects.filter(
               (project) =>
                 project.name.toLowerCase().includes(e.target.value.toLowerCase()) ||

@@ -18,10 +18,9 @@ interface ProjectIdea {
   created_at: string
   updated_at: string
   status: number
-  leader: { username: string; _id: string }  // Modify to match the structure of the leader object
+  leader: { username: string; _id: string } // Modify to match the structure of the leader object
   username: string
 }
-
 
 interface IdeaTableProps {
   ideas: ProjectIdea[]
@@ -39,78 +38,67 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex, setFilteredIde
     setIsModalOpen(true)
   }
 
- const handleAccept = useCallback(
-  async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!id || loadingId) return;
+  const handleAccept = useCallback(
+    async (id: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      if (!id || loadingId) return
 
-    setLoadingId(id);
+      setLoadingId(id)
 
-    try {
-      // Gọi API với URL chứa projectId và status trong body
-      const response = await instance.patch(
-        `/project/approve-idea/${id}`,  // Dùng projectId từ URL
-        { status: STATUS_MASTER.APPROVED },  // Truyền status trong body
-        { withCredentials: true }  // Đảm bảo gửi cookies chứa thông tin xác thực
-      );
+      try {
+        const response = await instance.patch(
+          `/project/approve-idea/${id}`,
+          { projectId: id, status: STATUS_MASTER.APPROVED },
+          { withCredentials: true }
+        )
 
-      if (response.status === 200) {
-        toast.success('Idea accepted successfully');
+        if (response.status === 200) {
+          toast.success('Idea accepted successfully')
 
-        // Cập nhật trạng thái trong filteredIdeas
-        setFilteredIdeas((prevIdeas) => {
-          return prevIdeas.map((idea) => 
-            idea._id === id ? { ...idea, status: STATUS_MASTER.APPROVED } : idea
-          );
-        });
+          setFilteredIdeas((prevIdeas) => {
+            return prevIdeas.map((idea) => (idea._id === id ? { ...idea, status: STATUS_MASTER.APPROVED } : idea))
+          })
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to accept idea')
+      } finally {
+        setLoadingId(null)
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to accept idea');
-    } finally {
-      setLoadingId(null);
-    }
-  },
-  [loadingId, setFilteredIdeas]
-);
+    },
+    [loadingId, setFilteredIdeas]
+  )
 
+  const handleReject = useCallback(
+    async (id: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      if (!id || loadingId) return
 
+      setLoadingId(id)
 
-const handleReject = useCallback(
-  async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!id || loadingId) return;
+      try {
+        const response = await instance.patch(
+          `/project/approve-idea/${id}`,
+          { projectId: id, status: STATUS_MASTER.REJECTED },
+          { withCredentials: true }
+        )
 
-    setLoadingId(id);
+        if (response.status === 200) {
+          toast.success('Idea accepted successfully')
 
-    try {
-      const response = await instance.patch(
-        `/project/approve-idea/${id}`,   
-        { projectId:id, status: STATUS_MASTER.REJECTED },   
-        { withCredentials: true }  
-      );
-
-      if (response.status === 200) {
-        toast.success('Idea accepted successfully');
-
-        setFilteredIdeas((prevIdeas) => {
-          return prevIdeas.map((idea) => 
-            idea._id === id ? { ...idea, status: STATUS_MASTER.REJECTED } : idea
-          );
-        });
+          setFilteredIdeas((prevIdeas) => {
+            return prevIdeas.map((idea) => (idea._id === id ? { ...idea, status: STATUS_MASTER.REJECTED } : idea))
+          })
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to reject idea')
+      } finally {
+        setLoadingId(null)
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to reject idea');
-    } finally {
-      setLoadingId(null);
-    }
-  },
-  [loadingId, setFilteredIdeas]
-);
-
-
-
+    },
+    [loadingId, setFilteredIdeas]
+  )
 
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
@@ -131,7 +119,9 @@ const handleReject = useCallback(
               <TableCell className='text-center'>{startIndex + index + 1}</TableCell>
               <TableCell>{idea.name}</TableCell>
               <TableCell>{new Date(idea.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{idea.major[0]?.name}, {idea.campus?.name}, {idea.field[0]?.name}</TableCell>
+              <TableCell>
+                {idea.major[0]?.name}, {idea.campus?.name}, {idea.field[0]?.name}
+              </TableCell>
               <TableCell>{idea.leader?.username}</TableCell>
               <TableCell className='flex justify-center gap-2 py-2'>
                 {STATUS_MASTER[idea.status] === 'PENDING' ? (

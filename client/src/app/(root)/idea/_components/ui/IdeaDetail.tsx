@@ -45,7 +45,11 @@ const IdeaDetail: React.FC<IdeaDetailProps> = ({ idea, isOpen, onClose }) => {
             <p className='text-gray-600'>
               <strong>Status:</strong>{' '}
               <span
-                className={STATUS_MASTER[idea.status] === 'APPROVED' ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'}
+                className={
+                  STATUS_MASTER[idea.status] === 'APPROVED'
+                    ? 'text-green-500 font-semibold'
+                    : 'text-red-500 font-semibold'
+                }
               >
                 {STATUS_MASTER[idea.status]}
               </span>
