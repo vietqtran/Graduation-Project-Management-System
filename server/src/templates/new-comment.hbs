@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <style>
+      .email-container { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; } .comment-box
+      { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0; } .button { display: inline-block;
+      padding: 10px 20px; background-color: #007bff; color: white !important; text-decoration: none; border-radius: 5px;
+      margin-top: 15px; } .button:hover { background-color: #0056b3; }
+    </style>
+  </head>
+  <body>
+    <div class='email-container'>
+      <h2>New Comment on Task</h2>
+      <p>Hello {{recipientName}},</p>
+      <p>A new comment has been added to task "{{taskTitle}}"</p>
+
+      <div class='comment-box'>
+        <p><strong>{{commenterName}} commented:</strong></p>
+        <p>{{commentContent}}</p>
+      </div>
+
+      <p style='margin-top: 20px;'>
+        <a href='{{taskUrl}}' class='button' target='_blank' rel='noopener noreferrer'>
+          View Comment
+        </a>
+      </p>
+      <p style='color: #666; font-size: 12px; margin-top: 20px;'>
+        If the button above doesn't work, copy and paste this URL into your browser:<br />
+        <span style='color: #007bff;'>{{taskUrl}}</span>
+      </p>
+    </div>
+  </body>
+</html>

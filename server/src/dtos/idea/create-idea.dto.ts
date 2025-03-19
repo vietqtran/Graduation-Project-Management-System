@@ -1,4 +1,13 @@
-import { IsArray, IsMongoId, IsString, IsOptional, MinLength, ArrayNotEmpty } from 'class-validator'
+import {
+  IsArray,
+  IsMongoId,
+  IsString,
+  IsOptional,
+  MinLength,
+  ArrayNotEmpty,
+  IsNotEmpty,
+  IsEmpty
+} from 'class-validator'
 
 export class CreateIdeaDto {
   @IsString()
@@ -38,4 +47,20 @@ export class CreateIdeaDto {
   @IsArray()
   @IsMongoId({ each: true, message: 'Each supervisor must be a valid MongoDB ID.' })
   supervisor: string[]
+}
+
+export class UpdateIdeaDto {
+  @IsString()
+  @IsEmpty({ message: 'Name of idea is requied.' })
+  @MinLength(3, {
+    message: 'Project name must be at least 3 characters long.'
+  })
+  name: string
+
+  @IsString()
+  @IsEmpty({ message: 'Description of idea is requied.' })
+  @MinLength(10, {
+    message: 'Description must be at least 10 characters long.'
+  })
+  description: string
 }

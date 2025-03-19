@@ -2,57 +2,67 @@
 import React from 'react'
 import StatusBar from './StatusBar'
 import StatusTable from './StatusTable'
+import { useState, useEffect } from 'react'
+import instance from '@/utils/axios'
+
+interface Task {
+  remark: string
+  created_at: Date
+  status: string
+  description: string
+  commentCount: number
+}
 
 const TeacherDashboard: React.FC = () => {
-  const tasks = [
-    {
-      title: 'Math Homework',
-      due: '2025-03-01 22:00:00',
-      status: 'Overdue',
-      description: 'Complete the math exercises',
-      commentCount: 2
-    },
-    {
-      title: 'Science Project',
-      due: '2025-02-28 22:00:00',
-      status: 'Submitted',
-      description: 'Submit the science project report',
-      commentCount: 5
-    },
-    {
-      title: 'English Essay',
-      due: '2025-03-05 22:00:00',
-      status: 'In Progress',
-      description: 'Write an essay on Shakespeare',
-      commentCount: 3
-    },
-    {
-      title: 'English Essay',
-      due: '2025-03-05 22:00:00',
-      status: 'Following',
-      description: 'Write an essay on Shakespeare',
-      commentCount: 3
-    },
-    {
-      title: 'English Essay',
-      due: '2025-03-05 22:00:00',
-      status: 'In Progress',
-      description: 'Write an essay on Shakespeare',
-      commentCount: 3
-    },
-    {
-      title: 'English Essay',
-      due: '2025-03-05 22:00:00',
-      status: 'Overdue',
-      description: 'Write an essay on Shakespeare',
-      commentCount: 3
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [filteredStatuses, setFilteredStatuses] = useState<string[]>(['All'])
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await instance.get('/request/get-all-requests', { withCredentials: true })
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch tasks')
+        }
+        setTasks(response.data.data) // Assuming the response is an array of tasks
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError('An unknown error occurred')
+        }
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchTasks()
+  }, []) // Empty dependency array means this runs once when the component mounts
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>
+  }
+
+  const handleFilterChange = (selectedLabels: string[]) => {
+    setFilteredStatuses((prev) => (JSON.stringify(prev) === JSON.stringify(selectedLabels) ? prev : selectedLabels))
+  }
 
   return (
     <div className='p-6'>
-      <StatusBar setIsFilterOpen={() => {}} />
-      <StatusTable tasks={tasks} />
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <StatusBar onFilterChange={handleFilterChange} />
+          <StatusTable tasks={tasks} filteredStatuses={filteredStatuses} />
+        </>
+      )}
     </div>
   )
 }

@@ -1,133 +1,117 @@
 'use client'
 
-import React, { useState } from 'react'
+import intance from '@/utils/axios'
+import React, { useEffect, useState } from 'react'
 import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
-import Pagination from './Pagination'
 
-// Dữ liệu mẫu cho requests
-const sampleRequests = [
-  {
-    id: 1,
-    status: 'Pending',
-    amount: 550,
-    customer: 'John Doe',
-    site: '123 Main Street',
-    date: '2023-02-01',
-    scheduled: '2023-02-03 10:00',
-    assignedTo: 'Technician A'
-  },
-  {
-    id: 2,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 3,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 4,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 5,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 6,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  },
-  {
-    id: 7,
-    status: 'Scheduled',
-    amount: 850,
-    customer: 'Jane Doe',
-    site: '456 Second Street',
-    date: '2023-02-05',
-    scheduled: '2023-02-07 14:00',
-    assignedTo: 'Technician B'
-  }
-]
+interface Request {
+  _id: string
+  remark: string
+  to_user: string
+  type: string
+  from_user: string
+  document: string
+  due_date?: Date
+  status: string
+  created_at?: Date
+  updated_at?: Date
+  setRefresh: React.Dispatch<React.SetStateAction<boolean>>
+}
 
 const RequestsPage: React.FC = () => {
-  const [requests] = useState(sampleRequests)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages] = useState(5) // ví dụ cứng, có thể tính toán dựa vào length của requests
+  const [requests, setRequests] = useState<Request[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refresh, setRefresh] = useState(false)
 
-  const handleSearch = (keyword: string) => {
-    // Logic tìm kiếm
-    console.log('Search keyword:', keyword)
+  // Hàm fetch dữ liệu từ API
+  const fetchRequests = async () => {
+    setLoading(true)
+    try {
+      const response = await intance.get('/request/get-all-requests', {
+        withCredentials: true
+      })
+      console.log(response.data.data)
+      if (response.data.success) {
+        setRequests(response.data.data || [])
+      } else {
+        console.error('Error fetching requests:', response.data.message)
+      }
+    } catch (error) {
+      console.error('Failed to fetch requests:', error)
+    }
+    setLoading(false)
   }
 
-  const handleFilterChange = (filterData: {
+  useEffect(() => {
+    fetchRequests()
+  }, [refresh])
+
+  const [filters, setFilters] = useState<{
+    search?: string
     status?: string
-    jobType?: string
+    requestType?: string
+    dateRange?: { start: string; end: string }
+  }>({})
+
+  const [filteredRequests, setFilteredRequests] = useState<Request[]>([])
+
+  useEffect(() => {
+    let filtered = requests
+
+    if (filters.search) {
+      filtered = filtered.filter((request) => request.remark.toLowerCase().includes(filters.search!.toLowerCase()))
+    }
+
+    if (filters.status) {
+      filtered = filtered.filter((request) => request.status.toLowerCase() === filters.status!.toLowerCase())
+    }
+
+    if (filters.requestType) {
+      filtered = filtered.filter((request) => request.type.toLowerCase() === filters.requestType!.toLowerCase())
+    }
+
+    if (filters.dateRange && filters.dateRange.start && filters.dateRange.end) {
+      const start = new Date(filters.dateRange.start)
+      const end = new Date(filters.dateRange.end)
+      filtered = filtered.filter((request) => {
+        if (request.created_at) {
+          const createDate = new Date(request.created_at)
+          return createDate >= start && createDate <= end
+        }
+        return false
+      })
+    }
+
+    setFilteredRequests(filtered)
+  }, [filters, requests])
+
+  const handleFilterChange = (filterData: {
+    search?: string
+    status?: string
+    requestType?: string
     dateRange?: { start: string; end: string }
   }) => {
-    // Logic filter
-    console.log('Filter data:', filterData)
+    setFilters(filterData)
   }
 
   const handleClearFilter = () => {
-    // Logic clear filter
-    console.log('Clear filter')
-  }
-
-  const handleAddRequest = () => {
-    // Logic mở modal hoặc form để thêm request
-    console.log('Add request clicked')
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    // Gọi API hoặc xử lý phân trang
-    console.log('Page changed:', page)
+    setFilters({})
   }
 
   return (
     <div className='p-4'>
-      <FilterBar
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onClearFilter={handleClearFilter}
-        onAddRequest={handleAddRequest}
-      />
+      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
 
-      <RequestTable requests={requests} />
-
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+      {loading ? (
+        <p>Loading requests...</p>
+      ) : (
+        <>
+          <RequestTable requests={filteredRequests} setRefresh={setRefresh} />
+        </>
+      )}
     </div>
   )
 }
 
-export default RequestsPage // Đổi tên component từ JobsPage thành RequestsPage
+export default RequestsPage

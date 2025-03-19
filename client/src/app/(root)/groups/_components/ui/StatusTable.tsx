@@ -1,20 +1,20 @@
-// StatusTable.tsx
 import React from 'react'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table' // Nhập các components từ thư mục ui
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { FaComment } from 'react-icons/fa'
+
 interface Task {
-  title: string
-  due: string
+  remark: string
+  created_at: Date
   status: string
-  description: string // Mô tả phụ cho mỗi task
-  commentCount: number // Số lượng bình luận
+  description: string
+  commentCount: number
 }
 
 interface StatusTableProps {
   tasks: Task[]
+  filteredStatuses: string[] // Status filters passed from parent
 }
 
-// Hàm để trả về màu sắc tương ứng với mỗi trạng thái
 const getStatusLabelClass = (status: string) => {
   switch (status) {
     case 'Completed':
@@ -26,46 +26,66 @@ const getStatusLabelClass = (status: string) => {
     case 'Submitted':
       return 'bg-blue-200 text-blue-900'
     case 'Following':
-      return 'bg-green-200 text-green-900'
+      return 'bg-purple-200 text-purple-900'
     default:
-      return 'bg-gray-200 text-white'
+      return 'bg-gray-200 text-gray-800'
   }
 }
 
-const StatusTable: React.FC<StatusTableProps> = ({ tasks }) => {
+const StatusTable: React.FC<StatusTableProps> = ({ tasks, filteredStatuses }) => {
+  // Filter tasks based on selected status filters
+  const filteredTasks = tasks.filter((task) => {
+    // If 'All' is selected or no filters are selected, show everything
+    if (filteredStatuses.includes('All') || filteredStatuses.length === 0) {
+      return true
+    }
+    // Otherwise, only show tasks that match the selected statuses
+    return filteredStatuses.includes(task.status)
+  })
+
   return (
     <div className='overflow-x-auto shadow-md sm:rounded-lg'>
       <Table className='min-w-full text-sm text-left text-gray-500'>
         <TableHeader>
           <TableRow>
             <TableHead className='px-6 py-3'>Title</TableHead>
-            <TableHead className='px-6 py-3'>Due</TableHead>
+            <TableHead className='px-6 py-3'>Create at</TableHead>
             <TableHead className='px-6 py-3'>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task, index) => (
-            <TableRow key={index} className='bg-white border-b hover:bg-gray-50'>
-              <TableCell className='px-6 py-4'>
-                <div className='flex items-center space-x-2'>
-                  <span className='font-medium'>{task.title}</span>
-                  <div className='flex items-center space-x-1'>
-                    <FaComment className='text-gray-500 text-sm' />
-                    <span className='text-xs text-gray-500'>{task.commentCount}</span>
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task, index) => (
+              <TableRow key={index} className='bg-white border-b hover:bg-gray-50'>
+                <TableCell className='px-6 py-4'>
+                  <div className='flex items-center space-x-2'>
+                    <span className='font-medium'>{task.remark}</span>
+                    <div className='flex items-center space-x-1'>
+                      <FaComment className='text-gray-500 text-sm' />
+                      <span className='text-xs text-gray-500'>{task.commentCount}</span>
+                    </div>
                   </div>
-                </div>
-                <p className='text-xs text-gray-400'>{task.description}</p>
-              </TableCell>
-              <TableCell className='px-6 py-4'>{task.due}</TableCell>
-              <TableCell className='px-6 py-4'>
-                <span
-                  className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusLabelClass(task.status)}`}
-                >
-                  {task.status}
-                </span>
+                  <p className='text-xs text-gray-400'>{task.description}</p>
+                </TableCell>
+                <TableCell className='px-6 py-4'>{new Date(task.created_at).toLocaleString()}</TableCell>
+                <TableCell className='px-6 py-4'>
+                  <span
+                    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusLabelClass(
+                      task.status
+                    )}`}
+                  >
+                    {task.status}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={3} className='text-center py-4'>
+                No tasks matching the selected filters
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

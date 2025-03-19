@@ -9,6 +9,10 @@ import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
 import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
+import { runTransaction } from '@/helpers/transaction-helper'
+import { IUploadDocument } from '@/models/document.model'
+import { session } from 'passport'
+import { create } from 'domain'
 
 dotenv.config()
 
@@ -25,44 +29,33 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  async createRequest(userId: string, createRequestDto: CreateRequestDto) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-
-    try {
-      const user = await this.userModel.findById(userId).session(session)
-      if (!user) {
-        throw new HttpException('User not found', 404)
-      }
-
-      const { to_user, type, remark } = createRequestDto
-
-      const createdRequest = await this.requestModel.create(
+  async createRequest(requestData: Omit<IRequest, '_id'>) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.create(
         [
           {
-            from_user: userId,
-            to_user,
-            type,
-            status: RequestStatus.PENDING,
-            remark
+            to_user: requestData.to_user,
+            from_user: requestData.from_user,
+            type: requestData.type,
+            remark: requestData.remark || '',
+            status: requestData.status || 'assigned',
+            approve_user: requestData.approve_user,
+            description: requestData.description,
+            documents: requestData.documents,
+            due_date: requestData.due_date || new Date(),
+            created_at: requestData.created_at || new Date(),
+            updated_at: requestData.updated_at || new Date()
           }
         ],
         { session }
       )
 
-      if (!createdRequest[0]) {
-        throw new HttpException("Can't create request", 500)
+      if (!request || request.length === 0) {
+        throw new HttpException('Error at creating request', 400)
       }
 
-      await session.commitTransaction()
-
-      return createdRequest[0]
-    } catch (error) {
-      await session.abortTransaction()
-      throw error
-    } finally {
-      session.endSession()
-    }
+      return request[0]
+    })
   }
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
@@ -148,44 +141,49 @@ export class RequestService {
   async getRequestById(requestId: string) {
     return this.requestModel.findById(requestId).populate('from_user').populate('to_user').populate('approve_user')
   }
-
   async getUserRequests(userId: string) {
-    return this.requestModel
-      .find({ from_user: userId })
-      .populate('from_user')
-      .populate('to_user')
-      .populate('approve_user')
+    return runTransaction(async (session) => {
+      const requests = await this.requestModel
+        .find({ from_user: userId })
+        .populate('to_user')
+        .populate('approve_user')
+        .session(session)
+        .lean()
+
+      return requests.map((request) => ({
+        _id: request._id?.toString(),
+        to_user: request.to_user || null,
+        from_user: request.from_user || null,
+        approve_user: request.approve_user || null,
+        type: request.type || null,
+        remark: request.remark || null,
+        due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
+        status: request.status || null,
+        created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
+        updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null
+      }))
+    })
   }
 
-  async getAllRequests(status?: RequestStatus) {
-    const query = status ? { status } : {}
-    return this.requestModel.find(query).populate('from_user').populate('to_user').populate('approve_user')
+  async getAllRequests(tokenPayload: any) {
+    const userId = tokenPayload._id // Lấy userId từ token
+
+    if (!userId) {
+      throw new Error('User ID not found in token')
+    }
+
+    return this.requestModel.find({ from_user: userId }).populate('to_user').populate('approve_user')
   }
 
-  async deleteRequest(requestId: string, userId: string) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-
-    try {
-      const request = await this.requestModel.findOne({ _id: requestId, from_user: userId }).session(session)
-
+  async deleteRequest(requestId: string, tokenPayload: any) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.findById(requestId).session(session)
       if (!request) {
         throw new HttpException('Request not found', 404)
+      } else {
+        await this.requestModel.findByIdAndDelete(requestId, { session })
+        return { message: 'Request updated successfully' }
       }
-
-      if (request.status !== RequestStatus.PENDING) {
-        throw new HttpException('Cannot delete processed request', 400)
-      }
-
-      await this.requestModel.findByIdAndDelete(requestId).session(session)
-
-      await session.commitTransaction()
-      return null
-    } catch (error) {
-      await session.abortTransaction()
-      throw error
-    } finally {
-      session.endSession()
-    }
+    })
   }
 }
