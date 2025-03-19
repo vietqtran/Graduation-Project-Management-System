@@ -1,5 +1,5 @@
 import { Model, Types } from 'mongoose'
-import { PROJECT_STATUS, USER_STATUS } from '@/constants/status'
+import { PROJECT_STATUS, STATUS_MASTER, USER_STATUS } from '@/constants/status'
 import ProjectModel, { IProject } from '@/models/project.model'
 import {
   StaffGetDetailProjectDto,
@@ -696,84 +696,53 @@ export class ProjectService {
     return project.members
   }
 
-  async approveIdea(projectId: string, status: PROJECT_STATUS, userEmail: string) {
-    return runTransaction(async (session) => {
-      console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
+ async approveIdea(projectId: string, status: STATUS_MASTER, userId: string) {
+  return runTransaction(async (session) => {
+    console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`);
+    
+    const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session);
+    if (!project) {
+      console.log('Project not found:', projectId);
+      throw new HttpException('Project not found', 404);
+    }
 
-      try {
-        // Log a sample project to check structure
-        const sampleProject = await this.projectModel.findOne().lean().exec()
-        console.log('Sample project structure:', sampleProject)
-      } catch (error) {
-        console.error('❌ Error fetching sample project:', error)
-      }
-
-      let project = null
-
-      try {
-        console.log('Attempting direct ID query...')
-        project = await this.projectModel.findById(projectId).session(session)
-        console.log(project ? '✅ Project found' : '⚠️ No project found')
-      } catch (error) {
-        console.error('❌ Error in direct ID query:', error)
-      }
-
-      if (!project && Types.ObjectId.isValid(projectId)) {
-        try {
-          console.log('Attempting ObjectId query...')
-          project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
-          console.log(project ? '✅ Project found with ObjectId' : '⚠️ No project found')
-        } catch (error) {
-          console.error('❌ Error in ObjectId query:', error)
+    const updatedProject = await this.projectModel.updateOne(
+      { _id: new Types.ObjectId(projectId) },
+      {
+        $set: {
+          status: status,
+          updated_by: userId,
+          updated_at: new Date()
         }
-      }
+      },
+      { session }
+    );
 
-      if (!project) {
-        console.log('❌ Project not found')
-        return { message: 'Project not found' }
-      }
+    if (updatedProject.matchedCount === 0) {
+      throw new HttpException('Failed to update project', 400);
+    }
 
-      try {
-        // Update project status
-        project.status = status
-        await project.save({ session })
-        console.log(`✅ Project status updated to ${status}`)
-      } catch (error) {
-        console.error('❌ Error updating project status:', error)
-        await session.abortTransaction()
-        return { message: 'Failed to update project status' }
-      }
+    console.log(`✅ Project status updated to ${status}`);
 
-      try {
-        // Commit transaction
-        await session.commitTransaction()
-        console.log('✅ Transaction committed successfully')
-      } catch (error) {
-        console.error('❌ Error committing transaction:', error)
-        return { message: 'Transaction failed' }
+    await this.emailQueue.addEmailJob({
+      to: userId,
+      subject: `Project Status Updated: ${status}`,
+      templateName: 'project-status-update',
+      context: {
+        projectTitle: project.name,
+        status,
+        year: new Date().getFullYear(),
+        start_url: process.env.CLIENT_URL
       }
+    });
+    console.log(`📧 Notification email sent to ${userId}`);
 
-      try {
-        // Send notification email
-        this.emailQueue.addEmailJob({
-          to: userEmail,
-          subject: `Project Status Updated: ${status}`,
-          templateName: 'project-status-update',
-          context: {
-            projectTitle: project.name,
-            status,
-            year: new Date().getFullYear(),
-            start_url: process.env.CLIENT_URL
-          }
-        })
-        console.log(`📧 Notification email sent to ${userEmail}`)
-      } catch (error) {
-        console.error('❌ Error sending email notification:', error)
-      }
+    await session.commitTransaction();
+    console.log('✅ Transaction committed successfully');
 
-      return { message: 'Project status updated successfully', project }
-    })
-  }
+    return { message: 'Project status updated successfully', project };
+  });
+}
 }
 
 export default new ProjectService()

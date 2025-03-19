@@ -70,7 +70,7 @@ const ReviewIdeas = () => {
         <div className='text-center text-gray-500'>Loading...</div>
       ) : hasData && filteredIdeas.length > 0 ? (
         <>
-          <IdeaTable ideas={currentIdeas} startIndex={startIndex} />
+          <IdeaTable ideas={currentIdeas} startIndex={startIndex} setFilteredIdeas={setFilteredIdeas} />
           <IdeaPagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </>
       ) : (

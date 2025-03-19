@@ -26,9 +26,10 @@ interface ProjectIdea {
 interface IdeaTableProps {
   ideas: ProjectIdea[]
   startIndex: number
+  setFilteredIdeas: React.Dispatch<React.SetStateAction<ProjectIdea[]>>
 }
 
-const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
+const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex, setFilteredIdeas }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [selectedIdea, setSelectedIdea] = useState<ProjectIdea | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -38,29 +39,79 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
     setIsModalOpen(true)
   }
 
-  const handleAccept = useCallback(
-    async (id: string) => {
-      if (!id || loadingId) return
+ const handleAccept = useCallback(
+  async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!id || loadingId) return;
 
-      setLoadingId(id)
-      try {
-        const response = await instance.patch(
-          '/project/approve-idea',
-          { id, status: 'APPROVED' },
-          { withCredentials: true }
-        )
-        if (response.status === 200) {
-          toast.success('Idea accepted successfully')
-        }
-      } catch (error) {
-        console.error(error)
-        toast.error('Failed to accept idea')
-      } finally {
-        setLoadingId(null)
+    setLoadingId(id);
+
+    try {
+      // Gọi API với URL chứa projectId và status trong body
+      const response = await instance.patch(
+        `/project/approve-idea/${id}`,  // Dùng projectId từ URL
+        { status: STATUS_MASTER.APPROVED },  // Truyền status trong body
+        { withCredentials: true }  // Đảm bảo gửi cookies chứa thông tin xác thực
+      );
+
+      if (response.status === 200) {
+        toast.success('Idea accepted successfully');
+
+        // Cập nhật trạng thái trong filteredIdeas
+        setFilteredIdeas((prevIdeas) => {
+          return prevIdeas.map((idea) => 
+            idea._id === id ? { ...idea, status: STATUS_MASTER.APPROVED } : idea
+          );
+        });
       }
-    },
-    [loadingId]
-  )
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to accept idea');
+    } finally {
+      setLoadingId(null);
+    }
+  },
+  [loadingId, setFilteredIdeas]
+);
+
+
+
+const handleReject = useCallback(
+  async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!id || loadingId) return;
+
+    setLoadingId(id);
+
+    try {
+      const response = await instance.patch(
+        `/project/approve-idea/${id}`,   
+        { projectId:id, status: STATUS_MASTER.REJECTED },   
+        { withCredentials: true }  
+      );
+
+      if (response.status === 200) {
+        toast.success('Idea accepted successfully');
+
+        setFilteredIdeas((prevIdeas) => {
+          return prevIdeas.map((idea) => 
+            idea._id === id ? { ...idea, status: STATUS_MASTER.REJECTED } : idea
+          );
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to reject idea');
+    } finally {
+      setLoadingId(null);
+    }
+  },
+  [loadingId, setFilteredIdeas]
+);
+
+
+
+
   return (
     <div className='w-full overflow-auto rounded-md border shadow-md'>
       <Table className='min-w-full bg-white'>
@@ -85,17 +136,17 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex }) => {
               <TableCell className='flex justify-center gap-2 py-2'>
                 {STATUS_MASTER[idea.status] === 'PENDING' ? (
                   <>
-                    <Button variant='default' onClick={() => handleAccept(idea._id)}>
+                    <Button variant='default' onClick={(event) => handleAccept(idea._id, event)}>
                       Accept
                     </Button>
-                    <Button variant='destructive' onClick={() => toast.success('Idea rejected successfully')}>
+                    <Button variant='destructive' onClick={(event) => handleReject(idea._id, event)}>
                       Reject
                     </Button>
                   </>
                 ) : (
                   <span className='text-gray-500 italic'>
                     {STATUS_MASTER[idea.status] === 'APPROVED' ? (
-                      <div className='text-green-500 font-semibold'>APPROVED</div>
+                      <div className='text-green-700 font-semibold'>APPROVED</div>
                     ) : STATUS_MASTER[idea.status] === 'REJECTED' ? (
                       <div className='text-red-500 font-semibold'>REJECTED</div>
                     ) : (
