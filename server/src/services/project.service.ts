@@ -331,7 +331,7 @@ export class ProjectService {
   }
 
   async staffGetListAvailableStudents(body: staffGetListAvailableStudentsDto) {
-    const { search = '' } = body
+    const { search = '', projectId } = body
     const currentSemester = getCurrentSemester()
     return runTransaction(async (session) => {
       const students = await this.userModel
@@ -339,7 +339,9 @@ export class ProjectService {
           roles: 'student',
           planned_semester: currentSemester,
           status: USER_STATUS.UN_GROUPED,
-          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          //if projectId is truthy, filter by projectId
+          ...(projectId && { project: { $ne: projectId } })
         })
         .select('display_name username email avatar')
         .session(session)
@@ -349,13 +351,14 @@ export class ProjectService {
   }
 
   async staffGetListAvailableSupervisors(body: staffGetListAvailableSupervisorsDto) {
-    const { search = '' } = body
+    const { search = '', projectId } = body
     return runTransaction(async (session) => {
       const supervisors = await this.userModel
         .find({
           roles: 'supervisor',
           status: USER_STATUS.AVAILABLE,
-          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }]
+          $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          ...(projectId && { project: { $ne: projectId } })
         })
         .select('display_name username email avatar')
         .session(session)
