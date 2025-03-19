@@ -24,7 +24,7 @@ const MyRequest = () => {
       if (user?._id) {
         const response = await getInviteByUserId(user._id)
         if (response?.success) {
-          setInvites(response.data)
+          setInvites(response.data ?? [])
         }
       } else {
         toast.error('User ID is not available')
@@ -109,44 +109,47 @@ const MyRequest = () => {
             </thead>
             <tbody>
               {invites.length > 0 ? (
-                invites.map((invite, index) => (
-                  <tr key={invite._id} className='border-t hover:bg-gray-50'>
-                    <td className='border p-3'>{index + 1}</td>
-                    <td
-                      className='border p-3 text-blue-600 hover:underline cursor-pointer'
-                      onClick={() => handleProjectClick(invite.project)}
-                    >
-                      {invite.project.name}
-                    </td>
-                    <td className='border p-3'>{invite.project.description}</td>
-                    <td className='border p-3'>{getInviteType(user?.roles || [])}</td>
-                    <td className='border p-3 text-center'>
-                      {invite.status === 'approved' ? (
-                        <span className='text-green-500'>You have accepted the invite</span>
-                      ) : invite.status === 'rejected' ? (
-                        <span className='text-red-500'>You have rejected the invite</span>
-                      ) : (
-                        <>
-                          <button
-                            className='bg-purple-500 text-white px-4 py-1 rounded-md hover:bg-purple-600 mr-2'
-                            onClick={() => handleAcceptInvite(invite._id)}
-                          >
-                            Agree
-                          </button>
-                          <button
-                            className='bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600'
-                            onClick={() => handleRejectInvite(invite._id)}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
-                    <td className='border p-3'>
-                      {invite.updated_at ? new Date(invite.updated_at).toLocaleDateString() : 'N/A'}
-                    </td>
-                  </tr>
-                ))
+                invites.map(
+                  (invite, index) =>
+                    invite.project && (
+                      <tr key={invite._id} className='border-t hover:bg-gray-50'>
+                        <td className='border p-3'>{index + 1}</td>
+                        <td
+                          className='border p-3 text-blue-600 hover:underline cursor-pointer'
+                          onClick={() => handleProjectClick(invite.project)}
+                        >
+                          {invite?.project?.name}
+                        </td>
+                        <td className='border p-3'>{invite?.project?.description}</td>
+                        <td className='border p-3'>{getInviteType(user?.roles || [])}</td>
+                        <td className='border p-3 text-center'>
+                          {invite?.status === 'approved' ? (
+                            <span className='text-green-500'>You have accepted the invite</span>
+                          ) : invite?.status === 'rejected' ? (
+                            <span className='text-red-500'>You have rejected the invite</span>
+                          ) : (
+                            <>
+                              <button
+                                className='bg-purple-500 text-white px-4 py-1 rounded-md hover:bg-purple-600 mr-2'
+                                onClick={() => handleAcceptInvite(invite._id)}
+                              >
+                                Agree
+                              </button>
+                              <button
+                                className='bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600'
+                                onClick={() => handleRejectInvite(invite._id)}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </td>
+                        <td className='border p-3'>
+                          {invite?.updated_at ? new Date(invite?.updated_at).toLocaleDateString() : 'N/A'}
+                        </td>
+                      </tr>
+                    )
+                )
               ) : (
                 <tr>
                   <td colSpan={4} className='border p-3 text-center'>
@@ -163,7 +166,7 @@ const MyRequest = () => {
       {selectedProject && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center'>
           <div className='bg-white p-6 rounded-md shadow-lg'>
-            <h3 className='text-2xl font-bold text-purple-700'>{selectedProject.name}</h3>
+            <h3 className='text-2xl font-bold text-purple-700'>{selectedProject?.name}</h3>
             <div className='mt-4 grid grid-cols-2 gap-4'>
               <div>
                 <p className='font-bold'>Description</p>
@@ -171,15 +174,15 @@ const MyRequest = () => {
               </div>
               <div>
                 <p className='font-bold'>Campus</p>
-                <p className='italic'>{selectedProject.campus.name}</p>
+                <p className='italic'>{selectedProject?.campus?.name}</p>
               </div>
               <div>
                 <p className='font-bold'>Field</p>
-                <p className='italic'>{selectedProject.field?.map((f: Field) => f.name).join(', ')}</p>
+                <p className='italic'>{selectedProject.field?.map((f: Field) => f?.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Major</p>
-                <p className='italic'>{selectedProject.major?.map((m: Major) => m.name).join(', ')}</p>
+                <p className='italic'>{selectedProject.major?.map((m: Major) => m?.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Total Members</p>
