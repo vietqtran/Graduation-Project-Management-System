@@ -39,6 +39,7 @@ export class InviteService {
     try {
       const { from_user, to_user, project } = inviteData
       const existingUser = await this.userModel.findOne({ email: to_user }).session(session)
+      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session);
       if (!existingUser) {
         throw new HttpException('User with the provided email does not exist', 404) // Kiểm tra xem user đã tồn tại trong ứng dụng chưa
       }
@@ -89,7 +90,6 @@ export class InviteService {
         existingInvite.set('updated_at', new Date())
         await existingInvite.save({ session }) // Mongoose sẽ tự động cập nhật `updated_at`
         await session.commitTransaction()
-        const fromUser = await this.userModel.findById(from_user).session(session)
         this.emailQueue.addEmailJob({
           to: existingUser.email, // Gửi đến người được mời
           subject: 'You have been invited to join a project',
@@ -119,7 +119,6 @@ export class InviteService {
           throw new HttpException("Can't create invite", 500)
         }
         await session.commitTransaction()
-        const fromUser = await this.userModel.findById(from_user).session(session)
         this.emailQueue.addEmailJob({
           to: existingUser.email, // Gửi đến người được mời
           subject: 'You have been invited to join a project',
