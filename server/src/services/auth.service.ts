@@ -189,7 +189,7 @@ export class AuthService {
             last_name,
             avatar: photoURL,
             display_name: `${first_name} ${last_name}`,
-            code: code
+            code: code.toUpperCase()
           }
         ],
         { session }
