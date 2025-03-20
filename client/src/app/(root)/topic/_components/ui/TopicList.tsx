@@ -24,7 +24,7 @@ interface TopicListProps {
   selectedMajorId: string | null
   searchTerm: string
   sortOrder: string
-  filterField: string
+  filterFieldId: string
   refresh: boolean
   setRefresh: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -55,7 +55,7 @@ const TopicList: React.FC<TopicListProps> = ({
   selectedMajorId,
   searchTerm,
   sortOrder,
-  filterField,
+  filterFieldId,
   refresh,
   setRefresh
 }) => {
@@ -84,13 +84,13 @@ const TopicList: React.FC<TopicListProps> = ({
     }
 
     fetchTopics()
-  }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
+  }, [refresh, selectedMajorId, searchTerm, sortOrder, filterFieldId])
 
-  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.majorId === selectedMajorId) : topics
+  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.major.some((major) => major._id === selectedMajorId)) : topics
   filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  if (filterField !== 'all') {
-    filteredTopics = filteredTopics.filter((topic) => topic.majorId === filterField)
-  }
+  if (filterFieldId !== 'all') {
+    filteredTopics = filteredTopics.filter((topic) => topic.field.some((field) => field._id === filterFieldId))
+  } 
 
   // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))

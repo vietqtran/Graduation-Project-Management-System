@@ -64,7 +64,7 @@ const ReviewIdeas = () => {
     fetchAvailableSlots()
 
     fetchProjectIdeas()
-  }, [setFilteredIdeas, filteredIdeas])
+  }, [])
 
   const totalPages = Math.ceil(filteredIdeas.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage

@@ -13,17 +13,22 @@ import { toast } from 'sonner'
 const TopicPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null)
+   const [selectedMajorId, setSelectedMajorId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
-  const [filterField, setFilterField] = useState('all')
+  const [filterFieldId, setFilterFieldId] = useState('all')
   const [refresh, setRefresh] = useState(true)
 
   const handleSearch = (search: string, sort: string, filter: string) => {
     setSearchTerm(search)
     setSortOrder(sort)
-    setFilterField(filter)
+    setFilterFieldId(filter)
   }
+
+   const handleMajorSelect = (majorId: string | null) => {
+    setSelectedMajorId(majorId) // Update the selected major ID
+  }
+
 
   const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
     setLoading(true)
@@ -49,14 +54,14 @@ const TopicPage = () => {
     <div>
       <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} onSearch={handleSearch} />
       <div className='flex gap-6 mt-4'>
-        <MajorSelection onMajorSelect={setSelectedMajorId} />
+        <MajorSelection onMajorSelect={handleMajorSelect} />
         <TopicList
           refresh={refresh}
           setRefresh={setRefresh}
-          selectedMajorId={selectedMajorId}
           searchTerm={searchTerm}
           sortOrder={sortOrder}
-          filterField={filterField}
+           selectedMajorId={selectedMajorId}
+          filterFieldId={filterFieldId}
         />
       </div>
 

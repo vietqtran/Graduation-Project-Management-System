@@ -19,7 +19,7 @@ interface TopicFormProps {
     document: string
     campus: string
     category: string
-    supervisor: string
+    leader: string
   }) => void
 }
 
@@ -33,7 +33,7 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
       document: '',
       campus: '',
       category: '',
-      supervisor: ''
+      leader: ''
     }
   })
 
@@ -220,15 +220,13 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
 
             <FormField
               control={form.control}
-              name='supervisor'
+              name='leader'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supervisor</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select supervisor' />
-                    </SelectTrigger>
-                  </Select>
+                  <FormLabel>Leader (optional)</FormLabel>
+                  <FormControl>
+                    <Input type='text' placeholder='Enter leader code' {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

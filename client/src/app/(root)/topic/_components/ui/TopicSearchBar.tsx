@@ -3,32 +3,55 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import instance from '@/utils/axios'
 import { PlusCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function TopicSearchBar({
   onOpenForm,
   onSearch
 }: {
   onOpenForm: () => void
-  onSearch: (searchTerm: string, sortOrder: string, filterField: string) => void
+  onSearch: (searchTerm: string, sortOrder: string, filterFieldId: string) => void
 }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
-  const [filterField, setFilterField] = useState('all')
+  const [filterFieldId, setFilterFieldId] = useState('all')
+  const [loading, setLoading] = useState(true)
+  interface Major {
+    _id: string;
+    name: string;
+    description: string;
+  }
+
+  const [fields, setFields] = useState<Major[]>([])
+
+   useEffect(() => {
+      const fetchData = async () => {
+      try {
+        const response = await instance.get('/public/fields', { withCredentials: true })
+        setFields(response.data.data)
+        setLoading(false)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchData()
+   }, [loading])
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
     setSearchTerm(value)
-    onSearch(value, sortOrder, filterField)
+    onSearch(value, sortOrder, filterFieldId)
   }
 
   const handleSortChange = (value: string) => {
     setSortOrder(value)
-    onSearch(searchTerm, value, filterField)
+    onSearch(searchTerm, value, filterFieldId)
   }
 
   const handleFilterChange = (value: string) => {
-    setFilterField(value)
+    setFilterFieldId(value)
     onSearch(searchTerm, sortOrder, value)
   }
 
@@ -47,14 +70,17 @@ export default function TopicSearchBar({
             <SelectItem value='desc'>Sort Z-A</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={filterField} onValueChange={handleFilterChange}>
+        <Select value={filterFieldId} onValueChange={handleFilterChange}>
           <SelectTrigger className='w-full md:w-1/3'>
             <SelectValue placeholder='Filter field' />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>All</SelectItem>
-            <SelectItem value='SE'>Software Engineering</SelectItem>
-            <SelectItem value='AI'>Artificial Intelligence</SelectItem>
+            {fields?.map((field) => (
+              <SelectItem key={field._id} value={field._id}>
+                {field?.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Button onClick={onOpenForm} className='flex items-center w-full md:w-1/4'>
@@ -64,3 +90,4 @@ export default function TopicSearchBar({
     </div>
   )
 }
+ 

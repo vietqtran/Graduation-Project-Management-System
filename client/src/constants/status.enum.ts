@@ -18,7 +18,8 @@ export enum STATUS_MASTER {
   APPROVED = 17,
   CANCELLED = 18,
   BLOCKED = 19,
-  UN_ACTIVE = 20
+  UN_ACTIVE = 20,
+  TOPIC = 21
 }
 
 export enum USER_STATUS {

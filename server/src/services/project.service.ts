@@ -368,58 +368,81 @@ export class ProjectService {
   }
 
   async createProjectAsTopic(
-    projectData: Omit<
-      IProject,
-      | '_id'
-      | 'histories'
-      | 'tasks'
-      | 'mark'
-      | 'slow_count'
-      | 'status'
-      | 'created_by'
-      | 'updated_by'
-      | 'created_at'
-      | 'updated_at'
-    >
-  ) {
-    return runTransaction(async (session) => {
-      const project = await this.projectModel.create(
-        [
-          {
-            name: projectData.name,
-            description: projectData.description || '',
-            major: projectData.major,
-            field: projectData.field,
-            campus: projectData.campus,
-            category: projectData.category,
-            supervisor: projectData.supervisor || [],
-            members: [],
-            documents: projectData.documents || [],
-            histories: [],
-            tasks: [],
-            mark: null,
-            slow_count: 0,
-            status: null,
-            stage: 1,
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        ],
+  projectData: Omit<
+    IProject,
+    | '_id'
+    | 'histories'
+    | 'tasks'
+    | 'mark'
+    | 'slow_count'
+    | 'status'
+    | 'created_by'
+    | 'updated_by'
+    | 'created_at'
+    | 'updated_at'
+  >
+) {
+  return runTransaction(async (session) => {
+    let leaderId = null;
+    let status = null;
+
+    // Check if leader is provided
+    if (projectData.leader) {
+      // Find the user by email
+      const user = await this.userModel.findOne(
+        { email: projectData.leader },
+        { _id: 1 },
         { session }
-      )
+      );
 
-      if (!project) {
-        throw new HttpException('Error at creating project as topic', 400)
+      if (user) {
+        leaderId = user._id;  // Set leaderId to the user's ID
+        status = 17;   // Set project status to APPROVED
+      } else {
+        throw new HttpException('Leader email not found in users table', 404);
       }
+    }
 
-      return project
-    })
-  }
+    // Create the project
+    const project = await this.projectModel.create(
+      [
+        {
+          name: projectData.name,
+          description: projectData.description || '',
+          major: projectData.major,
+          field: projectData.field,
+          campus: projectData.campus,
+          category: projectData.category,
+          supervisor: projectData.supervisor || [],
+          members: [],
+          documents: projectData.documents || [],
+          histories: [],
+          tasks: [],
+          mark: null,
+          slow_count: 0,
+          leader: leaderId,  // Set leaderId if available
+          status: status || 26,    // Set status if available
+          stage: 1,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ],
+      { session }
+    );
 
-  async getProjectsWithNullStatus() {
+    if (!project) {
+      throw new HttpException('Error at creating project as topic', 400);
+    }
+
+    return project;
+  });
+}
+
+  async getProjectsWithNullStatus(userId: string) {
     return runTransaction(async (session) => {
       const projects = await this.projectModel
-        .find({ status: null }) // Lọc các dự án có status là null
+        .find({ status: 26, category: 2, created_by: { $ne: userId } }) // Lọc các dự án có status là null va category 2
+        .populate('created_by')
         .populate('leader')
         .populate('supervisor')
         .populate('major')
@@ -641,7 +664,7 @@ export class ProjectService {
         new Map(
           projects
             .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
-            .map((p) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
+            .map((p: any) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
         ).values()
       )
 
@@ -650,107 +673,77 @@ export class ProjectService {
     })
   }
 
-  async getProjectsToReview(supervisorId: string) {
-    return runTransaction(async (session) => {
-      console.log('🔍 Supervisor ID from token:', supervisorId)
+ async getProjectsToReview(supervisorId: string) {
+  return runTransaction(async (session) => {
+    console.log('🔍 Supervisor ID from token:', supervisorId);
 
-      const sampleProject = await this.projectModel.findOne().lean().exec()
-      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
+    // Truy vấn mẫu để kiểm tra cấu trúc supervisor
+    const sampleProject = await this.projectModel.find().lean().exec();
+    console.log('Sample project supervisor field structure 12312312:', sampleProject?.[0]?.supervisor);
 
-      let projects: any[] = []
+    // Kiểm tra xem có trường supervisor hay không
+    if (!sampleProject?.[0]?.supervisor) {
+      console.log('No supervisor field found in project');
+      return [];
+    }
 
-      // Truy vấn theo chuỗi
-      console.log('Attempting string query...')
-      const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
-      console.log(`String query found ${stringQuery.length} projects`)
-      projects = [...projects, ...stringQuery]
+    // Tạo mảng status cần tìm kiếm
+    const validStatuses = [STATUS_MASTER.APPROVED, STATUS_MASTER.REJECTED, STATUS_MASTER.PENDING];
+    console.log(validStatuses)
 
-      // Truy vấn theo mảng string
-      console.log('Attempting array string query...')
-      const arrayStringQuery = await this.projectModel
-        .find({ supervisor: { $in: [supervisorId] } })
-        .lean()
-        .exec()
-      console.log(`Array string query found ${arrayStringQuery.length} projects`)
-      projects = [...projects, ...arrayStringQuery]
+    // Truy vấn các dự án có supervisorId và trạng thái hợp lệ
+    console.log('Attempting supervisorId and status query...');
+    const query = await this.projectModel
+      .find({ supervisor: supervisorId, status: { $in: validStatuses } })
+      .select('_id supervisor status') // Chỉ lấy các trường cần thiết
+      .lean()
+      .exec();
+    console.log(`Found ${query.length} projects for supervisorId with valid status`);
 
-      // Kiểm tra nếu supervisorId hợp lệ (ObjectId)
-      if (Types.ObjectId.isValid(supervisorId)) {
-        const objectId = new Types.ObjectId(supervisorId)
+    if (query.length === 0) {
+      console.log('No projects found for the given supervisorId with valid status');
+      return [];
+    }
 
-        console.log('Attempting ObjectId query...')
-        const objectIdQuery = await this.projectModel.find({ supervisor: objectId }).lean().exec()
-        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
-        projects = [...projects, ...objectIdQuery]
+    // Truy vấn với populate khi có dữ liệu dự án
+    console.log('Attempting populate query...');
+    const populatedProjects = await this.projectModel
+      .find({ supervisor: supervisorId, status: { $in: validStatuses } })
+      .populate('leader')
+      .populate('supervisor')
+      .populate('major')
+      .populate('field')
+      .populate('campus')
+      .populate({
+        path: 'members',
+        populate: [
+          { path: 'major', select: 'name' },
+          { path: 'field', select: 'name' }
+        ]
+      })
+      .populate({
+        path: 'documents',
+        populate: { path: 'user', select: 'display_name email' }
+      })
+      .session(session)
+      .exec();
+    console.log(`Populated projects found: ${populatedProjects.length}`);
 
-        console.log('Attempting array ObjectId query...')
-        const arrayObjectIdQuery = await this.projectModel
-          .find({ supervisor: { $in: [objectId] } })
-          .lean()
-          .exec()
-        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
-        projects = [...projects, ...arrayObjectIdQuery]
-      }
+    // Loại bỏ dự án trùng lặp dựa trên _id
+    const uniqueProjects = Array.from(
+      new Map(
+        [...query, ...populatedProjects]
+          .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
+          .map((p: any) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
+      ).values()
+    );
 
-      console.log('Attempting raw MongoDB query...')
-      const rawQuery = await this.projectModel.collection.find({ supervisor: { $in: [supervisorId] } }).toArray()
-      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
-      projects = [...projects, ...rawQuery]
+    console.log(`Final unique projects count: ${uniqueProjects.length}`);
+    return sampleProject;
+  });
+}
 
-      // Truy vấn với populate
-      console.log('Attempting populated query...')
-      const populatedProjects = await this.projectModel
-        .find({
-          $or: [
-            { supervisor: supervisorId },
-            { supervisor: { $in: [supervisorId] } },
-            ...(Types.ObjectId.isValid(supervisorId)
-              ? [
-                  { supervisor: new Types.ObjectId(supervisorId) },
-                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
-                ]
-              : [])
-          ]
-        })
-        .populate('leader')
-        .populate('supervisor')
-        .populate('major')
-        .populate('field')
-        .populate('campus')
-        .populate({
-          path: 'members',
-          populate: [
-            { path: 'major', select: 'name' },
-            { path: 'field', select: 'name' }
-          ]
-        })
-        .populate({
-          path: 'documents',
-          populate: { path: 'user', select: 'display_name email' }
-        })
-        .session(session)
-        .exec()
-      console.log(`Populated projects found: ${populatedProjects.length}`)
-      projects = [...projects, ...populatedProjects]
 
-      if (!projects || projects.length === 0) {
-        console.log('No projects found for supervisor after all query attempts')
-        return []
-      }
-
-      // Loại bỏ project trùng lặp dựa trên _id
-      const uniqueProjects = Array.from(
-        new Map(
-          projects
-            .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
-            .map((p) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
-        ).values()
-      )
-
-      console.log(`Final unique projects count: ${uniqueProjects.length}`)
-      return uniqueProjects
-    })
-  }
 
   async getProjectLeadersBySupervisor(supervisorId: string) {
     if (!supervisorId) {
@@ -862,23 +855,12 @@ export class ProjectService {
       const countSlot = await this.projectModel
         .countDocuments({
           status: STATUS_MASTER.APPROVED,
-          updated_by: userId
+          updated_by: userId,
+          stage: 1
         })
         .session(session)
 
       const availableSlot = 5 - countSlot
-
-      await this.emailQueue.addEmailJob({
-        to: userId,
-        subject: `available slot`,
-        templateName: 'available slot',
-        context: {
-          year: new Date().getFullYear(),
-          start_url: process.env.CLIENT_URL
-        }
-      })
-      console.log(`📧 Notification email available slot sent to ${userId}`)
-
       await session.commitTransaction()
       console.log('✅ Transaction committed successfully')
 

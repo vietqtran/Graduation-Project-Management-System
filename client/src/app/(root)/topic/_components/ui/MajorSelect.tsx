@@ -8,7 +8,7 @@ interface Major {
 }
 
 interface MajorSelectProps {
-  onMajorSelect: (majorId: string | null, selectAll?: boolean) => void // Thêm prop để truyền major ID khi bấm
+  onMajorSelect: (majorId: string | null, selectAll?: boolean) => void
 }
 
 const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
@@ -50,11 +50,11 @@ const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
           >
             Select all majors
           </button>
-          {majors.map((major) => (
+         {majors.map((major) => (
             <button
               key={major._id}
               className='p-2 rounded-md border border-gray-300 hover:bg-gray-100'
-              onClick={() => onMajorSelect(major._id, false)}
+              onClick={() => onMajorSelect(major._id, false)} // Select a single major
             >
               {major.name}
             </button>

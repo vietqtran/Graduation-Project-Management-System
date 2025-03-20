@@ -62,7 +62,8 @@ export class ProjectController {
   })
 
   getProjectsWithNullStatus = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const projects = await this.projectService.getProjectsWithNullStatus()
+    const tokenPayload = getUser(req)
+    const projects = await this.projectService.getProjectsWithNullStatus(tokenPayload._id)
     ResponseHandler.sendSuccess(res, projects)
   })
 
