@@ -86,11 +86,13 @@ const TopicList: React.FC<TopicListProps> = ({
     fetchTopics()
   }, [refresh, selectedMajorId, searchTerm, sortOrder, filterFieldId])
 
-  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.major.some((major) => major._id === selectedMajorId)) : topics
+  let filteredTopics = selectedMajorId
+    ? topics.filter((topic) => topic.major.some((major) => major._id === selectedMajorId))
+    : topics
   filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
   if (filterFieldId !== 'all') {
     filteredTopics = filteredTopics.filter((topic) => topic.field.some((field) => field._id === filterFieldId))
-  } 
+  }
 
   // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))

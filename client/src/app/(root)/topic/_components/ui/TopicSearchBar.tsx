@@ -19,15 +19,15 @@ export default function TopicSearchBar({
   const [filterFieldId, setFilterFieldId] = useState('all')
   const [loading, setLoading] = useState(true)
   interface Major {
-    _id: string;
-    name: string;
-    description: string;
+    _id: string
+    name: string
+    description: string
   }
 
   const [fields, setFields] = useState<Major[]>([])
 
-   useEffect(() => {
-      const fetchData = async () => {
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         const response = await instance.get('/public/fields', { withCredentials: true })
         setFields(response.data.data)
@@ -38,7 +38,7 @@ export default function TopicSearchBar({
     }
 
     fetchData()
-   }, [loading])
+  }, [loading])
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
     setSearchTerm(value)
@@ -90,4 +90,3 @@ export default function TopicSearchBar({
     </div>
   )
 }
- 

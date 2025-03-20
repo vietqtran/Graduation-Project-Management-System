@@ -50,7 +50,7 @@ const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
           >
             Select all majors
           </button>
-         {majors.map((major) => (
+          {majors.map((major) => (
             <button
               key={major._id}
               className='p-2 rounded-md border border-gray-300 hover:bg-gray-100'
