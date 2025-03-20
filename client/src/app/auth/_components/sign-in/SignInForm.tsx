@@ -68,58 +68,73 @@ const SignInForm = () => {
   }
 
   return (
-    <div className='w-full max-w-lg space-y-4 rounded-lg p-5'>
+    <div className='w-full max-w-lg space-y-4 rounded-lg p-5' data-cy="signin-container">
       <div className='pt-3 text-left'>
-        <h1 className='mb-2 text-2xl font-bold'>Sign In</h1>
-        <p className='text-sm text-muted-foreground'>Sign in if you already have an account</p>
+        <h1 className='mb-2 text-2xl font-bold' data-cy="signin-title">Sign In</h1>
+        <p className='text-sm text-muted-foreground' data-cy="signin-subtitle">Sign in if you already have an account</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-3'>
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-3' data-cy="signin-form">
           <FormField
             control={form.control}
             name='email'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel htmlFor='email-input'>Email</FormLabel>
                 <FormControl>
-                  <Input className='focus:ring-2' placeholder='example@domain.com' {...field} />
+                  <Input
+                    id='email-input'
+                    data-cy="email-input"
+                    placeholder='email@example.com'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name='password'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel htmlFor='password-input'>Password</FormLabel>
                 <FormControl>
-                  <Input type='password' className='focus:ring-2' placeholder='••••••••' {...field} />
+                  <Input
+                    id='password-input'
+                    data-cy="password-input"
+                    type='password'
+                    placeholder='********'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className='flex gap-3 items-center w-full pt-4'>
-            <Button
-              loading={isPending}
-              className='w-full bg-blue-500 font-semibold hover:bg-blue-600 dark:text-white'
-              type='submit'
-            >
-              Sign in
-            </Button>
-            <Button
-              onClick={handleLoginByPasskey}
-              type='button'
-              className='grid place-items-center bg-transparent dark:bg-neutral-100 hover:bg-neutral-300 aspect-square relative'
-            >
-              <span className='absolute top-1/2 left-1/2 text-black -translate-x-1/2 -translate-y-1/2 z-10'>
-                {isPendingPasskey ? <LineMdLoadingLoop stroke='black' /> : <Passkey fill='black' />}
-              </span>
-            </Button>
+          <div className='flex items-center justify-between'>
+            <div>
+              <Button
+                loading={isPending}
+                data-cy="signin-button"
+                className='w-full bg-blue-500 font-semibold hover:bg-blue-600 dark:text-white'
+                type='submit'
+              >
+                Sign in
+              </Button>
+            </div>
+            <div className='pl-3'>
+              <Button
+                data-cy="passkey-button"
+                onClick={handleLoginByPasskey}
+                type='button'
+                className='grid place-items-center bg-transparent dark:bg-neutral-100 hover:bg-neutral-300 aspect-square relative'
+              >
+                <span className='absolute top-1/2 left-1/2 text-black -translate-x-1/2 -translate-y-1/2 z-10'>
+                  {isPendingPasskey ? <LineMdLoadingLoop stroke='black' /> : <Passkey fill='black' />}
+                </span>
+              </Button>
+            </div>
           </div>
         </form>
       </Form>
