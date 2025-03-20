@@ -57,7 +57,8 @@ export class ProjectController {
 
   createProjectAsTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const projectData = req.body
-    const project = await this.projectService.createProjectAsTopic(projectData)
+    const tokenPayload = getUser(req)
+    const project = await this.projectService.createProjectAsTopic(projectData, tokenPayload)
     ResponseHandler.sendSuccess(res, project, 'Create project as topic successfully')
   })
 
