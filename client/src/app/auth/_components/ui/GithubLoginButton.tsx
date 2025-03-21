@@ -8,7 +8,7 @@ const GithubLoginButton = () => {
   return (
     <button
       onClick={handleGithubSignIn}
-      data-cy='continue-with-github-button'
+      data-cy='github-signin-button'
       className='flex w-full items-center justify-center gap-2 rounded-lg border p-2 transition duration-150 hover:bg-neutral-200 dark:hover:bg-neutral-800'
     >
       <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' className='size-6'>

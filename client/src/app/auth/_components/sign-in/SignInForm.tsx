@@ -68,13 +68,17 @@ const SignInForm = () => {
   }
 
   return (
-    <div className='w-full max-w-lg space-y-4 rounded-lg p-5' data-cy="signin-container">
+    <div className='w-full max-w-lg space-y-4 rounded-lg p-5' data-cy='signin-container'>
       <div className='pt-3 text-left'>
-        <h1 className='mb-2 text-2xl font-bold' data-cy="signin-title">Sign In</h1>
-        <p className='text-sm text-muted-foreground' data-cy="signin-subtitle">Sign in if you already have an account</p>
+        <h1 className='mb-2 text-2xl font-bold' data-cy='signin-title'>
+          Sign In
+        </h1>
+        <p className='text-sm text-muted-foreground' data-cy='signin-subtitle'>
+          Sign in if you already have an account
+        </p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-3' data-cy="signin-form">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-3' data-cy='signin-form'>
           <FormField
             control={form.control}
             name='email'
@@ -82,12 +86,7 @@ const SignInForm = () => {
               <FormItem>
                 <FormLabel htmlFor='email-input'>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    id='email-input'
-                    data-cy="email-input"
-                    placeholder='email@example.com'
-                    {...field}
-                  />
+                  <Input id='email-input' data-cy='email-input' placeholder='email@example.com' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,7 +101,7 @@ const SignInForm = () => {
                 <FormControl>
                   <Input
                     id='password-input'
-                    data-cy="password-input"
+                    data-cy='password-input'
                     type='password'
                     placeholder='********'
                     {...field}
@@ -116,7 +115,7 @@ const SignInForm = () => {
             <div>
               <Button
                 loading={isPending}
-                data-cy="signin-button"
+                data-cy='signin-button'
                 className='w-full bg-blue-500 font-semibold hover:bg-blue-600 dark:text-white'
                 type='submit'
               >
@@ -125,7 +124,7 @@ const SignInForm = () => {
             </div>
             <div className='pl-3'>
               <Button
-                data-cy="passkey-button"
+                data-cy='passkey-button'
                 onClick={handleLoginByPasskey}
                 type='button'
                 className='grid place-items-center bg-transparent dark:bg-neutral-100 hover:bg-neutral-300 aspect-square relative'

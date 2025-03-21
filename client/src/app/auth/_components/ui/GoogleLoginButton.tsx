@@ -17,7 +17,7 @@ const GoogleLoginButton = ({ callback }: Props) => {
   return (
     <button
       onClick={googleSignIn}
-      data-cy='continue-with-google-button'
+      data-cy='google-signin-button'
       className='g flex w-full items-center justify-center gap-2 rounded-lg border p-2 transition duration-150 hover:bg-neutral-200 dark:hover:bg-neutral-800'
     >
       <svg
