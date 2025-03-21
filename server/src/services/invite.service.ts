@@ -7,17 +7,20 @@ import { runTransaction } from '@/helpers/transaction-helper'
 import { InviteStatus } from '@/constants/invite-status-enum'
 import UserModel, { IUser } from '@/models/user.model'
 import ProjectModel, { IProject } from '@/models/project.model'
-import { USER_STATUS } from '@/constants/status'
+import { USER_STATUS, PROJECT_STATUS } from '@/constants/status'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
 import { format } from 'date-fns'
-
+import DeadlineModel, { IDeadline } from '@/models/deadline.model'
+import ParameterModel, { IParameter } from '@/models/parameter.model'
 export class InviteService {
   private readonly inviteModel: Model<IInvite>
   private readonly userModel: Model<IUser>
   private readonly projectModel: Model<IProject>
   private readonly emailQueue: EmailQueue
   private readonly mailService: MailService
+  private readonly deadlineModel: Model<IDeadline>
+  private readonly parameterModel: Model<IParameter>
 
   constructor() {
     this.inviteModel = InviteModel
@@ -25,9 +28,17 @@ export class InviteService {
     this.projectModel = ProjectModel
     this.mailService = new MailService()
     this.emailQueue = new EmailQueue(this.mailService)
+    this.deadlineModel = DeadlineModel
+    this.parameterModel = ParameterModel
   }
   async sendInvite(inviteData: InviteDto) {
-    const maxNumberOfSupervisorJoin = 5
+    const maxMembersPerGroup = await this.parameterModel.findOne({ param_name: 'MaxMembersPerGroup' })
+    const maxSupervisorsPerGroup = await this.parameterModel.findOne({ param_name: 'MaxSupervisorsPerGroup' })
+    const MaxGroupsPerTeacher = await this.parameterModel.findOne({ param_name: 'MaxGroupsPerTeacher' })
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException('The deadline for you to invite member or supervisor has expired.', 400)
+    }
     const requiredFields: (keyof InviteDto)[] = ['from_user', 'to_user', 'project']
     const missingFields = requiredFields.filter((field) => !inviteData[field])
 
@@ -39,7 +50,7 @@ export class InviteService {
     try {
       const { from_user, to_user, project } = inviteData
       const existingUser = await this.userModel.findOne({ email: to_user }).session(session)
-      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session);
+      const fromUser = await this.userModel.findOne({ _id: { $eq: from_user } }).session(session)
       if (!existingUser) {
         throw new HttpException('User with the provided email does not exist', 404) // Kiểm tra xem user đã tồn tại trong ứng dụng chưa
       }
@@ -47,7 +58,19 @@ export class InviteService {
       if (!existingProject) {
         throw new HttpException('Project not found', 404) // Kiểm tra xem project đó có tồn tại không
       }
+      if (existingProject?.leader?.toString() !== from_user) {
+        throw new HttpException('Just the leader of the project can invite members', 400)
+      }
+
       if (existingUser.roles?.includes('student')) {
+        if (maxMembersPerGroup) {
+          if (existingProject?.members?.length === Number(maxMembersPerGroup?.param_value)) {
+            throw new HttpException(
+              'Project has reached the maximum number of members. You cannot invite more members',
+              400
+            )
+          }
+        }
         if (from_user === existingUser._id) {
           throw new HttpException('You cannot invite yourself', 400) // Kiểm tra xem người gửi có phải là người nhận không
         }
@@ -69,11 +92,22 @@ export class InviteService {
         if (existingProject.supervisor.includes(existingUser._id)) {
           throw new HttpException('User is already a supervisor of the project', 400) // Kiểm tra xem user là người hướng dẫn của project đó chưa
         }
-        const numberOfSupervisorJoin = await this.projectModel.find({
+        if (maxSupervisorsPerGroup) {
+          if (existingProject?.supervisor?.length === Number(maxSupervisorsPerGroup?.param_value)) {
+            throw new HttpException(
+              'Project has reached the maximum number of supervisors. You cannot invite more supervisors',
+              400
+            )
+          }
+        }
+        const numberOfGroupSupervisorJoined = await this.projectModel.find({
           supervisor: { $in: [existingUser?._id] }
         })
-        if (numberOfSupervisorJoin.length >= maxNumberOfSupervisorJoin) {
-          throw new HttpException('The supervisor has reached the maximum number of projects', 400)
+        if (numberOfGroupSupervisorJoined.length >= Number(MaxGroupsPerTeacher?.param_value)) {
+          throw new HttpException(
+            'The supervisor has reached the maximum number of projects that can be supervised',
+            400
+          )
         }
       }
       const existingInvite = await this.inviteModel
@@ -162,8 +196,13 @@ export class InviteService {
       })
   }
   async acceptInvite(inviteId: string) {
-    const maxMember = 5
-    const maxSupervisor = 2
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException('The deadline for you to join to this group has expired.', 400)
+    }
+    const maxMembersPerGroup = await this.parameterModel.findOne({ param_name: 'MaxMembersPerGroup' })
+    const maxSupervisorsPerGroup = await this.parameterModel.findOne({ param_name: 'MaxSupervisorsPerGroup' })
+    const MaxGroupsPerTeacher = await this.parameterModel.findOne({ param_name: 'MaxGroupsPerTeacher' })
     return runTransaction(async (session) => {
       const invite = await this.inviteModel.findById(inviteId).session(session)
       if (!invite) {
@@ -188,30 +227,53 @@ export class InviteService {
           members: { $in: [user._id] }
         })
         if (userInProject) {
-          invite.status = InviteStatus.REJECTED
-          await invite.save({ session })
           throw new HttpException('Please leave the current group before joining another one', 400)
         }
-        if (project.members.length >= maxMember) {
-          invite.status = InviteStatus.REJECTED
-          await invite.save({ session })
-
+        if (project.members.length >= Number(maxMembersPerGroup?.param_value)) {
           throw new HttpException('Project has reached the maximum number of members', 400)
         } else {
           project.members.push(user._id)
+          await this.userModel.updateOne(
+            { _id: invite.to_user },
+            { $set: { status: USER_STATUS.ACTIVATED } },
+            { session }
+          )
         }
       } else if (user.roles && user.roles?.includes('supervisor')) {
-        if (project.supervisor.length >= maxSupervisor) {
-          invite.status = InviteStatus.REJECTED
-          await invite.save({ session })
-
+        if (project.supervisor.length >= Number(maxSupervisorsPerGroup?.param_value)) {
           throw new HttpException('Project has reached the maximum number of supervisors', 400)
         } else {
-          project.supervisor.push(user._id)
+          const numberOfGroupSupervisorJoined = await this.projectModel.find({
+            supervisor: { $in: [invite?.to_user] }
+          })
+          if (numberOfGroupSupervisorJoined.length >= Number(MaxGroupsPerTeacher?.param_value)) {
+            throw new HttpException(
+              'The supervisor has reached the maximum number of projects that can be supervised',
+              400
+            )
+          } else {
+            if (numberOfGroupSupervisorJoined.length === Number(MaxGroupsPerTeacher?.param_value) - 1) {
+              project.supervisor.push(user._id)
+              await this.userModel.updateOne(
+                { _id: invite.to_user },
+                { $set: { status: USER_STATUS.ACTIVATED } },
+                { session }
+              )
+            } else if (numberOfGroupSupervisorJoined.length < Number(MaxGroupsPerTeacher?.param_value) - 1) {
+              project.supervisor.push(user._id)
+              await this.userModel.updateOne(
+                { _id: invite.to_user },
+                { $set: { status: USER_STATUS.AVAILABLE } },
+                { session }
+              )
+            }
+          }
         }
       }
+      if (project.members.length === Number(maxMembersPerGroup?.param_value) && project.supervisor.length !== 0) {
+        project.status = PROJECT_STATUS.ACTIVATED
+      }
       await project.save({ session })
-      await this.userModel.updateOne({ _id: invite.to_user }, { $set: { status: USER_STATUS.ACTIVATED } }, { session })
 
       return invite
     })

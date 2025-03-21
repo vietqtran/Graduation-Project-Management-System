@@ -9,20 +9,31 @@ import { USER_STATUS } from '@/constants/status'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
 import { format } from 'date-fns'
+import { PROJECT_STATUS } from '@/constants/status'
+import DeadlineModel, { IDeadline } from '@/models/deadline.model'
+import InviteModel, { IInvite } from '@/models/invite.model'
 
 export class IdeaService {
   private readonly projectModel: Model<IProject>
   private readonly userModel: Model<IUser>
   private readonly emailQueue: EmailQueue
   private readonly mailService: MailService
+  private readonly deadlineModel: Model<IDeadline>
+  private readonly inviteModel: Model<IInvite>
   constructor() {
     this.projectModel = ProjectModel
     this.userModel = UserModel
     this.mailService = new MailService()
     this.emailQueue = new EmailQueue(this.mailService)
+    this.deadlineModel = DeadlineModel
+    this.inviteModel = InviteModel
   }
 
   async createIdea(ideaData: CreateIdeaDto): Promise<IProject> {
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_idea' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException('The deadline for creating ideas has passed', 400)
+    }
     // Kiểm tra các trường bắt buộc trong một lần
     const requiredFields: (keyof CreateIdeaDto)[] = ['name', 'campus', 'leader', 'members', 'field', 'major']
     const missingFields = requiredFields.filter((field) => !ideaData[field])
@@ -52,7 +63,8 @@ export class IdeaService {
         tasks: [],
         slow_count: 0,
         supervisor: [],
-        category: 1
+        category: 1,
+        status: PROJECT_STATUS.PENDING
       })
 
       await idea.save({ session })
@@ -107,6 +119,14 @@ export class IdeaService {
     return IdeaOfSupervisor
   }
   async deleteIdea(projectId: string, userId: string) {
+    // kiem tra date deadline
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException(
+        'The deadline for you to delete your current idea has expired. Please continue to complete this idea.',
+        400
+      )
+    }
     return runTransaction(async (session) => {
       const project = await this.projectModel.findOne({ _id: projectId }).session(session).exec()
       if (project?.leader?.valueOf() !== userId) {
@@ -122,9 +142,17 @@ export class IdeaService {
           )
           .exec()
       }
+      await this.inviteModel.deleteMany({ project: projectId }).session(session).exec()
     })
   }
   async changeIdea(projectId: string, updateIdea: UpdateIdeaDto, userId: string): Promise<IProject> {
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException(
+        'The deadline for you to change your current idea has expired. Please continue to complete this idea.',
+        400
+      )
+    }
     // Kiểm tra các trường bắt buộc
     const requiredFields: (keyof UpdateIdeaDto)[] = ['name', 'description']
     const missingFields = requiredFields.filter((field) => !updateIdea[field])
@@ -158,7 +186,15 @@ export class IdeaService {
       return project
     })
   }
-  async memberLeaveGroup(projectId: string,userId: string) {
+  async memberLeaveGroup(projectId: string, userId: string) {
+    // kiem tra date deadline
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException(
+        'The deadline for you to leave your current group has passed. Please continue to complete this idea.',
+        400
+      )
+    }
     const session = await mongoose.startSession()
     session.startTransaction()
     try {
@@ -182,25 +218,29 @@ export class IdeaService {
       if (project?.leader?._id?.valueOf() === userId) {
         throw new HttpException('You are the leader of this idea. Please delete the idea instead.', 400)
       }
-      project.members = (project.members as IUser[]).filter((member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== userId)
+      project.members = (project.members as IUser[]).filter(
+        (member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== userId
+      )
       await project.save({ session })
       user.status = USER_STATUS.UN_GROUPED
+      project.status = PROJECT_STATUS.PENDING
+      await project.save({ session })
       await user.save({ session })
       await session.commitTransaction()
       const toEmails = [
         ...(project.members as IUser[]).map((member: IUser) => member.email), // Lấy email của các thành viên
         ...(project.supervisor as IUser[]).map((supervisor: IUser) => supervisor.email) // Lấy email của các giám sát viên
-      ];
-      
+      ]
+
       this.emailQueue.addEmailJob({
         to: toEmails, // Gửi đến mọi người trong nhóm
         subject: 'Someone Has Left the Project',
-        templateName: 'member-leave-group', 
+        templateName: 'member-leave-group',
         context: {
           left_user_name: user.display_name,
-          project_name: project.name, 
+          project_name: project.name,
           projectUrl: `${process.env.CLIENT_URL}/team`,
-          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy') 
+          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy')
         }
       })
       return project
@@ -212,19 +252,26 @@ export class IdeaService {
     }
   }
   async leaderKickMember(projectId: string, memberId: string, leaderId: string) {
+    const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
+    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+      throw new HttpException(
+        'The deadline for you to kick member your current group has passed. Please continue to complete this idea.',
+        400
+      )
+    }
     const session = await mongoose.startSession()
     session.startTransaction()
     try {
       const project = await this.projectModel
-      .findById(projectId)
-      .populate<{ leader: IUser }>('leader')
-      .populate<{ members: IUser[] }>('members')
-      .populate<{ supervisor: IUser[] }>('supervisor')
-      .session(session)
-      .exec()
+        .findById(projectId)
+        .populate<{ leader: IUser }>('leader')
+        .populate<{ members: IUser[] }>('members')
+        .populate<{ supervisor: IUser[] }>('supervisor')
+        .session(session)
+        .exec()
       const member = await this.userModel.findById(memberId).session(session).exec()
       const leader = await this.userModel.findById(leaderId).session(session).exec()
-      if((project?.leader as IUser)._id?.valueOf() !== leaderId) {
+      if ((project?.leader as IUser)._id?.valueOf() !== leaderId) {
         throw new HttpException('You dont have permission to kick member', 400)
       }
       if (!member || !leader) {
@@ -236,43 +283,47 @@ export class IdeaService {
       if (!(project.members as IUser[]).map((member: IUser) => member._id?.valueOf()).includes(memberId)) {
         throw new HttpException('This user is not a member of the project', 400)
       }
-      project.members = (project.members as IUser[]).filter((member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== memberId)
+      project.members = (project.members as IUser[]).filter(
+        (member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== memberId
+      )
       await project.save({ session })
       member.status = USER_STATUS.UN_GROUPED
       await member.save({ session })
+      project.status = PROJECT_STATUS.PENDING
+      await project.save({ session })
       await session.commitTransaction()
       const toEmails = [
         ...(project.members as IUser[]).map((member: IUser) => member.email), // Lấy email của các thành viên
         ...(project.supervisor as IUser[]).map((supervisor: IUser) => supervisor.email) // Lấy email của các giám sát viên
-      ];
+      ]
       this.emailQueue.addEmailJob({
         to: toEmails, // Gửi đến mọi người trong nhóm
         subject: 'Member Has Been Kicked Out',
-        templateName: 'leader-kick-member', 
+        templateName: 'leader-kick-member',
         context: {
           member: member.display_name,
           leader: leader.display_name,
-          project_name: project.name, 
+          project_name: project.name,
           projectUrl: `${process.env.CLIENT_URL}/team`,
-          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy') 
+          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy')
         }
       })
 
       this.emailQueue.addEmailJob({
         to: member.email, // Gửi đến người bị kick
         subject: 'You Have Been Kicked Out',
-        templateName: 'member-kicked', 
+        templateName: 'member-kicked',
         context: {
           member: member.display_name,
           leader: leader.display_name,
           leader_email: leader.email,
-          project_name: project.name, 
+          project_name: project.name,
           projectUrl: `${process.env.CLIENT_URL}/team`,
-          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy') 
+          sentTime: format(new Date(), 'h:mm a dd/MM/yyyy')
         }
       })
       return project
-    }catch (error) {
+    } catch (error) {
       await session.abortTransaction()
       throw error
     } finally {

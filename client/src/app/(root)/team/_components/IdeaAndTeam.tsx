@@ -161,8 +161,6 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
           // Cập nhật lại state project
           setIdea(updatedProjectResponse.data.data)
         }
-      } else {
-        toast.error('Failed to kick member in page')
       }
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
@@ -202,7 +200,6 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
                   <Button
                     onClick={handleDeleteClick}
                     className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
-                    // disabled={loading}
                   >
                     {loading ? 'Deleting...' : 'Delete Idea'}
                   </Button>
@@ -211,7 +208,6 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
               <Button
                 onClick={handleLeaveGroupClick}
                 className={`border border-red-500 text-red-500 hover:bg-red-400 hover:text-white bg-transparent ${loading ? 'cursor-not-allowed' : ''}`}
-                // disabled={loading}
               >
                 {loading ? 'Leaving...' : 'Leave Group'}
               </Button>

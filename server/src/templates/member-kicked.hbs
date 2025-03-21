@@ -1,26 +1,9 @@
 <html>
   <head>
     <style>
-      .email-container {
-        font-family: Arial, sans-serif;
-      }
-      .email-container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white !important;
-        text-decoration: none;
-        border-radius: 5px;
-        margin-top: 15px;
-      }
-      .button:hover {
-        background-color: #0056b3;
-      }
+      .email-container { font-family: Arial, sans-serif; } .email-container { max-width: 600px; margin: 0 auto; padding:
+      20px; } .button { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white !important;
+      text-decoration: none; border-radius: 5px; margin-top: 15px; } .button:hover { background-color: #0056b3; }
     </style>
   </head>
   <body>
@@ -30,18 +13,24 @@
       <p>We regret to inform you that you have been removed from the project "{{project_name}}" by {{leader}}.</p>
 
       <p style='font-size: 14px; color: #555;'>
-        This action was performed on: {{sentTime}}
+        This action was performed on:
+        {{sentTime}}
       </p>
 
       <p style='margin-top: 20px;'>
-        After careful consideration, we feel that your skills and working style are not the best fit for this team. We sincerely wish you the best of luck in your future endeavors and hope you find new opportunities that are better aligned with your goals.
+        After careful consideration, we feel that your skills and working style are not the best fit for this team. We
+        sincerely wish you the best of luck in your future endeavors and hope you find new opportunities that are better
+        aligned with your goals.
       </p>
       <p style='margin-top: 20px;'>
-        If you have any questions or concerns, please don't hesitate to reach out to {{leader}} via email {{leader_email}}.     
-     </p>
-     <p style='margin-top: 20px;'>
-        You can also create a new project by clicking the button below.    
-     </p>
+        If you have any questions or concerns, please don't hesitate to reach out to
+        {{leader}}
+        via email
+        {{leader_email}}.
+      </p>
+      <p style='margin-top: 20px;'>
+        You can also create a new project by clicking the button below.
+      </p>
       <p style='margin-top: 20px;'>
         <a href='{{createProjectUrl}}' class='button' target='_blank' rel='noopener noreferrer'>
           Create New Project
