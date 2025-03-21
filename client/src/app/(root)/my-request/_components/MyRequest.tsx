@@ -10,7 +10,6 @@ import { User } from '@/types/user.type'
 import { Project } from '@/types/project.type'
 import { Invite } from '@/types/invite.type'
 import { AxiosError } from 'axios'
-import { get } from 'http'
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
@@ -36,7 +35,7 @@ const MyRequest = () => {
       }
     }
   }
-  useEffect(() => {   
+  useEffect(() => {
     fetchInvites()
   }, [getInviteByUserId])
 

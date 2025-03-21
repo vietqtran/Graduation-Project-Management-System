@@ -64,4 +64,26 @@ export class IdeaController {
       next(error)
     }
   })
+  memberLeaveGroup = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { projectId, userId } = req.body
+      const updateMember =  await this.ideaService.memberLeaveGroup(projectId,userId)
+      ResponseHandler.sendSuccess(res, updateMember, 'Member leave group successfully')
+    }
+    catch (error) {
+      console.error('Error in memberLeaveGroup controller:', error)
+      next(error)
+    }
+  })
+  leaderKickMember = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { projectId, memberId, leaderId } = req.body
+      const updateMember = await this.ideaService.leaderKickMember(projectId, memberId, leaderId)
+      ResponseHandler.sendSuccess(res, updateMember, 'Leader was kicked member successfully')
+    }
+    catch (error) {
+      console.error('Error in leaderKickMember controller:', error)
+      next(error)
+    }
+  })
 }
