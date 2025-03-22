@@ -7,6 +7,7 @@ import { FaEdit, FaInfoCircle, FaTrashAlt } from 'react-icons/fa'
 import { toast } from 'sonner'
 import TopicModal from './TopicModal'
 import ConfirmModal from './ConfirmModal'
+import TopicDetailModal from './TopicDetailModal'
 
 export interface Project {
   _id: string
@@ -18,6 +19,8 @@ export interface Project {
   document: string
   campus: { _id: string; name: string } | null
   category: string
+  created_at: string
+  updated_at: string
 }
 
 interface TopicListProps {
@@ -199,6 +202,14 @@ const TopicList: React.FC<TopicListProps> = ({
         onClose={() => setConfirmDelete({ id: null })}
         onConfirm={confirmDeleteTopic}
       />
+
+      {selectedTopic && (
+        <TopicDetailModal
+          isOpen={modalType === 'detail'}
+          onClose={() => setModalType(null)}
+          topic={selectedTopic}
+        />
+      )}
     </div>
   )
 }

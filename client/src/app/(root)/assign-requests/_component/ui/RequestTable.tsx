@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import instance from '@/utils/axios'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import RequestModal from './RequestModal'
 import ConfirmModal from './ConfirmModal'
@@ -34,6 +34,20 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
   const [modalType, setModalType] = useState<'update' | 'detail' | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ id: string | null }>({ id: null })
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(5)
+
+  const totalItems = requests.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+
+  // Calculate the requests for the current page
+  const currentRequests = useMemo(() => {
+    const indexOfLastRequest = currentPage * itemsPerPage
+    const indexOfFirstRequest = indexOfLastRequest - itemsPerPage
+    return requests.slice(indexOfFirstRequest, indexOfLastRequest)
+  }, [currentPage, itemsPerPage, requests])
 
   const handleDelete = (id: string) => {
     setConfirmDelete({ id })
@@ -69,6 +83,13 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
     setModalType(null)
   }
 
+  // Change the current page
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
   return (
     <>
       <Table>
@@ -84,7 +105,7 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests?.map((request) => (
+          {currentRequests?.map((request) => (
             <TableRow key={request._id}>
               <TableCell>{request?.status || 'N/A'}</TableCell>
               <TableCell>{request?.remark || 'N/A'}</TableCell>
@@ -144,6 +165,23 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
         onClose={() => setConfirmDelete({ id: null })}
         onConfirm={confirmDeleteRequest}
       />
+
+      {/* Pagination Controls */}
+      <div className='flex justify-center mt-4 space-x-4'>
+        <Button variant='secondary' onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+          Prev
+        </Button>
+        <span className='flex items-center justify-center text-sm text-gray-600'>
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant='secondary'
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
+      </div>
     </>
   )
 }
