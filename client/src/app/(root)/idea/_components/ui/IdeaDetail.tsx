@@ -1,7 +1,23 @@
 import { Button } from '@/components/ui/button'
 import React from 'react'
-import { ProjectIdea } from './ReviewIdeas'
 import { STATUS_MASTER } from '@/constants/status'
+
+interface ProjectIdea {
+  _id: string
+  name: string
+  field: Array<{ _id: string; name: string; description: string }>
+  major: Array<{ _id: string; name: string; description: string }>
+  campus: { _id: string; name: string; description: string }
+  description: string
+  created_at: string
+  updated_at: string
+  status: number
+  leader: { username: string; _id: string; display_name: string } // Modify to match the structure of the leader object
+  supervisor: Array<{ username: string; _id: string; display_name: string }>
+  username: string
+  members: string[]
+}
+
 
 interface IdeaDetailProps {
   idea: ProjectIdea | null

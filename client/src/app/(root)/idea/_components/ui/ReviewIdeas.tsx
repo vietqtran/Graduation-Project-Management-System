@@ -7,7 +7,7 @@ import IdeaPagination from './IdeaPagination'
 import IdeaTable from './IdeaTable'
 import ProjectSearchAndFilter from './IdeaSearchBar'
 
-export interface ProjectIdea {
+interface ProjectIdea {
   _id: string
   name: string
   field: Array<{ _id: string; name: string; description: string }>
@@ -17,9 +17,12 @@ export interface ProjectIdea {
   created_at: string
   updated_at: string
   status: number
-  leader: { username: string; _id: string } // Modify to match the structure of the leader object
+  leader: { username: string; _id: string; display_name: string } // Modify to match the structure of the leader object
+  supervisor: Array<{ username: string; _id: string; display_name: string }>
   username: string
+  members: string[]
 }
+
 
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)

@@ -204,11 +204,7 @@ const TopicList: React.FC<TopicListProps> = ({
       />
 
       {selectedTopic && (
-        <TopicDetailModal
-          isOpen={modalType === 'detail'}
-          onClose={() => setModalType(null)}
-          topic={selectedTopic}
-        />
+        <TopicDetailModal isOpen={modalType === 'detail'} onClose={() => setModalType(null)} topic={selectedTopic} />
       )}
     </div>
   )

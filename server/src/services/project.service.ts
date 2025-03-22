@@ -590,7 +590,7 @@ export class ProjectService {
       }
 
       return {
-        _id: "day la project dược get detial thanh cong",
+        _id: 'day la project dược get detial thanh cong',
         name: project.name,
         description: project.description, // Thêm description vào response
         major: project.major,

@@ -123,7 +123,13 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input type='text' {...field} disabled={type === 'detail'} placeholder={type === 'detail' ? field.value : 'Enter topic Name'} className={type === 'detail' ? 'bg-gray-100' : ''} />
+                    <Input
+                      type='text'
+                      {...field}
+                      disabled={type === 'detail'}
+                      placeholder={type === 'detail' ? field.value : 'Enter topic Name'}
+                      className={type === 'detail' ? 'bg-gray-100' : ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -136,7 +142,11 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
               render={({ field }) => (
                 <FormItem className='col-span-2'>
                   <FormLabel>Description</FormLabel>
-                  <Textarea {...field} disabled={type === 'detail'}  className={type === 'detail' ? 'bg-gray-100' : ''} />
+                  <Textarea
+                    {...field}
+                    disabled={type === 'detail'}
+                    className={type === 'detail' ? 'bg-gray-100' : ''}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
