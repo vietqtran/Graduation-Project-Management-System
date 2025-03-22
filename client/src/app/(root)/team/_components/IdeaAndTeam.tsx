@@ -1,11 +1,9 @@
 'use client'
 
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
-import React, { useState } from 'react'
-
-import { AxiosError } from 'axios'
-import { Button } from '@/components/ui/button'
 import { Field } from '@/types/field.type'
 import FieldBadge from '@/components/common/FieldBadge'
 import LeaderStar from '@/components/common/LeaderStar'
