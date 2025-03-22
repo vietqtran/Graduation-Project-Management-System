@@ -80,4 +80,12 @@ export class RequestController {
     const requests = await this.requestService.getRequestsByUserId(userId)
     ResponseHandler.sendSuccess(res, requests)
   })
+
+  updateRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { requestId } = req.params
+    const tokenPayload = getUser(req)
+    const updateRequestDto = req.body
+    const request = await this.requestService.updateRequest(requestId, tokenPayload._id, updateRequestDto)
+    ResponseHandler.sendSuccess(res, request, 'Update request successfully')
+  })
 }

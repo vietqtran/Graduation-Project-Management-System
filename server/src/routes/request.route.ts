@@ -11,4 +11,5 @@ router.post('/deny/:id', requestController.denyRequest)
 router.delete('/delete-request/:id', requestController.deleteRequest)
 router.get('/get-request-by-id/:id', requestController.getRequestById)
 router.get('/get-requests-by-user/:userId', requestController.getRequestsByUserId)
+router.patch('/update-request/:requestId', requestController.updateRequest)
 export { router as requestRoutes }

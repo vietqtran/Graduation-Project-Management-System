@@ -132,7 +132,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
 
       console.log('API response:', response.data)
       toast.success('Request created successfully!')
-      setRefresh(prev => !prev)
+      setRefresh((prev) => !prev)
       setIsDrawerOpen(false)
       currentFormData.current = null
     } catch (error) {

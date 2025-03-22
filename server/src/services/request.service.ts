@@ -69,27 +69,29 @@ export class RequestService {
   }
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-
-    try {
+    return runTransaction(async (session) => {
       const request = await this.requestModel.findOne({ _id: requestId, from_user: userId }).session(session)
 
       if (!request) {
         throw new HttpException('Request not found', 404)
       }
 
-      if (request.status !== RequestStatus.PENDING) {
-        throw new HttpException('Cannot update processed request', 400)
+      if (!updateRequestDto.approve_user || updateRequestDto.approve_user === '') {
+        delete updateRequestDto.approve_user
+      }
+
+      if (updateRequestDto.to_user && typeof updateRequestDto.to_user === 'string') {
+        const user = await this.userModel.findOne({ username: updateRequestDto.to_user })
+        if (user) {
+          updateRequestDto.to_user = user._id
+        } else {
+          throw new HttpException('User not found', 404)
+        }
       }
 
       const updatedRequest = await this.requestModel.findByIdAndUpdate(
         requestId,
-        {
-          $set: {
-            ...updateRequestDto
-          }
-        },
+        { $set: { ...updateRequestDto } },
         { new: true, session }
       )
 
@@ -97,14 +99,8 @@ export class RequestService {
         throw new HttpException("Can't update request", 500)
       }
 
-      await session.commitTransaction()
       return updatedRequest
-    } catch (error) {
-      await session.abortTransaction()
-      throw error
-    } finally {
-      session.endSession()
-    }
+    })
   }
 
   async processRequest(requestId: string, adminId: string, status: RequestStatus, remark?: string) {
