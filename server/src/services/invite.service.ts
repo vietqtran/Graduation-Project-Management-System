@@ -1,4 +1,3 @@
-
 import mongoose, { Model } from 'mongoose'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { InviteDto } from '@/dtos/invite/invite.dto'
