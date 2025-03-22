@@ -75,7 +75,6 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
         <TableHeader>
           <TableRow>
             <TableHead>Status</TableHead>
-            <TableHead>Type</TableHead>
             <TableHead>Remark</TableHead>
             <TableHead>Updated At</TableHead>
             <TableHead>Created At</TableHead>
@@ -85,15 +84,14 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.map((request) => (
+          {requests?.map((request) => (
             <TableRow key={request._id}>
-              <TableCell>{request.status || 'N/A'}</TableCell>
-              <TableCell>{request.type || 'N/A'}</TableCell>
-              <TableCell>{request.remark || 'N/A'}</TableCell>
-              <TableCell>{request.updated_at ? new Date(request.updated_at).toLocaleString() : 'N/A'}</TableCell>
-              <TableCell>{request.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</TableCell>
-              <TableCell>{request.due_date ? new Date(request.due_date).toLocaleString() : 'N/A'}</TableCell>
-              <TableCell>{request.to_user || 'N/A'}</TableCell>
+              <TableCell>{request?.status || 'N/A'}</TableCell>
+              <TableCell>{request?.remark || 'N/A'}</TableCell>
+              <TableCell>{request?.updated_at ? new Date(request.updated_at).toLocaleString() : 'N/A'}</TableCell>
+              <TableCell>{request?.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</TableCell>
+              <TableCell>{request?.due_date ? new Date(request.due_date).toLocaleString() : 'N/A'}</TableCell>
+              <TableCell>{request?.to_user || 'N/A'}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

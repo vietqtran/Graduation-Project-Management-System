@@ -1,9 +1,9 @@
 'use client'
 
-import intance from '@/utils/axios'
 import React, { useEffect, useState } from 'react'
 import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
+import instance from '@/utils/axios'
 
 interface Request {
   _id: string
@@ -28,7 +28,7 @@ const RequestsPage: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true)
     try {
-      const response = await intance.get('/request/get-all-requests', {
+      const response = await instance.get('/request/get-all-requests', {
         withCredentials: true
       })
       console.log(response.data.data)

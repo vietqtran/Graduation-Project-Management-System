@@ -152,10 +152,11 @@ export class RequestService {
 
       return requests.map((request) => ({
         _id: request._id?.toString(),
-        to_user: request.to_user || null,
+        to_user: (request.to_user as IUser)?.username || null,
         from_user: request.from_user || null,
         approve_user: request.approve_user || null,
         type: request.type || null,
+        description: request.description || null,
         remark: request.remark || null,
         due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
         status: request.status || null,
@@ -183,6 +184,18 @@ export class RequestService {
       } else {
         await this.requestModel.findByIdAndDelete(requestId, { session })
         return { message: 'Request updated successfully' }
+      }
+    })
+  }
+
+  async getRequestsByUserId(to_user: string) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.findById(to_user).session(session)
+      if (!request) {
+        throw new HttpException('Request not found', 404)
+      } else {
+        await this.requestModel.findById(to_user, { session })
+        return request
       }
     })
   }

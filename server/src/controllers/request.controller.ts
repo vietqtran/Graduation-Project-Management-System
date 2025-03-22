@@ -17,7 +17,7 @@ export class RequestController {
 
   getAllRequests = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenPayload = getUser(req) // ✅ Lấy user từ token
+      const tokenPayload = getUser(req)
       const userId = tokenPayload._id
 
       console.log('Token payload:', tokenPayload)
@@ -72,5 +72,11 @@ export class RequestController {
     const { id } = req.params
     const request = await this.requestService.getRequestById(id)
     ResponseHandler.sendSuccess(res, request)
+  })
+
+  getRequestsByUserId = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params
+    const requests = await this.requestService.getRequestsByUserId(userId)
+    ResponseHandler.sendSuccess(res, requests)
   })
 }
