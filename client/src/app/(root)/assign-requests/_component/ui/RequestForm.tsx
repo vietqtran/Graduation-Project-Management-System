@@ -15,7 +15,6 @@ type RequestFormProps = {
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   }) => void
@@ -29,7 +28,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
       type: 'project',
       remark: '',
       description: '',
-      from_user: '',
       document: '',
       due_date: ''
     }
@@ -60,14 +58,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
 
   useEffect(() => {
     const subscription = form.watch((formValues) => {
-      // Truyền giá trị hiện tại của form về component cha
       onSubmit(
         formValues as {
           to_user: string
           type: string
           remark: string
           description: string
-          from_user: string
           document: string
           due_date: string
         }
@@ -176,7 +172,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
             />
 
             <FormField
-              control={form.control}
               name='from_user'
               render={({ field }) => (
                 <FormItem>

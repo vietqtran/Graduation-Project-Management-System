@@ -6,6 +6,7 @@ import UserModel, { IUser } from '@/models/user.model'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { CreateRequestDto } from '@/dtos/request/create-request.dto'
 import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
@@ -29,13 +30,19 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  async createRequest(requestData: Omit<IRequest, '_id'>) {
+  async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
+    const toUser = await this.userModel.findOne({ email: requestData.to_user })
+
+    if (!toUser) {
+      throw new HttpException('User not found', 404)
+    }
+
     return runTransaction(async (session) => {
       const request = await this.requestModel.create(
         [
           {
-            to_user: requestData.to_user,
-            from_user: requestData.from_user,
+            to_user: toUser._id,
+            from_user: tokenPayload._id,
             type: requestData.type,
             remark: requestData.remark || '',
             status: requestData.status || 'assigned',
@@ -54,7 +61,10 @@ export class RequestService {
         throw new HttpException('Error at creating request', 400)
       }
 
-      return request[0]
+      return {
+        request: request[0],
+        requestData: requestData
+      }
     })
   }
 

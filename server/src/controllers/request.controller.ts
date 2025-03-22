@@ -57,7 +57,8 @@ export class RequestController {
 
   createRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const requestData = req.body
-    const request = await this.requestService.createRequest(requestData)
+    const tokenPayload = getUser(req)
+    const request = await this.requestService.createRequest(requestData, tokenPayload)
     ResponseHandler.sendSuccess(res, request, 'Create request successfully')
   })
 

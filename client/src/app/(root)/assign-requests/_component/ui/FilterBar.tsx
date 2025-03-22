@@ -20,9 +20,10 @@ interface FilterBarProps {
   }) => void
   onClearFilter: () => void
   setUserId: (id: string) => void
+  setRefresh: (refresh: boolean | ((prev: boolean) => boolean)) => void
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, setUserId }) => {
+const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, setUserId, setRefresh }) => {
   const [searchValue, setSearchValue] = useState('')
   const [status, setStatus] = useState('all')
   const [requestType, setRequestType] = useState('all')
@@ -36,12 +37,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   } | null>(null)
-
-  const currentUserId = 'currentUserId'
 
   useEffect(() => {
     const fetchProjectIdeas = async () => {
@@ -86,6 +84,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
     setStatus('all')
     setRequestType('all')
     setDateRange({ start: '', end: '' })
+    setUserId('')
     onClearFilter()
   }
 
@@ -94,7 +93,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   }) => {
@@ -108,12 +106,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
       return
     }
 
-    if (!currentFormData.current.from_user && currentUserId) {
-      currentFormData.current.from_user = currentUserId
-    }
-
-    const { to_user, description, document, due_date, from_user } = currentFormData.current
-    if (!to_user || !description || !document || !due_date || !from_user) {
+    const { to_user, description, document, due_date } = currentFormData.current
+    if (!to_user || !description || !document || !due_date) {
       toast.error('Please fill all required fields')
       return
     }
@@ -128,7 +122,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
           type: currentFormData.current.type,
           remark: currentFormData.current.remark,
           description: description,
-          from_user: from_user,
           document: document,
           due_date: due_date
         },
@@ -139,6 +132,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
 
       console.log('API response:', response.data)
       toast.success('Request created successfully!')
+      setRefresh(prev => !prev)
       setIsDrawerOpen(false)
       currentFormData.current = null
     } catch (error) {

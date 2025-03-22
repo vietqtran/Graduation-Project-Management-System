@@ -124,7 +124,7 @@ const RequestsPage: React.FC = () => {
 
   return (
     <div className='p-4'>
-      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} setUserId={setUserId} />
+      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} setUserId={setUserId} setRefresh={setRefresh} />
 
       {loading ? (
         <p>Loading requests...</p>
