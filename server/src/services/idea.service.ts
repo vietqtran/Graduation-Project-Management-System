@@ -41,12 +41,15 @@ export class IdeaService {
     if (missingFields.length > 0) {
       throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
+    if (typeof ideaData.leader !== 'string') {
+      throw new HttpException('Invalid leader ID', 400)
+    }
     const user = await this.userModel.findById(ideaData.leader)
     if (!user?.roles?.includes('student')) {
       throw new HttpException('This action is only available for students', 404)
     }
     const existingIdea = await this.projectModel.findOne({
-      members: { $in: [ideaData.leader] } // Kiểm tra xem userId có nằm trong mảng members không
+      members: { $in: [{ $eq: ideaData.leader }] } // Kiểm tra xem userId có nằm trong mảng members không
     })
 
     if (existingIdea) {
@@ -199,7 +202,7 @@ export class IdeaService {
     session.startTransaction()
     try {
       const project = await this.projectModel
-        .findById(projectId)
+        .findOne({ _id: { $eq: projectId } })
         .populate<{ leader: IUser }>('leader')
         .populate<{ members: IUser[] }>('members')
         .populate<{ supervisor: IUser[] }>('supervisor')
@@ -263,14 +266,14 @@ export class IdeaService {
     session.startTransaction()
     try {
       const project = await this.projectModel
-        .findById(projectId)
+        .findOne({ _id: { $eq: projectId } })
         .populate<{ leader: IUser }>('leader')
         .populate<{ members: IUser[] }>('members')
         .populate<{ supervisor: IUser[] }>('supervisor')
         .session(session)
         .exec()
-      const member = await this.userModel.findById(memberId).session(session).exec()
-      const leader = await this.userModel.findById(leaderId).session(session).exec()
+      const member = await this.userModel.findOne({ _id: { $eq: memberId } }).session(session).exec()
+      const leader = await this.userModel.findOne({ _id: { $eq: leaderId } }).session(session).exec()
       if ((project?.leader as IUser)._id?.valueOf() !== leaderId) {
         throw new HttpException('You dont have permission to kick member', 400)
       }
