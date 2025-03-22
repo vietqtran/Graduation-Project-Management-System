@@ -1,13 +1,13 @@
-import mongoose, { Model } from 'mongoose'
 
-import InviteModel, { IInvite } from '@/models/invite.model'
-import { InviteDto } from '@/dtos/invite/invite.dto'
+import mongoose, { Model } from 'mongoose'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import { runTransaction } from '@/helpers/transaction-helper'
+import { InviteDto } from '@/dtos/invite/invite.dto'
 import { InviteStatus } from '@/constants/invite-status-enum'
 import UserModel, { IUser } from '@/models/user.model'
 import ProjectModel, { IProject } from '@/models/project.model'
+import InviteModel, { IInvite } from '@/models/invite.model'
 import { USER_STATUS, PROJECT_STATUS } from '@/constants/status'
+import { runTransaction } from '@/helpers/transaction-helper'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
 import { format } from 'date-fns'
@@ -79,7 +79,7 @@ export class InviteService {
         }
         const checkInOtherProject = await this.projectModel
           .findOne({
-            members: { $in: [existingUser?._id] }
+            members: { $in: [existingUser._id] }
           })
           .session(session)
         if (checkInOtherProject) {

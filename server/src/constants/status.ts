@@ -52,3 +52,8 @@ export enum PROJECT_STATUS {
   PASSED = STATUS_MASTER.PASS, //sau khi có điểm, pass
   FAILED = STATUS_MASTER.FAILED //sau khi có điểm, fail
 }
+
+export enum STUDENT_INQUIRY_STATUS {
+  PROCESSING = STATUS_MASTER.PROCESSING, // chưa đc phản hồi
+  APPROVED = STATUS_MASTER.APPROVED // đã phản hồi
+}

@@ -20,8 +20,7 @@ export const RequestSchema = new Schema<IRequest>(
   {
     to_user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Recipient user is required']
+      ref: 'User'
     },
     from_user: {
       type: Schema.Types.ObjectId,

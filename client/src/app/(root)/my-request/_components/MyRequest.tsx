@@ -1,15 +1,17 @@
 'use client'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import React, { useEffect, useState } from 'react'
-import useInvite from '@/hooks/useInvite'
+
+import { AxiosError } from 'axios'
+import { Field } from '@/types/field.type'
+import { Invite } from '@/types/invite.type'
+import { Major } from '@/types/major.type'
+import { Project } from '@/types/project.type'
+import { User } from '@/types/user.type'
 import { toast } from 'sonner'
 import { useAppSelector } from '@/hooks'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Field } from '@/types/field.type'
-import { Major } from '@/types/major.type'
-import { User } from '@/types/user.type'
-import { Project } from '@/types/project.type'
-import { Invite } from '@/types/invite.type'
-import { AxiosError } from 'axios'
+import useInvite from '@/hooks/useInvite'
 
 const MyRequest = () => {
   const user = useAppSelector((state) => state.auth.user)
@@ -22,7 +24,7 @@ const MyRequest = () => {
       if (user?._id) {
         const response = await getInviteByUserId(user._id)
         if (response?.success) {
-          setInvites(response.data)
+          setInvites(response.data ?? [])
         }
       } else {
         toast.error('User ID is not available')
@@ -35,6 +37,7 @@ const MyRequest = () => {
       }
     }
   }
+
   useEffect(() => {
     fetchInvites()
   }, [getInviteByUserId])
@@ -52,7 +55,7 @@ const MyRequest = () => {
   const handleAcceptInvite = async (inviteId: string) => {
     try {
       await acceptInvite(inviteId)
-      fetchInvites()
+      await fetchInvites()
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
         toast.error(error.response.data.message)
@@ -161,6 +164,7 @@ const MyRequest = () => {
         <div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center'>
           <div className='bg-white p-6 rounded-md shadow-lg'>
             <h3 className='text-2xl font-bold text-purple-700'>{selectedProject?.name}</h3>
+            <h3 className='text-2xl font-bold text-purple-700'>{selectedProject?.name}</h3>
             <div className='mt-4 grid grid-cols-2 gap-4'>
               <div>
                 <p className='font-bold'>Description</p>
@@ -169,14 +173,15 @@ const MyRequest = () => {
               <div>
                 <p className='font-bold'>Campus</p>
                 <p className='italic'>{selectedProject?.campus?.name}</p>
+                <p className='italic'>{selectedProject?.campus?.name}</p>
               </div>
               <div>
                 <p className='font-bold'>Field</p>
-                <p className='italic'>{selectedProject?.field?.map((f: Field) => f.name).join(', ')}</p>
+                <p className='italic'>{selectedProject?.field?.map((f: Field) => f?.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Major</p>
-                <p className='italic'>{selectedProject?.major?.map((m: Major) => m.name).join(', ')}</p>
+                <p className='italic'>{selectedProject?.major?.map((m: Major) => m?.name).join(', ')}</p>
               </div>
               <div>
                 <p className='font-bold'>Total Members</p>

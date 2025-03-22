@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid'
 export const useAuth = () => {
   const dispatch = useAppDispatch()
   const { getDeviceInformation } = useDevice()
-  const { push } = useRouter()
+  const { push, refresh } = useRouter()
 
   const signUp = async ({
     email,
@@ -117,6 +117,8 @@ export const useAuth = () => {
         })
       )
       localStorage.removeItem('device_id')
+      push('/auth/sign-in')
+      refresh()
     } catch (error) {
       console.log(error)
     }
