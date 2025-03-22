@@ -190,11 +190,10 @@ export class RequestService {
 
   async getRequestsByUserId(to_user: string) {
     return runTransaction(async (session) => {
-      const request = await this.requestModel.findById(to_user).session(session)
+      const request = await this.requestModel.find({ to_user: to_user }).session(session)
       if (!request) {
         throw new HttpException('Request not found', 404)
       } else {
-        await this.requestModel.findById(to_user, { session })
         return request
       }
     })

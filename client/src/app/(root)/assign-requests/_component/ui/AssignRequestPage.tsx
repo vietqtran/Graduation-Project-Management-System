@@ -23,8 +23,8 @@ const RequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
   const [refresh, setRefresh] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
-  // Hàm fetch dữ liệu từ API
   const fetchRequests = async () => {
     setLoading(true)
     try {
@@ -55,6 +55,29 @@ const RequestsPage: React.FC = () => {
   }>({})
 
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([])
+
+  useEffect(() => {
+    if (userId) {
+      const fetchRequestsByUser = async () => {
+        try {
+          const response = await instance.get(`/request/get-requests-by-user/${userId}`, {
+            withCredentials: true
+          })
+          if (response.data.success) {
+            setRequests(response.data.data || [])
+          } else {
+            console.error('Error fetching user-specific requests:', response.data.message)
+          }
+        } catch (error) {
+          console.error('Failed to fetch requests by user:', error)
+        }
+      }
+
+      fetchRequestsByUser()
+    } else {
+      fetchRequests()
+    }
+  }, [userId, refresh])
 
   useEffect(() => {
     let filtered = requests
@@ -101,7 +124,7 @@ const RequestsPage: React.FC = () => {
 
   return (
     <div className='p-4'>
-      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} />
+      <FilterBar onFilterChange={handleFilterChange} onClearFilter={handleClearFilter} setUserId={setUserId} />
 
       {loading ? (
         <p>Loading requests...</p>
