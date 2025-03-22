@@ -147,11 +147,7 @@ export class IdeaService {
             { session }
           )
           .exec()
-      }
-      if (!mongoose.Types.ObjectId.isValid(projectId)) {
-        throw new HttpException('Invalid project ID', 400);
-      }
-      
+      }      
       await this.inviteModel.deleteMany({ project: { $eq: projectId } }).session(session).exec()
     })
   }
