@@ -26,7 +26,7 @@ const TopicPage = () => {
   }
 
   const handleMajorSelect = (majorId: string | null) => {
-    setSelectedMajorId(majorId) // Update the selected major ID
+    setSelectedMajorId(majorId)  
   }
 
   const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {
@@ -64,7 +64,6 @@ const TopicPage = () => {
         />
       </div>
 
-      {/* Drawer using Radix UI */}
       <Dialog.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className='fixed inset-0 bg-black bg-opacity-30' />

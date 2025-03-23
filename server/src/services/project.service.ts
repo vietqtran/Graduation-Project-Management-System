@@ -575,7 +575,7 @@ export class ProjectService {
         .findOne({ _id: projectId })
         .populate({ path: 'major', select: '_id name' })
         .populate({ path: 'field', select: '_id name' })
-        .populate({ path: 'campus', select: '_id name' })
+        .populate({ path: 'campus', select: '_id name'})
         .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
         .populate({ path: 'leader', select: '_id display_name username email avatar' })
         .populate({ path: 'members', select: '_id display_name username email avatar' })

@@ -5,9 +5,8 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import { FaEdit, FaInfoCircle, FaTrashAlt } from 'react-icons/fa'
 import { toast } from 'sonner'
-import TopicModal from './TopicModal'
 import ConfirmModal from './ConfirmModal'
-import TopicDetailModal from './TopicDetailModal'
+import TopicModal from './TopicModal'
 
 export interface Project {
   _id: string
@@ -97,7 +96,6 @@ const TopicList: React.FC<TopicListProps> = ({
     filteredTopics = filteredTopics.filter((topic) => topic.field.some((field) => field._id === filterFieldId))
   }
 
-  // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
 
   const handleDelete = async (id: string) => {
@@ -127,9 +125,9 @@ const TopicList: React.FC<TopicListProps> = ({
   const handleDetail = async (id: string) => {
     try {
       const response = await instance.get(`/project/detail-topic/${id}`, { withCredentials: true })
-      console.log('Detailed Topic Response:', response.data)
-      setSelectedTopic(response.data)
-      setModalType('detail')
+      console.log('Detailed Topic Response:', response.data.data)
+      setSelectedTopic(response.data.data)
+     setModalType('detail')
     } catch (error) {
       console.error('Error fetching topic details:', error)
       toast.error('Failed to fetch topic details.')
@@ -140,6 +138,7 @@ const TopicList: React.FC<TopicListProps> = ({
     setSelectedTopic(null)
     setModalType(null)
   }
+
 
   return (
     <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>
@@ -193,18 +192,14 @@ const TopicList: React.FC<TopicListProps> = ({
         </div>
       )}
 
-      {modalType && selectedTopic && (
-        <TopicModal topic={selectedTopic} type={modalType} onClose={closeModal} onSubmit={() => setRefresh(!refresh)} />
-      )}
-
       <ConfirmModal
         isOpen={!!confirmDelete.id}
         onClose={() => setConfirmDelete({ id: null })}
         onConfirm={confirmDeleteTopic}
       />
 
-      {selectedTopic && (
-        <TopicDetailModal isOpen={modalType === 'detail'} onClose={() => setModalType(null)} topic={selectedTopic} />
+      {modalType && selectedTopic && (
+        <TopicModal topic={selectedTopic} type={modalType} onClose={closeModal} onSubmit={() => setRefresh(!refresh)} />
       )}
     </div>
   )
