@@ -389,15 +389,13 @@ export class ProjectService {
       let status = null
       let leaderEmail = ''
 
-      // Check if leader is provided
       if (projectData.leader) {
-        // Find the user by email to get the leader's ID
-        const user = await this.userModel.findOne({ email: projectData.leader }, { _id: 1, email: 1 }, { session })
+        const user = await this.userModel.findOne({ email: { $eq: projectData.leader } }, { _id: 1, email: 1 }, { session })
 
         if (user) {
-          leaderId = user._id // Set leaderId to the user's ID
-          leaderEmail = user.email // Save the leader's email for sending the email
-          status = 17 // Set project status to APPROVED
+          leaderId = user._id  
+          leaderEmail = user.email  
+          status = 17  
         } else {
           throw new HttpException('Leader email not found in users table', 404)
         }
@@ -590,9 +588,9 @@ export class ProjectService {
       }
 
       return {
-        _id: 'day la project dược get detial thanh cong',
+        _id: project._id,
         name: project.name,
-        description: project.description, // Thêm description vào response
+        description: project.description,  
         major: project.major,
         field: project.field,
         campus: project.campus,
@@ -608,9 +606,9 @@ export class ProjectService {
         updated_by: project.updated_by,
         created_at: project.created_at,
         updated_at: project.updated_at,
-        histories: project.histories, // Thêm lịch sử cập nhật nếu cần
-        documents: project.documents, // Trả về tài liệu nếu cần
-        tasks: project.tasks // Trả về danh sách task nếu cần
+        histories: project.histories,  
+        documents: project.documents,  
+        tasks: project.tasks  
       }
     })
   }

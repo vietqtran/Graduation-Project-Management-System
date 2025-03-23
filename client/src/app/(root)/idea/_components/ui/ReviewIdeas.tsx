@@ -23,7 +23,6 @@ interface ProjectIdea {
   members: string[]
 }
 
-
 const ReviewIdeas = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [originalIdeas, setOriginalIdeas] = useState<ProjectIdea[]>([])

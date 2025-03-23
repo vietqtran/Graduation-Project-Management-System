@@ -18,7 +18,6 @@ interface ProjectIdea {
   members: string[]
 }
 
-
 interface IdeaDetailProps {
   idea: ProjectIdea | null
   isOpen: boolean

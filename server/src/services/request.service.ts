@@ -30,8 +30,8 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
-    const toUser = await this.userModel.findOne({ email: requestData.to_user })
+   async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
+    const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } })
 
     if (!toUser) {
       throw new HttpException('User not found', 404)
@@ -89,9 +89,17 @@ export class RequestService {
         }
       }
 
+      const allowedUpdates: Array<keyof UpdateRequestDto> = ['approve_user', 'to_user', 'type', 'remark', 'status', 'description',  'due_date'];
+      const sanitizedUpdate: Partial<Record<keyof UpdateRequestDto, any>> = {};
+      allowedUpdates.forEach((field: keyof UpdateRequestDto) => {
+        if (updateRequestDto[field] !== undefined) {
+          sanitizedUpdate[field] = updateRequestDto[field];
+        }
+      });
+
       const updatedRequest = await this.requestModel.findByIdAndUpdate(
         requestId,
-        { $set: { ...updateRequestDto } },
+        { $set: sanitizedUpdate },
         { new: true, session }
       )
 
