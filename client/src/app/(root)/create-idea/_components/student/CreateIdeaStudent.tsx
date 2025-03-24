@@ -101,7 +101,10 @@ export default function CreateIdea() {
       setShowSuccessModal(true) // Show the success modal
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
-        const errorMessage = error.response.data.error.message.split('name: ')[1] || 'Validation error'
+        const errorMessage =
+          error.response.data.error.message.split('name: ')[1] ||
+          error.response.data.error.message ||
+          'Validation error'
         toast.error(errorMessage)
       } else {
         toast.error('An unexpected error occurred')

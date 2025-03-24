@@ -26,7 +26,7 @@ export class StudentGetListInquiriesDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'Limit must be a number' })
   @Min(1, { message: 'Limit must be at least 1' })
-//   @Max(100, { message: 'Limit cannot exceed 100' })
+  //   @Max(100, { message: 'Limit cannot exceed 100' })
   limit: number = 10
 
   //a object to store sort options (suitable for sort by mongoose)
