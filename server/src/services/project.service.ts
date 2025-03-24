@@ -390,12 +390,16 @@ export class ProjectService {
       let leaderEmail = ''
 
       if (projectData.leader) {
-        const user = await this.userModel.findOne({ email: { $eq: projectData.leader } }, { _id: 1, email: 1 }, { session })
+        const user = await this.userModel.findOne(
+          { email: { $eq: projectData.leader } },
+          { _id: 1, email: 1 },
+          { session }
+        )
 
         if (user) {
-          leaderId = user._id  
-          leaderEmail = user.email  
-          status = 17  
+          leaderId = user._id
+          leaderEmail = user.email
+          status = 17
         } else {
           throw new HttpException('Leader email not found in users table', 404)
         }
@@ -575,7 +579,7 @@ export class ProjectService {
         .findOne({ _id: projectId })
         .populate({ path: 'major', select: '_id name' })
         .populate({ path: 'field', select: '_id name' })
-        .populate({ path: 'campus', select: '_id name'})
+        .populate({ path: 'campus', select: '_id name' })
         .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
         .populate({ path: 'leader', select: '_id display_name username email avatar' })
         .populate({ path: 'members', select: '_id display_name username email avatar' })
@@ -590,7 +594,7 @@ export class ProjectService {
       return {
         _id: project._id,
         name: project.name,
-        description: project.description,  
+        description: project.description,
         major: project.major,
         field: project.field,
         campus: project.campus,
@@ -606,9 +610,9 @@ export class ProjectService {
         updated_by: project.updated_by,
         created_at: project.created_at,
         updated_at: project.updated_at,
-        histories: project.histories,  
-        documents: project.documents,  
-        tasks: project.tasks  
+        histories: project.histories,
+        documents: project.documents,
+        tasks: project.tasks
       }
     })
   }

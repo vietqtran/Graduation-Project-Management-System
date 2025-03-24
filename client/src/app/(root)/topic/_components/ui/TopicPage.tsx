@@ -26,7 +26,7 @@ const TopicPage = () => {
   }
 
   const handleMajorSelect = (majorId: string | null) => {
-    setSelectedMajorId(majorId)  
+    setSelectedMajorId(majorId)
   }
 
   const handleSubmit = async (data: { [key: string]: string | number | boolean }) => {

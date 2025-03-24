@@ -30,7 +30,6 @@ export class UpdateRequestDto {
   @IsOptional()
   from_user?: IUser['_id']
   @IsEnum(RequestStatus)
- 
   @IsString()
   @IsOptional()
   description?: string
@@ -38,5 +37,4 @@ export class UpdateRequestDto {
   @IsString()
   @IsOptional()
   due_date?: Date
- 
 }

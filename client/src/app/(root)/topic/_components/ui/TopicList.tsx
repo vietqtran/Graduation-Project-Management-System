@@ -127,7 +127,7 @@ const TopicList: React.FC<TopicListProps> = ({
       const response = await instance.get(`/project/detail-topic/${id}`, { withCredentials: true })
       console.log('Detailed Topic Response:', response.data.data)
       setSelectedTopic(response.data.data)
-     setModalType('detail')
+      setModalType('detail')
     } catch (error) {
       console.error('Error fetching topic details:', error)
       toast.error('Failed to fetch topic details.')
@@ -138,7 +138,6 @@ const TopicList: React.FC<TopicListProps> = ({
     setSelectedTopic(null)
     setModalType(null)
   }
-
 
   return (
     <div className='flex flex-col gap-2 p-4 border rounded-lg shadow-md w-full h-full'>

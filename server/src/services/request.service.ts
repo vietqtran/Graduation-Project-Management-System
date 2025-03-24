@@ -30,7 +30,7 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-   async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
+  async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
     const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } })
 
     if (!toUser) {
@@ -89,13 +89,21 @@ export class RequestService {
         }
       }
 
-      const allowedUpdates: Array<keyof UpdateRequestDto> = ['approve_user', 'to_user', 'type', 'remark', 'status', 'description',  'due_date'];
-      const sanitizedUpdate: Partial<Record<keyof UpdateRequestDto, any>> = {};
+      const allowedUpdates: Array<keyof UpdateRequestDto> = [
+        'approve_user',
+        'to_user',
+        'type',
+        'remark',
+        'status',
+        'description',
+        'due_date'
+      ]
+      const sanitizedUpdate: Partial<Record<keyof UpdateRequestDto, any>> = {}
       allowedUpdates.forEach((field: keyof UpdateRequestDto) => {
         if (updateRequestDto[field] !== undefined) {
-          sanitizedUpdate[field] = updateRequestDto[field];
+          sanitizedUpdate[field] = updateRequestDto[field]
         }
-      });
+      })
 
       const updatedRequest = await this.requestModel.findByIdAndUpdate(
         requestId,

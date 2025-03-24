@@ -56,28 +56,28 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
       }
     }
 
-      const fetchFields = async () => {
-        try {
-          const response = await instance.get('/public/fields')
-          setFields(response.data.data)
-        } catch (error) {
-          console.error('Error fetching fields:', error)
-        }
+    const fetchFields = async () => {
+      try {
+        const response = await instance.get('/public/fields')
+        setFields(response.data.data)
+      } catch (error) {
+        console.error('Error fetching fields:', error)
       }
-  
-      const fetchCampuses = async () => {
-        try {
-          const response = await instance.get('/public/campuses')
-          setCampuses(response.data.data)
-        } catch (error) {
-          console.error('Error fetching campuses:', error)
-        }
+    }
+
+    const fetchCampuses = async () => {
+      try {
+        const response = await instance.get('/public/campuses')
+        setCampuses(response.data.data)
+      } catch (error) {
+        console.error('Error fetching campuses:', error)
       }
-  
-      fetchMajors()
-      fetchFields()
-      fetchCampuses()
-    }, [])
+    }
+
+    fetchMajors()
+    fetchFields()
+    fetchCampuses()
+  }, [])
   async function handleUpload(file: File) {
     setUploading(true)
     try {
@@ -101,7 +101,7 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
         throw new Error('Invalid upload response')
       }
 
-      setDocumentId(fileResult.key)  
+      setDocumentId(fileResult.key)
       toast.success('File uploaded successfully!')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Upload failed')
