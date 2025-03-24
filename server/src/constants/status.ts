@@ -21,7 +21,9 @@ export enum STATUS_MASTER {
   BLOCKED = 19,
   UN_ACTIVE = 20,
   UN_GROUPED = 21, // chưa vào nhóm, nếu vào nhóm rồi thì sử dụng STATUS_MASTER.ACTIVATED
-  AVAILABLE = 22 // supervisor chưa đủ nhóm, nếu supervisor đủ nhóm rồi thì sử dụng STATUS_MASTER.ACTIVATED
+  AVAILABLE = 22, // supervisor chưa đủ nhóm, nếu supervisor đủ nhóm rồi thì sử dụng STATUS_MASTER.ACTIVATED
+  PASS = 23,
+  FAILED = 24
 }
 
 export enum USER_STATUS {
@@ -43,14 +45,17 @@ export enum ACCOUNT_STATUS {
 }
 
 export enum PROJECT_STATUS {
-  PENDING = STATUS_MASTER.PENDING,
-  REJECTED = STATUS_MASTER.REJECTED,
-  SUBMITTED = STATUS_MASTER.SUBMITTED,
-  APPROVED = STATUS_MASTER.APPROVED,
   CANCELLED = STATUS_MASTER.CANCELLED,
   BLOCKED = STATUS_MASTER.BLOCKED,
   UN_ACTIVE = STATUS_MASTER.UN_ACTIVE,
-  TOPIC = STATUS_MASTER.TOPIC
+  TOPIC = STATUS_MASTER.TOPIC,
+  PENDING = STATUS_MASTER.PENDING, //chưa đủ member hoặc chưa có gv
+  ACTIVATED = STATUS_MASTER.ACTIVATED, //đủ member và đã có gv
+  REJECTED = STATUS_MASTER.REJECTED, //đề tài bị GV reject
+  APPROVED = STATUS_MASTER.APPROVED, //đề tài đủ đk để làm
+  SUBMITTED = STATUS_MASTER.SUBMITTED, //đã submit đủ, đủ đk để bảo vệ
+  PASSED = STATUS_MASTER.PASS, //sau khi có điểm, pass
+  FAILED = STATUS_MASTER.FAILED //sau khi có điểm, fail
 }
 
 export enum STUDENT_INQUIRY_STATUS {
