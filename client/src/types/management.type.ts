@@ -9,6 +9,14 @@ interface User {
   avatar?: string
 }
 
+export interface UserDto {
+  _id: string
+  email: string
+  username: string
+  display_name: string
+  avatar?: string
+}
+
 // Deadline type definition
 interface Deadline {
   _id: string

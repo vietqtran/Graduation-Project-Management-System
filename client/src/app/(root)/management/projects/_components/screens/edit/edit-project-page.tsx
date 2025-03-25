@@ -16,7 +16,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 
 import useManagement from '@/hooks/useManagement'
 import useField from '@/hooks/public/useField'
@@ -25,6 +24,7 @@ import useMajor from '@/hooks/public/useMajor'
 import { Project } from '@/types/project.type'
 import { UserDto } from '@/types/management.type'
 import { PROJECT_STATUS } from '@/constants/status.enum'
+import { Checkbox } from '@/components/ui/checkbox'
 
 // Create an array of status options for the dropdown
 const PROJECT_STATUS_OPTIONS = [
