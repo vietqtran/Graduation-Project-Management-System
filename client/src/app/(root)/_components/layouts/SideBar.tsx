@@ -53,7 +53,7 @@ const SideBar = () => {
           </div>
           <div className={`flex flex-col flex-1 overflow-y-auto max-h-screen ${isExpanse ? 'pt-10' : 'pt-0'}`}>
             <div className='p-2 w-full flex gap-1 flex-col'>
-              {SIDEBAR_LINKS.filter((s) => s.roles.some((role) => user?.roles?.includes(role))).map((s) => {
+              {SIDEBAR_LINKS.filter((s) => s.roles?.some((role) => user?.roles?.includes(role))).map((s) => {
                 return (
                   <TooltipProvider key={`${s.label}`}>
                     <Tooltip>
