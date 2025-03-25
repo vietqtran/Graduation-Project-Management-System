@@ -12,102 +12,139 @@ import { Users } from 'lucide-react'
 import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
 import TeamIcon from '@/components/icons/TeamIcon'
 import MyRequestIcon from '@/components/icons/MyRequestIcon'
-import ListIdeaSupervisorIcon from '@/components/icons/ListIdeaSupervisorIcon'
 import ListSupervisorIcon from '@/components/icons/ListSupervisorIcon'
+
 export const SIDEBAR_LINKS = [
   {
     href: '/',
     label: 'Dashboard',
-    icon: <DashboardIcon />
+    icon: <DashboardIcon />,
+    roles: ['user', 'student', 'lecturer', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/project',
-    label: 'Project',
-    icon: <ProjectIcon />
+    label: 'Project Management',
+    icon: <ProjectIcon />,
+    roles: ['admin', 'staff']
   },
   {
     href: '/documents',
     label: 'Documents',
-    icon: <HugeiconsDocumentAttachment />
+    icon: <HugeiconsDocumentAttachment />,
+    roles: ['user', 'student', 'lecturer', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/timetable',
     label: 'Timetable',
-    icon: <TimetableIcon />
+    icon: <TimetableIcon />,
+    roles: ['user', 'student', 'lecturer', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/messages',
     label: 'Message',
-    icon: <MessageIcon />
+    icon: <MessageIcon />,
+    roles: ['user', 'student', 'lecturer', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/tasks',
     label: 'Tasks',
-    icon: <TaskIcon />
+    icon: <TaskIcon />,
+    roles: ['user', 'student', 'lecturer', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/idea',
     label: 'Idea',
-    icon: <IdeaIcon />
+    icon: <IdeaIcon />,
+    roles: ['user', 'student', 'lecturer']
   },
   {
     href: '/topic',
     label: 'Submit Topic',
-    icon: <SubmitTopicIcon />
+    icon: <SubmitTopicIcon />,
+    roles: ['user', 'student', 'lecturer']
   },
   {
     href: '/groups',
     label: 'Manage Groups',
-    icon: <ManageGroupsIcon />
+    icon: <ManageGroupsIcon />,
+    roles: ['lecturer']
   },
   {
     href: '/assign-requests',
     label: 'Assign Request',
-    icon: <AssignTaskIcon />
+    icon: <AssignTaskIcon />,
+    roles: ['lecturer']
   },
   {
     href: '/management/deadlines',
     label: 'Deadlines Management',
-    icon: <Users />
+    icon: <Users />,
+    roles: ['admin', 'staff']
   },
   {
     href: '/management/students',
     label: 'Student Management',
-    icon: <Users />
+    icon: <Users />,
+    roles: ['admin', 'staff']
   },
   {
     href: '/management/teachers',
     label: 'Teachers Management',
-    icon: <Users />
+    icon: <Users />,
+    roles: ['admin', 'staff']
   },
   {
     href: '/management/projects',
     label: 'Projects Management',
-    icon: <Users />
+    icon: <Users />,
+    roles: ['admin', 'staff']
   },
   {
     href: '/create-idea',
     label: 'Create Idea',
-    icon: <CreateIdeaIcon />
+    icon: <CreateIdeaIcon />,
+    roles: ['user', 'student']
   },
   {
     href: '/team',
     label: 'Team',
-    icon: <TeamIcon />
+    icon: <TeamIcon />,
+    roles: ['user', 'student']
+  },
+  {
+    href: '/change-idea',
+    label: 'Change Idea',
+    icon: <IdeaIcon />,
+    roles: ['user', 'student']
+  },
+  {
+    href: '/delete-idea',
+    label: 'Delete Idea',
+    icon: <IdeaIcon />,
+    roles: ['user', 'student']
+  },
+  {
+    href: '/invite-member',
+    label: 'Invite Member',
+    icon: <Users />,
+    roles: ['user', 'student']
   },
   {
     href: '/my-request',
     label: 'My Request',
-    icon: <MyRequestIcon />
-  },
-  {
-    href: '/list-idea-supervisor',
-    label: 'List Idea Supervisor',
-    icon: <ListIdeaSupervisorIcon />
+    icon: <MyRequestIcon />,
+    roles: ['lecturer']
   },
   {
     href: '/list-supervisor',
-    label: 'List Supervisor',
-    icon: <ListSupervisorIcon />
+    label: 'List Supervisors',
+    icon: <ListSupervisorIcon />,
+    roles: ['user', 'student']
+  },
+  {
+    href: '/invite-supervisor',
+    label: 'Invite Supervisor',
+    icon: <Users />,
+    roles: ['user', 'student']
   }
 ]
