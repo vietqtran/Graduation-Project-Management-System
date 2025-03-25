@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import SimpleBar from 'simplebar-react'
 import TaskComponent from './Task'
 import instance from '@/utils/axios'
+import { toast } from 'sonner'
 
 interface ColumnProps {
   column: Column
@@ -16,6 +17,7 @@ interface ColumnProps {
   onTaskUpdate: () => void
   onTaskOpen: (taskId: string) => void // Added for drawer
   editingTask: string | null
+  isViewOnly?: boolean
 }
 
 const ColumnComponent: React.FC<ColumnProps> = ({
@@ -25,13 +27,18 @@ const ColumnComponent: React.FC<ColumnProps> = ({
   onUpdate,
   onTaskUpdate,
   onTaskOpen,
-  editingTask
+  editingTask,
+  isViewOnly
 }) => {
   const [title, setTitle] = React.useState(column.title)
   const [isEditing, setIsEditing] = React.useState(false)
 
   const handleUpdateTitle = useCallback(
     async (newTitle: string) => {
+      if (isViewOnly) {
+        toast.error('You just have view permission')
+        return
+      }
       if (!newTitle) return
       await instance.patch(`/board/columns/${column._id}`, { title: newTitle }, { withCredentials: true })
       onUpdate()
@@ -86,6 +93,7 @@ const ColumnComponent: React.FC<ColumnProps> = ({
                         onUpdate={onTaskUpdate}
                         onOpen={onTaskOpen} // Pass to trigger drawer
                         isEditing={editingTask === task._id}
+                        isViewOnly={isViewOnly}
                       />
                     ))}
                     {provided.placeholder}
@@ -94,7 +102,12 @@ const ColumnComponent: React.FC<ColumnProps> = ({
               </SimpleBar>
             )}
           </Droppable>
-          <AddTask columnId={column._id} projectId={column.project} onTaskAdded={onTaskUpdate} />
+          <AddTask
+            isViewOnly={isViewOnly}
+            columnId={column._id}
+            projectId={column.project}
+            onTaskAdded={onTaskUpdate}
+          />
         </div>
       )}
     </Draggable>

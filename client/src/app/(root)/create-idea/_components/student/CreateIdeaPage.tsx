@@ -1,12 +1,22 @@
 'use client'
 
-import Image from 'next/image'
+import { useAppSelector, useProject, useRouter } from '@/hooks'
+
 import CreateIdeaStudent from './CreateIdeaStudent'
+import Image from 'next/image'
 import React from 'react'
-import { useProject } from '@/hooks'
+import { toast } from 'sonner'
 
 export default function CreateIdeaPage() {
   const { project, isLoading } = useProject()
+  const router = useRouter()
+  const { user } = useAppSelector((state) => state.auth)
+
+  if (!user?.roles.includes('student')) {
+    toast.error('You are not a student')
+    router.back()
+    return null
+  }
 
   if (isLoading) {
     return (

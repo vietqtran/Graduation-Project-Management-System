@@ -56,59 +56,65 @@ export function DocumentsTable({ documents, isLoading }: DocumentsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {documents.map((doc) => (
-            <TableRow key={doc._id}>
-              <TableCell className='font-medium max-w-[300px] truncate'>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className='size-full truncate'>
-                        <span>{doc.title}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className='max-w-[300px]' side='top'>
-                      <p>{doc.title}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TableCell>
-              <TableCell className='max-w-[300px] truncate'>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className='size-full truncate'>
-                        <span>{doc.description}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className='max-w-[300px]' side='top'>
-                      <p>{doc.description}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TableCell>
-              <TableCell>
-                <div className='flex items-center gap-2'>
-                  <Avatar className='h-6 w-6'>
-                    <AvatarImage src={doc.user.avatar} />
-                    <AvatarFallback>{doc.user?.display_name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className='whitespace-nowrap'>{doc.user?.display_name}</span>
-                </div>
-              </TableCell>
-              <TableCell className='whitespace-nowrap'>{formatFileSize(doc.file_size)}</TableCell>
-              <TableCell>{format(new Date(doc.created_at), 'PPp')}</TableCell>
-              <TableCell>{format(new Date(doc.updated_at), 'PPp')}</TableCell>
-              <TableCell>
-                <Button
-                  onClick={() => window.open(`${process.env.NEXT_PUBLIC_S3_BUCKET_PREFIX}${doc.file_url}`, '_blank')}
-                  className='bg-green-500 hover:bg-green-600'
-                >
-                  <FiEye />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {documents?.map(
+            (doc, idx) =>
+              !!doc && (
+                <TableRow key={doc._id + '' + idx}>
+                  <TableCell className='font-medium max-w-[300px] truncate'>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className='size-full truncate'>
+                            <span>{doc.title}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-[300px]' side='top'>
+                          <p>{doc.title}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell className='max-w-[300px] truncate'>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className='size-full truncate'>
+                            <span>{doc.description}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-[300px]' side='top'>
+                          <p>{doc.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                  <TableCell>
+                    <div className='flex items-center gap-2'>
+                      <Avatar className='h-6 w-6'>
+                        <AvatarImage src={doc?.user?.avatar} />
+                        <AvatarFallback>{doc?.user?.display_name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className='whitespace-nowrap'>{doc?.user?.display_name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className='whitespace-nowrap'>{formatFileSize(doc?.file_size)}</TableCell>
+                  {doc?.created_at && <TableCell>{format(new Date(doc?.created_at), 'PPp')}</TableCell>}
+                  {doc?.updated_at && <TableCell>{format(new Date(doc?.updated_at), 'PPp')}</TableCell>}
+                  <TableCell>
+                    <Button
+                      onClick={() =>
+                        window.open(`${process.env.NEXT_PUBLIC_S3_BUCKET_PREFIX}${doc.file_url}`, '_blank')
+                      }
+                      className='bg-green-500 hover:bg-green-600'
+                    >
+                      <FiEye />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+          )}
         </TableBody>
+        s
       </Table>
     </div>
   )

@@ -11,6 +11,7 @@ import FileIcon from '@/components/icons/FileIcon'
 import { User } from '@/types/user.type'
 import { format } from 'date-fns'
 import instance from '@/utils/axios'
+import { toast } from 'sonner'
 
 interface TaskProps {
   task: Task
@@ -18,10 +19,15 @@ interface TaskProps {
   onUpdate: () => void
   onOpen: (taskId: string) => void // To open the drawer
   isEditing: boolean
+  isViewOnly?: boolean
 }
 
-const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate, onOpen, isEditing = false }) => {
+const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate, onOpen, isEditing = false, isViewOnly }) => {
   const handleToggleComplete = async () => {
+    if (isViewOnly) {
+      toast.error('You are supervisor, you just have view permission')
+      return
+    }
     try {
       await instance.patch(`/board/tasks/${task._id}`, { is_completed: !task.is_completed }, { withCredentials: true })
       onUpdate()
@@ -110,7 +116,7 @@ const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate, onOpen, isE
                       <AvatarGroup
                         className='size-6'
                         avatars={task.assignees.map((assignee: User) => ({
-                          src: assignee.avatar ?? 'https://i.pravatar.cc/300',
+                          src: assignee.avatar ?? 'https://avatar.iran.liara.run/public/boy',
                           alt: assignee.username
                         }))}
                       />

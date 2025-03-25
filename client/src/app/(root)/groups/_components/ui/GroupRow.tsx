@@ -1,12 +1,15 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import MemberProfileModal from './MemberProfileModal'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Table, TableHeader, TableRow, TableCell, TableBody } from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Select, SelectItem } from '@/components/ui/select'
+
 import * as Progress from '@radix-ui/react-progress'
+
+import React, { useEffect, useState } from 'react'
+import { Select, SelectItem } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
+
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import MemberProfileModal from './MemberProfileModal'
 import { SelectContent } from '@radix-ui/react-select'
 import instance from '@/utils/axios'
 
@@ -91,22 +94,22 @@ const GroupRow: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredGroups.map((group) => (
-            <React.Fragment key={group.id}>
+          {filteredGroups.map((group, idx) => (
+            <React.Fragment key={group?.id + '' + idx}>
               <TableRow>
-                <TableCell>{group.name}</TableCell>
-                <TableCell>{group.members.length}</TableCell>
-                <TableCell>{group.status}</TableCell>
+                <TableCell>{group?.name}</TableCell>
+                <TableCell>{group?.members.length}</TableCell>
+                <TableCell>{group?.status}</TableCell>
                 <TableCell>
-                  <ProgressBar progress={group.progress} />
+                  <ProgressBar progress={group?.progress} />
                 </TableCell>
                 <TableCell>
-                  <Button onClick={() => toggleGroup(group.id)}>
-                    {expandedGroupId === group.id ? 'Hide Details' : 'View Details'}
+                  <Button onClick={() => toggleGroup(group?.id)}>
+                    {expandedGroupId === group?.id ? 'Hide Details' : 'View Details'}
                   </Button>
                 </TableCell>
               </TableRow>
-              {expandedGroupId === group.id && group.members.length > 0 ? (
+              {expandedGroupId === group?.id && group?.members.length > 0 ? (
                 <TableRow>
                   <TableCell colSpan={5}>
                     <Table>
@@ -121,15 +124,15 @@ const GroupRow: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {group.members.map((member) => (
-                          <TableRow key={member.id}>
-                            <TableCell>{member.username}</TableCell>
-                            <TableCell>{member.role}</TableCell>
+                        {group?.members.map((member) => (
+                          <TableRow key={member?.id}>
+                            <TableCell>{member?.username}</TableCell>
+                            <TableCell>{member?.role}</TableCell>
                             <TableCell>
-                              <ProgressBar progress={member.progress} />
+                              <ProgressBar progress={member?.progress} />
                             </TableCell>
-                            <TableCell>{member.tasksCompleted}</TableCell>
-                            <TableCell>{member.status}</TableCell>
+                            <TableCell>{member?.tasksCompleted}</TableCell>
+                            <TableCell>{member?.status}</TableCell>
                             <TableCell>
                               <Button onClick={() => setSelectedMember(member)}>View Profile</Button>
                             </TableCell>

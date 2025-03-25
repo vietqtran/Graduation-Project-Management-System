@@ -1,9 +1,12 @@
+'use client'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import { DocumentsTable } from './ProjectDocument'
 import { Field } from '@/types/field.type'
 import FieldBadge from '@/components/common/FieldBadge'
 import LeaderStar from '@/components/common/LeaderStar'
+import Link from 'next/link'
 import { Major } from '@/types/major.type'
 import MajorBadge from '@/components/common/MajorBadge'
 import { Project } from '@/types/project.type'
@@ -11,12 +14,14 @@ import ProjectStatusBadge from '@/components/common/ProjectStatusBadge'
 import React from 'react'
 import { Separator } from '@/components/ui/seperator'
 import { User } from '@/types/user.type'
+import { useAppSelector } from '@/hooks'
 
 interface ProjectDetailsProps {
   project: Project | null
 }
 
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
+  const { user } = useAppSelector((state) => state.auth)
   return (
     <>
       <div className='w-full mx-auto p-6 bg-white'>
@@ -25,6 +30,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
             <div>
               <h1 className='text-2xl font-bold'>{project?.name}</h1>
               <p className='text-gray-600 mt-2'>{project?.description}</p>
+              {user?.roles.includes('supervisor') && (
+                <Link href={`/tasks/${project?._id}`} className='text-blue-500 underline'>
+                  <span>View Board</span>
+                </Link>
+              )}
             </div>
 
             <ProjectStatusBadge status={project?.status ?? 0} />

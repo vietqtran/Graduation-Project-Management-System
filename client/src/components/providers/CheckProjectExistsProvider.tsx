@@ -1,25 +1,19 @@
 'use client'
 
-import { useAppSelector, useProject } from '@/hooks'
-
 import Image from 'next/image'
-import { LineMdLoadingLoop } from '@/components/icons/Loading'
+import { LineMdLoadingLoop } from '../icons/Loading'
 import Link from 'next/link'
-import ProjectDetails from './ProjectDetails'
-import ProjectList from './ProjectList'
 import React from 'react'
+import { useProject } from '@/hooks'
 
-interface ProjectPageProps {
-  id?: string
+type Props = {
+  children: React.ReactNode
 }
 
-const ProjectPage = ({ id }: ProjectPageProps) => {
-  const { project, isLoading, projects } = useProject(id)
-  const { user } = useAppSelector((state) => state.auth)
-  if (user?.roles.includes('supervisor') && !id) {
-    return <ProjectList projects={projects} />
-  } else if (project) {
-    return <ProjectDetails project={project} />
+const CheckProjectExistsProvider = ({ children }: Props) => {
+  const { project, isLoading } = useProject()
+  if (project) {
+    return children
   }
   return isLoading ? (
     <div className='size-full min-h-[80vh] grid place-items-center'>
@@ -36,4 +30,4 @@ const ProjectPage = ({ id }: ProjectPageProps) => {
   )
 }
 
-export default ProjectPage
+export default CheckProjectExistsProvider

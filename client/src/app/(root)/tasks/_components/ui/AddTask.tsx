@@ -5,26 +5,36 @@ import React, { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import instance from '@/utils/axios'
+import { toast } from 'sonner'
 import useClickOutside from '@/hooks/useClickOutside'
 
 interface AddTaskProps {
   columnId: string
   projectId: string
   onTaskAdded: () => void
+  isViewOnly?: boolean
 }
 
-const AddTask: React.FC<AddTaskProps> = ({ columnId, projectId, onTaskAdded }) => {
+const AddTask: React.FC<AddTaskProps> = ({ columnId, projectId, onTaskAdded, isViewOnly }) => {
   const [isAddTask, setIsAddTask] = useState(false)
   const [taskName, setTaskName] = useState('')
   const ref = useRef<HTMLTextAreaElement>(null)
   const wrapperRef = useClickOutside<HTMLDivElement>(() => setIsAddTask(false))
 
   const handleShowInput = () => {
+    if (isViewOnly) {
+      toast.error('You just have view permission')
+      return
+    }
     setIsAddTask(true)
     setTimeout(() => ref.current?.focus(), 10)
   }
 
   const handleAddTask = async () => {
+    if (isViewOnly) {
+      toast.error('You just have view permission')
+      return
+    }
     if (!taskName.trim()) return
     await instance.post(
       `/board/project/${projectId}/tasks`,

@@ -17,7 +17,7 @@ import { useUpload } from '@/hooks/useUpload'
 export default function DocumentManager() {
   const { user } = useAppSelector((state: RootState) => state.auth)
   const [documents, setDocuments] = useState<UploadDocument[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState<FileList | null>(null)
