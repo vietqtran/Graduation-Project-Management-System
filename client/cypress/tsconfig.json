@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "lib": ["es2019", "dom"],
+    "types": ["cypress", "node"],
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": "../"
+  },
+  "include": ["**/*.ts"]
+}

@@ -40,7 +40,7 @@ const MyRequest = () => {
 
   useEffect(() => {
     fetchInvites()
-  }, [getInviteByUserId])
+  }, [])
 
   const getInviteType = (roles: string[]) => {
     if (roles.includes('student')) {

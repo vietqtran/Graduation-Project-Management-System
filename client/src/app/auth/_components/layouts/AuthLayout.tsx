@@ -30,7 +30,7 @@ const AuthLayout = ({ children }: Props) => {
   return isPending ? null : (
     <main className='grid md:grid-cols-2 relative min-h-screen min-w-full'>
       <div className='p-3 hidden md:block lg:pr-0 col-span-1 size-full '>
-        <div className="bg-neutral-700 size-full rounded-lg overflow-hidden bg-[url('/images/auth-cover.jpg')] bg-no-repeat bg-center bg-cover">
+        <div className="bg-neutral-700 size-full rounded-lg overflow-hidden bg-[url('/images/auth-cover.png')] bg-no-repeat bg-center bg-cover">
           <div className='size-full bg-black/40'></div>
         </div>
       </div>

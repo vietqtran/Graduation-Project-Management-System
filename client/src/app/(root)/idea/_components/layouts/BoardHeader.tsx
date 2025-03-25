@@ -15,20 +15,20 @@ const BoardHeader = () => {
         </div>
         <AvatarGroup
           avatars={[
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' },
-            { src: 'https://i.pravatar.cc/300', alt: 'avatar' }
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' },
+            { src: 'https://avatar.iran.liara.run/public/boy', alt: 'avatar' }
           ]}
         />
       </div>

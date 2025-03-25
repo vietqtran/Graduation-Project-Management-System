@@ -1,15 +1,17 @@
 'use client'
 
+import * as Dialog from '@radix-ui/react-dialog'
+
+import React, { useEffect, useRef, useState } from 'react'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-import instance from '@/utils/axios'
-import * as Dialog from '@radix-ui/react-dialog'
-import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 import RequestForm from './RequestForm'
 import { STATUS_MASTER } from '@/constants/status.enum'
+import instance from '@/utils/axios'
+import { toast } from 'sonner'
 
 interface FilterBarProps {
   onFilterChange: (filterData: {
@@ -51,8 +53,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
           )
 
           const leaders = filteredProjectswithName.map((project: { leader: { _id: string; username: string } }) => ({
-            leaderId: project.leader._id,
-            leaderName: project.leader.username
+            leaderId: project?.leader?._id,
+            leaderName: project?.leader?.username
           }))
 
           console.log(leaders)

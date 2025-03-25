@@ -143,11 +143,7 @@ const SignUpForm = () => {
           />
 
           <div className='w-full pt-4'>
-            <Button
-              loading={isPending}
-              className='w-full bg-blue-500 font-semibold hover:bg-blue-600 dark:text-white'
-              type='submit'
-            >
+            <Button loading={isPending} className='w-full bg-blue-500 font-semibold hover:bg-blue-600' type='submit'>
               Sign up
             </Button>
           </div>

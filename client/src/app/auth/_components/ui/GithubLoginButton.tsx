@@ -1,10 +1,15 @@
 import React from 'react'
 
 const GithubLoginButton = () => {
+  const handleGithubSignIn = () => {
+    // Add your sign-in logic here
+  }
+
   return (
     <button
-      data-cy='continue-with-github-button'
-      className='g flex w-full items-center justify-center gap-2 rounded-lg border p-2 transition duration-150 hover:bg-neutral-200 dark:hover:bg-neutral-800'
+      onClick={handleGithubSignIn}
+      data-cy='github-signin-button'
+      className='flex w-full items-center justify-center gap-2 rounded-lg border p-2 transition duration-150 hover:bg-neutral-200'
     >
       <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' className='size-6'>
         <path
