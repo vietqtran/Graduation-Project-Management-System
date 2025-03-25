@@ -83,11 +83,11 @@ const ManageDeadlines = () => {
                 <TableRow key={deadline._id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{dayjs(deadline.deadline_date).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                  <TableCell>{deadline.deadline_key}</TableCell>
-                  <TableCell>{deadline.created_by.display_name}</TableCell>
-                  <TableCell>{deadline.updated_by.display_name}</TableCell>
-                  <TableCell>{dayjs(deadline.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                  <TableCell>{dayjs(deadline.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                  <TableCell>{deadline?.deadline_key}</TableCell>
+                  <TableCell>{deadline?.created_by?.display_name}</TableCell>
+                  <TableCell>{deadline?.updated_by?.display_name}</TableCell>
+                  <TableCell>{dayjs(deadline?.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                  <TableCell>{dayjs(deadline?.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -142,14 +142,14 @@ const ManageDeadlines = () => {
             {parametersData?.map((parameter, index) => (
               <TableRow key={parameter._id}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{parameter.param_name}</TableCell>
-                <TableCell>{parameter.param_value}</TableCell>
-                <TableCell>{dayjs(parameter.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{parameter.created_by.display_name}</TableCell>
-                <TableCell>{dayjs(parameter.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
-                <TableCell>{parameter.updated_by.display_name}</TableCell>
-                <TableCell>{parameter.param_type}</TableCell>
-                <TableCell>{parameter.description}</TableCell>
+                <TableCell>{parameter?.param_name}</TableCell>
+                <TableCell>{parameter?.param_value}</TableCell>
+                <TableCell>{dayjs(parameter?.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                <TableCell>{parameter?.created_by?.display_name}</TableCell>
+                <TableCell>{dayjs(parameter?.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
+                <TableCell>{parameter?.updated_by?.display_name}</TableCell>
+                <TableCell>{parameter?.param_type}</TableCell>
+                <TableCell>{parameter?.description}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

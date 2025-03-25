@@ -17,6 +17,7 @@ import { IParameter } from '@/models/parameter.model'
 import { MailService } from './mail.service'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
+import { send } from 'process'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -380,9 +381,31 @@ export class ProjectService {
       | 'updated_by'
       | 'created_at'
       | 'updated_at'
-    >
+    >,
+    tokenPayload: TokenPayload
   ) {
     return runTransaction(async (session) => {
+      let leaderId = null
+      let status = null
+      let leaderEmail = ''
+
+      if (projectData.leader) {
+        const user = await this.userModel.findOne(
+          { email: { $eq: projectData.leader } },
+          { _id: 1, email: 1 },
+          { session }
+        )
+
+        if (user) {
+          leaderId = user._id
+          leaderEmail = user.email
+          status = 17
+        } else {
+          throw new HttpException('Leader email not found in users table', 404)
+        }
+      }
+
+      // Create the project
       const project = await this.projectModel.create(
         [
           {
@@ -392,14 +415,16 @@ export class ProjectService {
             field: projectData.field,
             campus: projectData.campus,
             category: projectData.category,
-            supervisor: projectData.supervisor || [],
+            supervisor: tokenPayload._id || [],
             members: [],
             documents: projectData.documents || [],
             histories: [],
             tasks: [],
             mark: null,
             slow_count: 0,
-            status: null,
+            updated_by: tokenPayload._id,
+            leader: leaderId, // Set leaderId if available
+            status: status || 26, // Set status if available
             stage: 1,
             created_at: new Date(),
             updated_at: new Date()
@@ -412,14 +437,66 @@ export class ProjectService {
         throw new HttpException('Error at creating project as topic', 400)
       }
 
+      // Prepare email content
+      const projectDetails = {
+        name: projectData.name,
+        description: projectData.description || 'No description provided.',
+        major: projectData.major,
+        field: projectData.field,
+        campus: projectData.campus,
+        category: projectData.category
+      }
+
+      const updater = await this.userModel.findById(tokenPayload._id, { email: 1 }).session(session)
+      if (!updater) {
+        throw new HttpException('User not found for the updater', 404)
+      }
+
+      // 2. Email content for the person who updated the project
+      const updateEmailContent = {
+        to: updater.email, // Use the email of the updater
+        subject: 'Project Created Successfully',
+        templateName: 'project-update-notification',
+        context: {
+          first_name: updater.first_name, // Assuming first_name is available in user model
+          last_name: updater.last_name, // Assuming last_name is available in user model
+          projectDetails,
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      }
+
+      // 3. Email content for the project leader
+      const leader = await this.userModel.findById(leaderId, { email: 1, first_name: 1, last_name: 1 }).session(session)
+      if (!leader) {
+        throw new HttpException('Leader not found', 404)
+      }
+
+      const leaderEmailContent = {
+        to: leader.email, // Send email to the leader
+        subject: 'You Have Been Added to a New Project',
+        templateName: 'leader-project-notification',
+        context: {
+          leader_name: leader.first_name + ' ' + leader.last_name, // Concatenate first and last name of the leader
+          projectDetails,
+          year: new Date().getFullYear(),
+          start_url: process.env.CLIENT_URL
+        }
+      }
+
+      // 4. Add email jobs to the queue
+      await this.emailQueue.addEmailJob(updateEmailContent) // Add job for the person who updated
+      await this.emailQueue.addEmailJob(leaderEmailContent) // Add job for the leader
+
       return project
     })
   }
 
-  async getProjectsWithNullStatus() {
+  async getProjectsWithNullStatus(userId: string) {
     return runTransaction(async (session) => {
       const projects = await this.projectModel
-        .find({ status: null }) // Lọc các dự án có status là null
+        .find({ status: 26, category: 2, created_by: { $ne: userId } }) // Lọc các dự án có status là null va category 2
+        .populate('created_by')
         .populate('leader')
         .populate('supervisor')
         .populate('major')
@@ -517,7 +594,7 @@ export class ProjectService {
       return {
         _id: project._id,
         name: project.name,
-        description: project.description, // Thêm description vào response
+        description: project.description,
         major: project.major,
         field: project.field,
         campus: project.campus,
@@ -533,9 +610,9 @@ export class ProjectService {
         updated_by: project.updated_by,
         created_at: project.created_at,
         updated_at: project.updated_at,
-        histories: project.histories, // Thêm lịch sử cập nhật nếu cần
-        documents: project.documents, // Trả về tài liệu nếu cần
-        tasks: project.tasks // Trả về danh sách task nếu cần
+        histories: project.histories,
+        documents: project.documents,
+        tasks: project.tasks
       }
     })
   }
@@ -641,7 +718,7 @@ export class ProjectService {
         new Map(
           projects
             .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
-            .map((p) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
+            .map((p: any) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
         ).values()
       )
 
@@ -861,24 +938,13 @@ export class ProjectService {
     return runTransaction(async (session) => {
       const countSlot = await this.projectModel
         .countDocuments({
-          status: STATUS_MASTER.APPROVED,
-          updated_by: userId
+          status: 17,
+          updated_by: userId,
+          stage: 1
         })
         .session(session)
 
       const availableSlot = 5 - countSlot
-
-      await this.emailQueue.addEmailJob({
-        to: userId,
-        subject: `available slot`,
-        templateName: 'available slot',
-        context: {
-          year: new Date().getFullYear(),
-          start_url: process.env.CLIENT_URL
-        }
-      })
-      console.log(`📧 Notification email available slot sent to ${userId}`)
-
       await session.commitTransaction()
       console.log('✅ Transaction committed successfully')
 

@@ -7,8 +7,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Filter, Search } from 'lucide-react'
 import instance from '@/utils/axios'
-// Import ProjectIdea type from ReviewIdeas
-export interface ProjectIdea {
+interface ProjectSearchAndFilterProps {
+  projects?: ProjectIdea[]
+  onFilteredProjects: (filteredProjects: ProjectIdea[]) => void
+}
+
+interface ProjectIdea {
   _id: string
   name: string
   field: Array<{ _id: string; name: string; description: string }>
@@ -18,13 +22,10 @@ export interface ProjectIdea {
   created_at: string
   updated_at: string
   status: number
-  leader: { username: string; _id: string } // Modify to match the structure of the leader object
+  leader: { username: string; _id: string; display_name: string } // Modify to match the structure of the leader object
+  supervisor: Array<{ username: string; _id: string; display_name: string }>
   username: string
-}
-
-interface ProjectSearchAndFilterProps {
-  projects?: ProjectIdea[]
-  onFilteredProjects: (filteredProjects: ProjectIdea[]) => void
+  members: string[]
 }
 
 const ProjectSearchAndFilter: React.FC<ProjectSearchAndFilterProps> = ({ projects = [], onFilteredProjects }) => {
