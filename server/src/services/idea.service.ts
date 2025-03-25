@@ -49,7 +49,7 @@ export class IdeaService {
       throw new HttpException('This action is only available for students', 404)
     }
     const existingIdea = await this.projectModel.findOne({
-      members: { $in: [{ $eq: ideaData.leader }] } // Kiểm tra xem userId có nằm trong mảng members không
+      members: { $in: [ideaData.leader] } // Kiểm tra xem userId có nằm trong mảng members không
     })
 
     if (existingIdea) {
