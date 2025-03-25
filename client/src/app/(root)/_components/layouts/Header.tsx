@@ -36,7 +36,7 @@ const Header = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             <Image
-              src={user?.avatar || 'https://i.pravatar.cc/300'}
+              src={user?.avatar || 'https://avatar.iran.liara.run/public/boy'}
               width={100}
               height={100}
               alt='avatar'

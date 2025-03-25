@@ -1,17 +1,18 @@
-import mongoose from 'mongoose'
+import { CreateIdeaDto, UpdateIdeaDto } from '@/dtos/idea/create-idea.dto'
+import DeadlineModel, { IDeadline } from '@/models/deadline.model'
 import { FilterQuery, Model, UpdateQuery } from 'mongoose'
+import InviteModel, { IInvite } from '@/models/invite.model'
 import ProjectModel, { IProject } from '@/models/project.model'
 import UserModel, { IUser } from '@/models/user.model'
-import { CreateIdeaDto, UpdateIdeaDto } from '@/dtos/idea/create-idea.dto'
-import { HttpException } from '@/shared/exceptions/http.exception'
-import { runTransaction } from '@/helpers/transaction-helper'
-import { USER_STATUS } from '@/constants/status'
+
 import { EmailQueue } from '@/queues/email.queue'
+import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
-import { format } from 'date-fns'
 import { PROJECT_STATUS } from '@/constants/status'
-import DeadlineModel, { IDeadline } from '@/models/deadline.model'
-import InviteModel, { IInvite } from '@/models/invite.model'
+import { USER_STATUS } from '@/constants/status'
+import { format } from 'date-fns'
+import mongoose from 'mongoose'
+import { runTransaction } from '@/helpers/transaction-helper'
 
 export class IdeaService {
   private readonly projectModel: Model<IProject>
@@ -71,7 +72,11 @@ export class IdeaService {
       })
 
       await idea.save({ session })
-      await this.userModel.updateOne({ _id: ideaData.leader }, { $set: { status: USER_STATUS.ACTIVATED } }, { session })
+      await this.userModel.updateOne(
+        { _id: ideaData.leader },
+        { $set: { status: USER_STATUS.ACTIVATED, project: idea._id } },
+        { session }
+      )
       return idea
     })
   }

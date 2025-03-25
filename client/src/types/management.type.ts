@@ -1,7 +1,7 @@
 import { Field } from './field.type'
 import { Major } from './major.type'
 
-interface User {
+export interface UserDto {
   _id: string
   email: string
   username: string
@@ -23,8 +23,8 @@ interface Deadline {
   deadline_key: 'create_group' | 'create_idea' | 'thesis_defense' // Enum-like restriction
   deadline_date: string // ISO Date String
   semester: string
-  created_by: User
-  updated_by: User
+  created_by: UserDto
+  updated_by: UserDto
   created_at: string // ISO Date String
   updated_at: string // ISO Date String
 }
@@ -35,8 +35,8 @@ interface Parameter {
   param_value: string
   param_type: 'string' | 'number' | 'boolean' | 'date'
   description?: string
-  created_by: User
-  updated_by: User
+  created_by: UserDto
+  updated_by: UserDto
   created_at: string // ISO date string
   updated_at: string // ISO date string
 }
@@ -98,8 +98,8 @@ export interface Project {
   slow_count: number
   noMembers: number
   supervisor: Supervisor[] | null
-  created_by?: User
-  updated_by?: User
+  created_by?: UserDto
+  updated_by?: UserDto
   created_at: string
   updated_at?: string
 }

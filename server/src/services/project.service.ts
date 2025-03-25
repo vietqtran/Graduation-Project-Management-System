@@ -438,6 +438,19 @@ export class ProjectService {
         category: projectData.category
       }
 
+      const user = await this.userModel
+        .updateOne({ _id: tokenPayload._id }, { $set: { project: project[0]?._id } })
+        .session(session)
+      if (!user) {
+        throw new HttpException('Updater not found', 404)
+      }
+
+      const updaterEmail = await this.userModel.findById(tokenPayload._id, { email: 1 }).session(session)
+      if (!updaterEmail) {
+        throw new HttpException('Updater not found', 404)
+      }
+
+      // 2. Email content for the person who updated the project
       const updateEmailContent = {
         to: updater.email,
         subject: 'Project Created Successfully',
@@ -565,9 +578,9 @@ export class ProjectService {
         .populate({ path: 'major', select: '_id name' })
         .populate({ path: 'field', select: '_id name' })
         .populate({ path: 'campus', select: '_id name' })
-        .populate({ path: 'supervisor', select: '_id display_name username email avatar' })
+        .populate({ path: 'supervisor', select: '_id display_name username email avatar first_name last_name' })
         .populate({ path: 'leader', select: '_id display_name username email avatar' })
-        .populate({ path: 'members', select: '_id display_name username email avatar' })
+        .populate({ path: 'members', select: '_id display_name username email avatar first_name last_name' })
         .populate({ path: 'created_by', select: '_id display_name username email avatar' })
         .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
         .session(session)
@@ -897,6 +910,20 @@ export class ProjectService {
         throw new HttpException('Failed to update project', 400)
       }
 
+      const updateUser = await this.userModel.updateOne(
+        { _id: new Types.ObjectId(userId) },
+        {
+          $set: {
+            project: projectId
+          }
+        },
+        { session }
+      )
+
+      if (updateUser.matchedCount === 0) {
+        throw new HttpException('Failed to update user', 400)
+      }
+
       console.log(`✅ Project status updated to ${status}`)
 
       await this.emailQueue.addEmailJob({
@@ -934,6 +961,28 @@ export class ProjectService {
       console.log('✅ Transaction committed successfully')
 
       return { message: 'Count available slot successfully', availableSlot }
+    })
+  }
+
+  async getAllProjectBySupervisor(supervisorId: string) {
+    return runTransaction(async (session) => {
+      const projects = await this.projectModel
+        .find({ supervisor: supervisorId })
+        .populate('members')
+        .populate('leader')
+        .populate('supervisor')
+        .populate('major')
+        .populate('field')
+        .populate('campus')
+        .populate('documents')
+        .session(session)
+        .exec()
+
+      if (!projects || projects.length === 0) {
+        return []
+      }
+
+      return projects
     })
   }
 }

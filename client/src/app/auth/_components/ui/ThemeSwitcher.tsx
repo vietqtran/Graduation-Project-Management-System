@@ -14,7 +14,7 @@ const ThemeSwitcher = () => {
   return (
     <Button
       type='button'
-      className='p-0 rounded-full shadow-none hover:bg-neutral-300/50 text-black dark:text-white bg-transparent aspect-square'
+      className='p-0 rounded-full shadow-none hover:bg-neutral-300/50 text-black bg-transparent aspect-square'
       onClick={handleThemeChange}
     >
       {resolvedTheme === 'dark' ? <Sun className='size-6' /> : <Moon className='size-6' />}

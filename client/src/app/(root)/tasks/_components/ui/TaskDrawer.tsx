@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { User } from '@/types/user.type'
 import { format } from 'date-fns'
 import instance from '@/utils/axios'
+import { toast } from 'sonner'
 import useClickOutside from '@/hooks/useClickOutside'
 import { useProject } from '@/hooks'
 
@@ -21,9 +22,10 @@ interface TaskDrawerProps {
   task: Task
   onClose: () => void
   onUpdate: () => void
+  isViewOnly?: boolean
 }
 
-const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
+const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate, isViewOnly }) => {
   const { project } = useProject()
   const [loading, setLoading] = useState(false)
   const [projectMembers, setProjectMembers] = useState<User[]>([])
@@ -81,6 +83,10 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
   }
 
   const handleSave = async () => {
+    if (isViewOnly) {
+      toast.error('You just have view permission')
+      return
+    }
     if (!task?._id) return
 
     try {
@@ -103,6 +109,10 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
   }
 
   const addLabel = async () => {
+    if (isViewOnly) {
+      toast.error('You just have view permission')
+      return
+    }
     if (!newLabel.text || !task?._id) return
 
     try {
@@ -116,6 +126,10 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
   }
 
   const removeLabel = async (index: number) => {
+    if (isViewOnly) {
+      toast.error('You just have view permission')
+      return
+    }
     if (!task?._id) return
 
     try {
@@ -182,11 +196,12 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder='Task Name'
             className='text-lg font-medium'
+            readOnly={isViewOnly}
           />
 
           {/* Task Type and Priority */}
           <div className='flex items-center gap-2'>
-            <Select value={taskData.type} onValueChange={(value) => handleChange('type', value)}>
+            <Select value={taskData.type} onValueChange={(value) => handleChange('type', value)} disabled={isViewOnly}>
               <SelectTrigger className='w-[150px]'>
                 <SelectValue>{taskData.type === 'milestone' ? 'Milestone' : 'Task'}</SelectValue>
               </SelectTrigger>
@@ -196,7 +211,11 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
               </SelectContent>
             </Select>
 
-            <Select value={taskData.priority} onValueChange={(value) => handleChange('priority', value)}>
+            <Select
+              value={taskData.priority}
+              onValueChange={(value) => handleChange('priority', value)}
+              disabled={isViewOnly}
+            >
               <SelectTrigger className='w-[150px]'>
                 <SelectValue>{taskData.priority.charAt(0).toUpperCase() + taskData.priority.slice(1)}</SelectValue>
               </SelectTrigger>
@@ -214,40 +233,44 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
             <div className='space-y-2 flex-1'>
               <label className='text-sm font-medium'>Start Date</label>
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger asChild disabled={isViewOnly}>
                   <Button variant='outline' className='w-full justify-start text-left font-normal'>
                     <CalendarIcon className='mr-2 h-4 w-4' />
                     {taskData.start_date ? format(taskData.start_date, 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className='w-auto p-0'>
-                  <Calendar
-                    mode='single'
-                    selected={taskData.start_date || undefined}
-                    onSelect={(date) => handleChange('start_date', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
+                {!isViewOnly && (
+                  <PopoverContent className='w-auto p-0'>
+                    <Calendar
+                      mode='single'
+                      selected={taskData.start_date || undefined}
+                      onSelect={(date) => handleChange('start_date', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                )}
               </Popover>
             </div>
 
             <div className='space-y-2 flex-1'>
               <label className='text-sm font-medium'>Due Date</label>
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger asChild disabled={isViewOnly}>
                   <Button variant='outline' className='w-full justify-start text-left font-normal'>
                     <CalendarIcon className='mr-2 h-4 w-4' />
                     {taskData.due_date ? format(taskData.due_date, 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className='w-auto p-0'>
-                  <Calendar
-                    mode='single'
-                    selected={taskData.due_date || undefined}
-                    onSelect={(date) => handleChange('due_date', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
+                {!isViewOnly && (
+                  <PopoverContent className='w-auto p-0'>
+                    <Calendar
+                      mode='single'
+                      selected={taskData.due_date || undefined}
+                      onSelect={(date) => handleChange('due_date', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                )}
               </Popover>
             </div>
           </div>
@@ -262,12 +285,12 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
               {projectMembers.map((member) => (
                 <div
                   key={member._id}
-                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${
+                  className={`flex items-center gap-2 p-2 rounded border ${
                     selectedAssignees.includes(member._id) ? 'bg-primary/10 border-primary' : ''
-                  }`}
-                  onClick={() => handleAssigneeToggle(member._id)}
-                  role='button'
-                  tabIndex={0}
+                  } ${isViewOnly ? '' : 'cursor-pointer'}`}
+                  onClick={() => !isViewOnly && handleAssigneeToggle(member._id)}
+                  role={isViewOnly ? undefined : 'button'}
+                  tabIndex={isViewOnly ? undefined : 0}
                   aria-pressed={selectedAssignees.includes(member._id)}
                 >
                   <Avatar className='h-6 w-6'>
@@ -291,35 +314,39 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
                   style={{ backgroundColor: label.color }}
                 >
                   <span>{label.text}</span>
-                  <button
-                    onClick={() => removeLabel(idx)}
-                    className='text-xs hover:text-gray-200'
-                    aria-label={`Remove label ${label.text}`}
-                  >
-                    ×
-                  </button>
+                  {!isViewOnly && (
+                    <button
+                      onClick={() => removeLabel(idx)}
+                      className='text-xs hover:text-gray-200'
+                      aria-label={`Remove label ${label.text}`}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
-            <div className='flex gap-2'>
-              <Input
-                value={newLabel.text}
-                onChange={(e) => setNewLabel({ ...newLabel, text: e.target.value })}
-                placeholder='New Label'
-                className='flex-1'
-                onKeyDown={(e) => handleKeyDown(e, addLabel)}
-              />
-              <Input
-                type='color'
-                value={newLabel.color}
-                onChange={(e) => setNewLabel({ ...newLabel, color: e.target.value })}
-                className='w-12'
-                aria-label='Label color'
-              />
-              <Button onClick={addLabel} variant='secondary'>
-                Add
-              </Button>
-            </div>
+            {!isViewOnly && (
+              <div className='flex gap-2'>
+                <Input
+                  value={newLabel.text}
+                  onChange={(e) => setNewLabel({ ...newLabel, text: e.target.value })}
+                  placeholder='New Label'
+                  className='flex-1'
+                  onKeyDown={(e) => handleKeyDown(e, addLabel)}
+                />
+                <Input
+                  type='color'
+                  value={newLabel.color}
+                  onChange={(e) => setNewLabel({ ...newLabel, color: e.target.value })}
+                  className='w-12'
+                  aria-label='Label color'
+                />
+                <Button onClick={addLabel} variant='secondary'>
+                  Add
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -330,6 +357,7 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder='Add a detailed description...'
               rows={6}
+              readOnly={isViewOnly}
             />
           </div>
 
@@ -369,11 +397,13 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate }) => {
 
       <div className='p-4 border-t flex justify-end gap-2'>
         <Button variant='outline' onClick={onClose}>
-          Cancel
+          Close
         </Button>
-        <Button onClick={handleSave} disabled={loading}>
-          {loading ? 'Saving...' : 'Save Changes'}
-        </Button>
+        {!isViewOnly && (
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        )}
       </div>
     </div>
   )
