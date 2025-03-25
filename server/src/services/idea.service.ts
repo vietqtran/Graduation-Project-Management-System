@@ -134,11 +134,17 @@ export class IdeaService {
       if (!mongoose.Types.ObjectId.isValid(projectId)) {
         throw new HttpException('Invalid project ID', 400)
       }
-      const project = await this.projectModel.findOne({ _id: { $eq: projectId } }).session(session).exec()
+      const project = await this.projectModel
+        .findOne({ _id: { $eq: projectId } })
+        .session(session)
+        .exec()
       if (project?.leader?.valueOf() !== userId) {
         throw new HttpException('You are not the leader of this idea', 400)
       }
-      await this.projectModel.deleteOne({ _id: { $eq: projectId } }).session(session).exec()
+      await this.projectModel
+        .deleteOne({ _id: { $eq: projectId } })
+        .session(session)
+        .exec()
       if (project.members && project.members.length > 0) {
         await this.userModel
           .updateMany(
@@ -147,8 +153,15 @@ export class IdeaService {
             { session }
           )
           .exec()
-      }      
-      await this.inviteModel.deleteMany({ project: { $eq: projectId } }).session(session).exec()
+      }
+      if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        throw new HttpException('Invalid project ID', 400)
+      }
+
+      await this.inviteModel
+        .deleteMany({ project: { $eq: projectId } })
+        .session(session)
+        .exec()
     })
   }
   async changeIdea(projectId: string, updateIdea: UpdateIdeaDto, userId: string): Promise<IProject> {
@@ -211,11 +224,11 @@ export class IdeaService {
         .populate<{ supervisor: IUser[] }>('supervisor')
         .session(session)
         .exec()
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-          throw new HttpException('Invalid user ID', 400);
-        }
-        
-        const user = await this.userModel.findById(userId).session(session).exec();
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new HttpException('Invalid user ID', 400)
+      }
+
+      const user = await this.userModel.findById(userId).session(session).exec()
       if (!user) {
         throw new HttpException('User not found', 404)
       }
@@ -279,8 +292,14 @@ export class IdeaService {
         .populate<{ supervisor: IUser[] }>('supervisor')
         .session(session)
         .exec()
-      const member = await this.userModel.findOne({ _id: { $eq: memberId } }).session(session).exec()
-      const leader = await this.userModel.findOne({ _id: { $eq: leaderId } }).session(session).exec()
+      const member = await this.userModel
+        .findOne({ _id: { $eq: memberId } })
+        .session(session)
+        .exec()
+      const leader = await this.userModel
+        .findOne({ _id: { $eq: leaderId } })
+        .session(session)
+        .exec()
       if ((project?.leader as IUser)._id?.valueOf() !== leaderId) {
         throw new HttpException('You dont have permission to kick member', 400)
       }

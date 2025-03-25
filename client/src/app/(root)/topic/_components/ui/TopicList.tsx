@@ -5,8 +5,8 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import { FaEdit, FaInfoCircle, FaTrashAlt } from 'react-icons/fa'
 import { toast } from 'sonner'
-import TopicModal from './TopicModal'
 import ConfirmModal from './ConfirmModal'
+import TopicModal from './TopicModal'
 
 export interface Project {
   _id: string
@@ -18,13 +18,15 @@ export interface Project {
   document: string
   campus: { _id: string; name: string } | null
   category: string
+  created_at: string
+  updated_at: string
 }
 
 interface TopicListProps {
   selectedMajorId: string | null
   searchTerm: string
   sortOrder: string
-  filterField: string
+  filterFieldId: string
   refresh: boolean
   setRefresh: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -55,7 +57,7 @@ const TopicList: React.FC<TopicListProps> = ({
   selectedMajorId,
   searchTerm,
   sortOrder,
-  filterField,
+  filterFieldId,
   refresh,
   setRefresh
 }) => {
@@ -84,15 +86,16 @@ const TopicList: React.FC<TopicListProps> = ({
     }
 
     fetchTopics()
-  }, [refresh, selectedMajorId, searchTerm, sortOrder, filterField])
+  }, [refresh, selectedMajorId, searchTerm, sortOrder, filterFieldId])
 
-  let filteredTopics = selectedMajorId ? topics.filter((topic) => topic.majorId === selectedMajorId) : topics
+  let filteredTopics = selectedMajorId
+    ? topics.filter((topic) => topic.major.some((major) => major._id === selectedMajorId))
+    : topics
   filteredTopics = filteredTopics.filter((topic) => topic.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  if (filterField !== 'all') {
-    filteredTopics = filteredTopics.filter((topic) => topic.majorId === filterField)
+  if (filterFieldId !== 'all') {
+    filteredTopics = filteredTopics.filter((topic) => topic.field.some((field) => field._id === filterFieldId))
   }
 
-  // **Sắp xếp topics theo thứ tự bảng chữ cái**
   filteredTopics.sort((a, b) => (sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
 
   const handleDelete = async (id: string) => {
@@ -122,8 +125,8 @@ const TopicList: React.FC<TopicListProps> = ({
   const handleDetail = async (id: string) => {
     try {
       const response = await instance.get(`/project/detail-topic/${id}`, { withCredentials: true })
-      console.log('Detailed Topic Response:', response.data)
-      setSelectedTopic(response.data)
+      console.log('Detailed Topic Response:', response.data.data)
+      setSelectedTopic(response.data.data)
       setModalType('detail')
     } catch (error) {
       console.error('Error fetching topic details:', error)
@@ -188,15 +191,15 @@ const TopicList: React.FC<TopicListProps> = ({
         </div>
       )}
 
-      {modalType && selectedTopic && (
-        <TopicModal topic={selectedTopic} type={modalType} onClose={closeModal} onSubmit={() => setRefresh(!refresh)} />
-      )}
-
       <ConfirmModal
         isOpen={!!confirmDelete.id}
         onClose={() => setConfirmDelete({ id: null })}
         onConfirm={confirmDeleteTopic}
       />
+
+      {modalType && selectedTopic && (
+        <TopicModal topic={selectedTopic} type={modalType} onClose={closeModal} onSubmit={() => setRefresh(!refresh)} />
+      )}
     </div>
   )
 }

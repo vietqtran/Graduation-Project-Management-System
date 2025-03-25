@@ -8,13 +8,13 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import instance from '@/utils/axios'
+
 type RequestFormProps = {
   onSubmit: (data: {
     to_user: string
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   }) => void
@@ -28,7 +28,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
       type: 'project',
       remark: '',
       description: '',
-      from_user: '',
       document: '',
       due_date: ''
     }
@@ -57,6 +56,22 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
     fetchLeaders()
   }, [])
 
+  useEffect(() => {
+    const subscription = form.watch((formValues) => {
+      onSubmit(
+        formValues as {
+          to_user: string
+          type: string
+          remark: string
+          description: string
+          document: string
+          due_date: string
+        }
+      )
+    })
+
+    return () => subscription.unsubscribe()
+  }, [form, onSubmit])
   async function handleUpload(file: File) {
     if (!file) {
       toast.error('Please select a file first')
@@ -95,34 +110,14 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
     }
   }
 
-  const handleFormSubmit = (
-    data: Record<'to_user' | 'type' | 'remark' | 'description' | 'from_user' | 'document' | 'due_date', string>
-  ) => {
-    // Validate document upload
-    if (!documentId) {
-      toast.error('Please upload a document before submitting')
-      return
-    }
-
-    // Validate required fields
-    const requiredFields: Array<keyof typeof data> = ['to_user', 'description', 'due_date']
-    const missingFields = requiredFields.filter((field) => !data[field])
-
-    if (missingFields.length > 0) {
-      toast.error(`Please fill in the following fields: ${missingFields.join(', ')}`)
-      return
-    }
-
-    // Call the onSubmit prop with the form data
-    onSubmit(data)
-  }
+  // Định nghĩa hàm handleFormSubmit để xử lý khi form được submit
 
   return (
     <div>
       <div className='bg-white grid p-1 gap-4'>
         <h2 className='text-2xl font-bold text-center mt-12'>Submit a Request</h2>
         <Form {...form}>
-          <form className='grid grid-cols-2 gap-4' onSubmit={form.handleSubmit(handleFormSubmit)}>
+          <form className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}
               name='to_user'
@@ -177,7 +172,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
             />
 
             <FormField
-              control={form.control}
               name='from_user'
               render={({ field }) => (
                 <FormItem>

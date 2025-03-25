@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useEffect, useState } from 'react'
 import MemberProfileModal from './MemberProfileModal'
 import { Card } from '@/components/ui/card'
@@ -52,11 +51,11 @@ const GroupRow: React.FC = () => {
         console.error('Error fetching groups:', error)
       }
     }
-
     fetchGroups()
   }, [])
 
   const toggleGroup = (groupId: number) => {
+    // If the group being clicked is the currently expanded group, collapse it
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId)
   }
 
@@ -107,7 +106,7 @@ const GroupRow: React.FC = () => {
                   </Button>
                 </TableCell>
               </TableRow>
-              {expandedGroupId === group.id && (
+              {expandedGroupId === group.id && group.members.length > 0 ? (
                 <TableRow>
                   <TableCell colSpan={5}>
                     <Table>
@@ -125,7 +124,7 @@ const GroupRow: React.FC = () => {
                         {group.members.map((member) => (
                           <TableRow key={member.id}>
                             <TableCell>{member.username}</TableCell>
-                            <TableCell>{JSON.stringify(member.role)}</TableCell>
+                            <TableCell>{member.role}</TableCell>
                             <TableCell>
                               <ProgressBar progress={member.progress} />
                             </TableCell>
@@ -140,12 +139,15 @@ const GroupRow: React.FC = () => {
                     </Table>
                   </TableCell>
                 </TableRow>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5}>No members available for this group</TableCell>
+                </TableRow>
               )}
             </React.Fragment>
           ))}
         </TableBody>
       </Table>
-
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />}
     </Card>
   )
