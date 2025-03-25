@@ -91,7 +91,7 @@ const GroupRow: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredGroups.map((group) => (
+          {filteredGroups?.map((group) => (
             <React.Fragment key={group.id}>
               <TableRow>
                 <TableCell>{group.name}</TableCell>
@@ -121,7 +121,7 @@ const GroupRow: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {group.members.map((member) => (
+                        {group?.members.map((member) => (
                           <TableRow key={member.id}>
                             <TableCell>{member.username}</TableCell>
                             <TableCell>{member.role}</TableCell>
@@ -145,7 +145,7 @@ const GroupRow: React.FC = () => {
                 </TableRow>
               )}
             </React.Fragment>
-          ))}
+          )) || <TableRow><TableCell colSpan={5}>No groups found</TableCell></TableRow>}
         </TableBody>
       </Table>
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />}
