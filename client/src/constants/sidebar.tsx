@@ -8,7 +8,7 @@ import IdeaIcon from '@/components/icons/ReviewIdeaIcon'
 import SubmitTopicIcon from '@/components/icons/SubmitTopicIcon'
 import TaskIcon from '@/components/icons/TaskIcon'
 import TimetableIcon from '@/components/icons/TimetableIcon'
-import { Users } from 'lucide-react'
+import { Newspaper, Users } from 'lucide-react'
 import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
 import TeamIcon from '@/components/icons/TeamIcon'
 import MyRequestIcon from '@/components/icons/MyRequestIcon'
@@ -26,6 +26,11 @@ export const SIDEBAR_LINKS = [
     label: 'Project Management',
     icon: <ProjectIcon />,
     roles: ['admin', 'staff']
+  },
+  {
+    href: '/news',
+    label: 'News Center',
+    icon: <Newspaper />
   },
   {
     href: '/documents',
@@ -98,6 +103,11 @@ export const SIDEBAR_LINKS = [
     label: 'Projects Management',
     icon: <Users />,
     roles: ['admin', 'staff']
+  },
+  {
+    href: '/management/news',
+    label: 'News Management',
+    icon: <Newspaper />
   },
   {
     href: '/create-idea',
