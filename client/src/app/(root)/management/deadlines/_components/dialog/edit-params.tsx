@@ -34,7 +34,6 @@ interface EditParamDialogProps {
 
 const EditParamDialog = ({ parameter, onClose }: EditParamDialogProps) => {
   const { updateParameter } = useManagement()
-  console.log(parameter)
 
   const {
     register,
