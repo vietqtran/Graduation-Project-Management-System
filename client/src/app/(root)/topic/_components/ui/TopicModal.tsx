@@ -27,9 +27,17 @@ interface TopicModalProps {
 }
 
 const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit }) => {
+  interface FormValues {
+    name: string
+    description: string
+    document: string
+    major: string
+    field: string
+    campus: string
+    category: string
+  }
   console.log('Received Topic Data:', JSON.stringify(topic, null, 2))
 
-  // Normalize the major and field data
   const normalizeMajor = (major?: { _id: string; name: string }[] | { _id: string; name: string } | null) => {
     if (Array.isArray(major)) {
       return major.length > 0 ? major[0]._id : ''
@@ -41,15 +49,7 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
     return category ? category.toString() : '1'
   }
 
-  const form = useForm<{
-    name: string
-    description: string
-    document: string
-    major: string
-    field: string
-    campus: string
-    category: string
-  }>({
+  const form = useForm<FormValues>({
     defaultValues: {
       name: topic.name || '',
       description: topic.description || '',
@@ -110,17 +110,15 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
   }
 
   return (
-    <div
-      className={`fixed top-[60px] left-[80px] right-0 bottom-0 flex items-center justify-center bg-black bg-opacity-50 transition-all duration-300`}
-    >
-      <div className='bg-white p-6 rounded-lg shadow-lg w-[800px] max-h-[calc(100vh-80px)] overflow-hidden'>
+    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+      <div className='bg-white p-6 rounded-lg shadow-lg w-[800px] max-h-[90vh] overflow-auto'>
         <h2 className='text-lg font-bold mb-4'>{type === 'update' ? 'Edit Topic' : 'Topic Details'}</h2>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className='grid grid-cols-2 gap-4'>
             <FormField
-              control={form.control}
               name='name'
+              control={form.control}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
@@ -128,8 +126,9 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
                     <Input
                       type='text'
                       {...field}
-                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`}
                       disabled={type === 'detail'}
+                      placeholder={type === 'detail' ? field.value : 'Enter topic Name'}
+                      className={type === 'detail' ? 'bg-gray-100' : ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -138,18 +137,16 @@ const TopicModal: React.FC<TopicModalProps> = ({ topic, type, onClose, onSubmit 
             />
 
             <FormField
-              control={form.control}
               name='description'
+              control={form.control}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className='col-span-2'>
                   <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      className={`w-full p-2 border rounded ${type === 'detail' ? 'bg-gray-100' : ''}`}
-                      disabled={type === 'detail'}
-                    />
-                  </FormControl>
+                  <Textarea
+                    {...field}
+                    disabled={type === 'detail'}
+                    className={type === 'detail' ? 'bg-gray-100' : ''}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

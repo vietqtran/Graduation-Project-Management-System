@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useUpload } from '@/hooks/useUpload'
-import { useState } from 'react'
+import instance from '@/utils/axios'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -19,7 +20,7 @@ interface TopicFormProps {
     document: string
     campus: string
     category: string
-    supervisor: string
+    leader: string
   }) => void
 }
 
@@ -33,7 +34,7 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
       document: '',
       campus: '',
       category: '',
-      supervisor: ''
+      leader: ''
     }
   })
 
@@ -41,6 +42,42 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
   const [uploading, setUploading] = useState(false)
   const [documentId, setDocumentId] = useState<string | null>(null) // Lưu ID tài liệu
 
+  const [majors, setMajors] = useState<string[]>([])
+  const [fields, setFields] = useState<string[]>([])
+  const [campuses, setCampuses] = useState<string[]>([])
+
+  useEffect(() => {
+    const fetchMajors = async () => {
+      try {
+        const response = await instance.get('/public/majors')
+        setMajors(response.data.data)
+      } catch (error) {
+        console.error('Error fetching majors:', error)
+      }
+    }
+
+    const fetchFields = async () => {
+      try {
+        const response = await instance.get('/public/fields')
+        setFields(response.data.data)
+      } catch (error) {
+        console.error('Error fetching fields:', error)
+      }
+    }
+
+    const fetchCampuses = async () => {
+      try {
+        const response = await instance.get('/public/campuses')
+        setCampuses(response.data.data)
+      } catch (error) {
+        console.error('Error fetching campuses:', error)
+      }
+    }
+
+    fetchMajors()
+    fetchFields()
+    fetchCampuses()
+  }, [])
   async function handleUpload(file: File) {
     setUploading(true)
     try {
@@ -64,7 +101,7 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
         throw new Error('Invalid upload response')
       }
 
-      setDocumentId(fileResult.key) // Gán document ID
+      setDocumentId(fileResult.key)
       toast.success('File uploaded successfully!')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Upload failed')
@@ -118,8 +155,11 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
                       <SelectValue placeholder='Select major' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='67a8ecd0d1eb085255e86f21'>HE</SelectItem>
-                      <SelectItem value='67a8ecf3d1eb085255e86f23'>HS</SelectItem>
+                      {majors.map((major) => (
+                        <SelectItem key={major} value={major}>
+                          {major}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -138,8 +178,11 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
                       <SelectValue placeholder='Select field' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='67a8ec0fd1eb085255e86f1d'>Software Engineering</SelectItem>
-                      <SelectItem value='67a8ec7dd1eb085255e86f20'>Artificial Intelligence</SelectItem>
+                      {fields.map((field) => (
+                        <SelectItem key={field} value={field}>
+                          {field}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -187,9 +230,11 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
                       <SelectValue placeholder='Select campus' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='67a8eea9d1eb085255e86f2a'>Hòa Lạc</SelectItem>
-                      <SelectItem value='67b6028c8d133eec2f0c2415'>TP Hồ Chí Minh</SelectItem>
-                      <SelectItem value='67b602318d133eec2f0c2413'>Đà Nẵng</SelectItem>
+                      {campuses.map((field) => (
+                        <SelectItem key={field} value={field}>
+                          {field}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -220,15 +265,13 @@ const TopicForm: React.FC<TopicFormProps> = ({ onSubmit }) => {
 
             <FormField
               control={form.control}
-              name='supervisor'
+              name='leader'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supervisor</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select supervisor' />
-                    </SelectTrigger>
-                  </Select>
+                  <FormLabel>Leader (optional)</FormLabel>
+                  <FormControl>
+                    <Input type='text' placeholder='Enter leader code' {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
