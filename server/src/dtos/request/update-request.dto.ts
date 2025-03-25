@@ -29,4 +29,12 @@ export class UpdateRequestDto {
   @IsMongoId()
   @IsOptional()
   from_user?: IUser['_id']
+  @IsEnum(RequestStatus)
+  @IsString()
+  @IsOptional()
+  description?: string
+
+  @IsString()
+  @IsOptional()
+  due_date?: Date
 }

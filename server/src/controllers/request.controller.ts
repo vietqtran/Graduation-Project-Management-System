@@ -17,7 +17,7 @@ export class RequestController {
 
   getAllRequests = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenPayload = getUser(req) // ✅ Lấy user từ token
+      const tokenPayload = getUser(req)
       const userId = tokenPayload._id
 
       console.log('Token payload:', tokenPayload)
@@ -57,7 +57,8 @@ export class RequestController {
 
   createRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const requestData = req.body
-    const request = await this.requestService.createRequest(requestData)
+    const tokenPayload = getUser(req)
+    const request = await this.requestService.createRequest(requestData, tokenPayload)
     ResponseHandler.sendSuccess(res, request, 'Create request successfully')
   })
 
@@ -72,5 +73,19 @@ export class RequestController {
     const { id } = req.params
     const request = await this.requestService.getRequestById(id)
     ResponseHandler.sendSuccess(res, request)
+  })
+
+  getRequestsByUserId = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params
+    const requests = await this.requestService.getRequestsByUserId(userId)
+    ResponseHandler.sendSuccess(res, requests)
+  })
+
+  updateRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { requestId } = req.params
+    const tokenPayload = getUser(req)
+    const updateRequestDto = req.body
+    const request = await this.requestService.updateRequest(requestId, tokenPayload._id, updateRequestDto)
+    ResponseHandler.sendSuccess(res, request, 'Update request successfully')
   })
 }
