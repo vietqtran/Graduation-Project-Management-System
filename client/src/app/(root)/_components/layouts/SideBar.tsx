@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
 import { SIDEBAR_LINKS } from '@/constants/sidebar'
-import { usePathname } from '@/hooks'
+import { useAppSelector, usePathname } from '@/hooks'
 
 const SideBar = () => {
+  const user = useAppSelector((state) => state.auth.user)
+  console.log(user)
   const [isExpanse, setIsExpanse] = useState(true)
   const pathName = usePathname()
 
@@ -51,7 +53,7 @@ const SideBar = () => {
           </div>
           <div className={`flex flex-col flex-1 overflow-y-auto max-h-screen ${isExpanse ? 'pt-10' : 'pt-0'}`}>
             <div className='p-2 w-full flex gap-1 flex-col'>
-              {SIDEBAR_LINKS.map((s) => {
+              {SIDEBAR_LINKS.filter((s) => s.roles.some((role) => user?.roles?.includes(role))).map((s) => {
                 return (
                   <TooltipProvider key={`${s.label}`}>
                     <Tooltip>

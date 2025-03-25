@@ -43,6 +43,30 @@ const ManageDeadlines = () => {
     fetchParameters()
   }, [debouncedSemester])
 
+  const handleOpenParamDialog = (param: ParametersResponse[0]) => {
+    setSelectedParam(param)
+  }
+
+  const handleCloseParamDialog = () => {
+    setTimeout(() => setSelectedParam(null), 300) // Delay to ensure dialog is closed before removing the data
+  }
+
+  const handleOpenDeleteParamDialog = (param: ParametersResponse[0]) => {
+    setSelectedDeleteParam(param)
+  }
+
+  const handleCloseDeleteParamDialog = () => {
+    setTimeout(() => setSelectedDeleteParam(null), 300) // Delay to ensure dialog is closed before removing the data
+  }
+
+  const handleOpenDeadlineDialog = (deadline: DeadlinesResponse[0]) => {
+    setSelectedDeadline(deadline)
+  }
+
+  const handleCloseDeadlineDialog = () => {
+    setTimeout(() => setSelectedDeadline(null), 300) // Delay to ensure dialog is closed before removing the data
+  }
+
   return (
     <div className='p-6'>
       <h1 className='text-2xl font-bold mb-4'>Deadlines Management</h1>
@@ -96,7 +120,7 @@ const ManageDeadlines = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => setSelectedDeadline(deadline)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenDeadlineDialog(deadline)}>Edit</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -158,8 +182,8 @@ const ManageDeadlines = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => setSelectedParam(parameter)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSelectedDeleteParam(parameter)}>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleOpenParamDialog(parameter)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleOpenDeleteParamDialog(parameter)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -168,11 +192,12 @@ const ManageDeadlines = () => {
           </TableBody>
         </Table>
       </div>
+      {/* Dialog Rendering */}
       {selectedParam && (
         <EditParamDialog
           parameter={selectedParam}
           onClose={() => {
-            setSelectedParam(null)
+            handleCloseParamDialog()
             fetchParameters()
           }}
         />
@@ -181,7 +206,7 @@ const ManageDeadlines = () => {
         <DeleteParamDialog
           parameter={selectedDeleteParam}
           onClose={() => {
-            setSelectedDeleteParam(null)
+            handleCloseDeleteParamDialog()
             fetchParameters()
           }}
         />
@@ -190,7 +215,7 @@ const ManageDeadlines = () => {
         <EditDeadlineDialog
           deadline={selectedDeadline}
           onClose={() => {
-            setSelectedDeadline(null)
+            handleCloseDeadlineDialog()
             fetchDeadlines()
           }}
         />
