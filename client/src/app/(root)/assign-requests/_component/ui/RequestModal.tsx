@@ -45,7 +45,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       to_user: request.to_user || '',
       from_user: request.from_user || '',
       status: request.status || 'assigned',
-      approve_user: request.approve_user || '',
+      approve_user: '',
       remark: request.remark || '',
       type: request.type || 'project',
       description: request.description || '',
@@ -70,7 +70,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
     if (type !== 'update') return
 
     try {
-      await instance.patch(`/request/detail/${request._id}`, data, { withCredentials: true })
+      await instance.patch(`/request/update-request/${request._id}`, data, { withCredentials: true })
       toast.success('Request updated successfully!')
       if (onSubmit) onSubmit()
       onClose()

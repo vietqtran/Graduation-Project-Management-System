@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-import * as Dialog from '@radix-ui/react-dialog'
-import React, { useState } from 'react'
-import RequestForm from './RequestForm'
-import { toast } from 'sonner'
 import instance from '@/utils/axios'
+import * as Dialog from '@radix-ui/react-dialog'
+import React, { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import RequestForm from './RequestForm'
+import { STATUS_MASTER } from '@/constants/status.enum'
 
 interface FilterBarProps {
   onFilterChange: (filterData: {
@@ -18,24 +19,57 @@ interface FilterBarProps {
     dateRange?: { start: string; end: string }
   }) => void
   onClearFilter: () => void
+  setUserId: (id: string) => void
+  setRefresh: (refresh: boolean | ((prev: boolean) => boolean)) => void
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) => {
+const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, setUserId, setRefresh }) => {
   const [searchValue, setSearchValue] = useState('')
   const [status, setStatus] = useState('all')
   const [requestType, setRequestType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [formData, setFormData] = useState<{
+  const [loading, setLoading] = useState(true)
+  const [groupName, setGroupName] = useState<{ leaderId: string; leaderName: string }[]>([])
+
+  const currentFormData = useRef<{
     to_user: string
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   } | null>(null)
 
+  useEffect(() => {
+    const fetchProjectIdeas = async () => {
+      try {
+        const response = await instance.get('/project/get-projects-to-review', { withCredentials: true })
+        if (response.data) {
+          const filteredProjectswithName = response.data.data.filter(
+            (project: { status: string }) => project.status !== STATUS_MASTER.APPROVED.toString()
+          )
+
+          const leaders = filteredProjectswithName.map((project: { leader: { _id: string; username: string } }) => ({
+            leaderId: project.leader._id,
+            leaderName: project.leader.username
+          }))
+
+          console.log(leaders)
+
+          setGroupName(leaders)
+          console.log('Project names: ', leaders)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Error fetching project ideas:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjectIdeas()
+  }, [])
   const handleApplyFilter = () => {
     onFilterChange({
       search: searchValue || undefined,
@@ -50,44 +84,60 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
     setStatus('all')
     setRequestType('all')
     setDateRange({ start: '', end: '' })
+    setUserId('')
     onClearFilter()
   }
 
-  const handleSubmit = async (data: {
+  const handleSubmit = (data: {
     to_user: string
     type: string
     remark: string
     description: string
-    from_user: string
     document: string
     due_date: string
   }) => {
-    setFormData(data)
+    console.log('Form data received:', data)
+    currentFormData.current = data
   }
 
   const confirmSubmit = async () => {
-    if (!formData) {
-      toast.error('No request data to submit')
+    if (!currentFormData.current) {
+      toast.error('Please fill the form first')
       return
     }
 
-    if (!formData.document) {
-      toast.error('Please upload a document before submitting')
+    const { to_user, description, document, due_date } = currentFormData.current
+    if (!to_user || !description || !document || !due_date) {
+      toast.error('Please fill all required fields')
       return
     }
+
+    console.log('Payload data before sending:', currentFormData.current)
 
     try {
-      const response = await instance.post('/request/create-request', formData, {
-        withCredentials: true
-      })
+      const response = await instance.post(
+        '/request/create-request',
+        {
+          to_user: to_user,
+          type: currentFormData.current.type,
+          remark: currentFormData.current.remark,
+          description: description,
+          document: document,
+          due_date: due_date
+        },
+        {
+          withCredentials: true
+        }
+      )
 
-      console.log(response.data)
+      console.log('API response:', response.data)
       toast.success('Request created successfully!')
+      setRefresh((prev) => !prev)
       setIsDrawerOpen(false)
-      setFormData(null)
+      currentFormData.current = null
     } catch (error) {
       console.error('Error creating request:', error)
-      toast.error('Failed to create request')
+      toast.error('ko tao moi request duoc')
     }
   }
 
@@ -146,12 +196,34 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
       </div>
 
       <div className='flex gap-2 justify-center items-center'>
-        <div className='flex flex-wrap gap-4 items-center justify-center'>
-          <Label className='text-center rounded-full border-2 border-red-500 p-2'>Group 1 | SE</Label>
-          <Label className='text-center rounded-full border-2 border-purpe-500 p-2'>Group 2 | IT</Label>
-          <Label className='text-center rounded-full border-2 border-blue-500 p-2'>Group 3 | HR</Label>
-          <Label className='text-center rounded-full border-2 border-green-500 p-2'>Group 4 | Finance</Label>
-          <Label className='text-center rounded-full border-2 border-orange-500 p-2'>Group 5 | Marketing</Label>
+        <div className='flex gap-2 justify-center items-center'>
+          <div className='flex flex-wrap gap-4 items-center justify-center'>
+            {loading
+              ? 'Loading...'
+              : groupName.map((group, index) => {
+                  const labelColors = [
+                    'border-red-500',
+                    'border-purple-500',
+                    'border-blue-500',
+                    'border-green-500',
+                    'border-orange-500'
+                  ]
+
+                  const groupIndex = index % labelColors.length
+                  return (
+                    <Label
+                      onClick={() => {
+                        setUserId(group.leaderId)
+                        console.log(group.leaderId)
+                      }}
+                      key={index}
+                      className={`text-center rounded-full border-2 ${labelColors[groupIndex]} p-2`}
+                    >
+                      {`Group ${index + 1} | ${group.leaderName}`}
+                    </Label>
+                  )
+                })}
+          </div>
         </div>
 
         <Button className='bg-yellow-500 text-white' size='sm' onClick={() => setIsDrawerOpen(true)}>
@@ -164,13 +236,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter }) 
           <Dialog.Overlay className='fixed inset-0 bg-black bg-opacity-30' />
           <Dialog.Content className='fixed top-0 right-0 w-1/2 h-full bg-white shadow-lg p-6 flex flex-col'>
             <div className='flex-1 overflow-y-auto'>
-              <RequestForm onClose={() => setIsDrawerOpen(false)} onSubmit={(formData) => handleSubmit(formData)} />
+              <RequestForm onClose={() => setIsDrawerOpen(false)} onSubmit={handleSubmit} />
             </div>
             <div className='flex justify-end gap-6'>
               <Button variant='outline' onClick={() => setIsDrawerOpen(false)}>
                 Cancel
               </Button>
-              <Button variant='default' onClick={confirmSubmit} disabled={!formData}>
+              <Button variant='default' onClick={confirmSubmit}>
                 Submit
               </Button>
             </div>

@@ -6,6 +6,7 @@ import UserModel, { IUser } from '@/models/user.model'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { CreateRequestDto } from '@/dtos/request/create-request.dto'
 import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
 import { MailService } from './mail.service'
@@ -29,13 +30,19 @@ export class RequestService {
     this.emailQueue = new EmailQueue(this.mailService)
   }
 
-  async createRequest(requestData: Omit<IRequest, '_id'>) {
+  async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
+    const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } })
+
+    if (!toUser) {
+      throw new HttpException('User not found', 404)
+    }
+
     return runTransaction(async (session) => {
       const request = await this.requestModel.create(
         [
           {
-            to_user: requestData.to_user,
-            from_user: requestData.from_user,
+            to_user: toUser._id,
+            from_user: tokenPayload._id,
             type: requestData.type,
             remark: requestData.remark || '',
             status: requestData.status || 'assigned',
@@ -54,32 +61,53 @@ export class RequestService {
         throw new HttpException('Error at creating request', 400)
       }
 
-      return request[0]
+      return {
+        request: request[0],
+        requestData: requestData
+      }
     })
   }
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-
-    try {
+    return runTransaction(async (session) => {
       const request = await this.requestModel.findOne({ _id: requestId, from_user: userId }).session(session)
 
       if (!request) {
         throw new HttpException('Request not found', 404)
       }
 
-      if (request.status !== RequestStatus.PENDING) {
-        throw new HttpException('Cannot update processed request', 400)
+      if (!updateRequestDto.approve_user || updateRequestDto.approve_user === '') {
+        delete updateRequestDto.approve_user
       }
+
+      if (updateRequestDto.to_user && typeof updateRequestDto.to_user === 'string') {
+        const user = await this.userModel.findOne({ username: updateRequestDto.to_user })
+        if (user) {
+          updateRequestDto.to_user = user._id
+        } else {
+          throw new HttpException('User not found', 404)
+        }
+      }
+
+      const allowedUpdates: Array<keyof UpdateRequestDto> = [
+        'approve_user',
+        'to_user',
+        'type',
+        'remark',
+        'status',
+        'description',
+        'due_date'
+      ]
+      const sanitizedUpdate: Partial<Record<keyof UpdateRequestDto, any>> = {}
+      allowedUpdates.forEach((field: keyof UpdateRequestDto) => {
+        if (updateRequestDto[field] !== undefined) {
+          sanitizedUpdate[field] = updateRequestDto[field]
+        }
+      })
 
       const updatedRequest = await this.requestModel.findByIdAndUpdate(
         requestId,
-        {
-          $set: {
-            ...updateRequestDto
-          }
-        },
+        { $set: sanitizedUpdate },
         { new: true, session }
       )
 
@@ -87,14 +115,8 @@ export class RequestService {
         throw new HttpException("Can't update request", 500)
       }
 
-      await session.commitTransaction()
       return updatedRequest
-    } catch (error) {
-      await session.abortTransaction()
-      throw error
-    } finally {
-      session.endSession()
-    }
+    })
   }
 
   async processRequest(requestId: string, adminId: string, status: RequestStatus, remark?: string) {
@@ -152,10 +174,11 @@ export class RequestService {
 
       return requests.map((request) => ({
         _id: request._id?.toString(),
-        to_user: request.to_user || null,
+        to_user: (request.to_user as IUser)?.username || null,
         from_user: request.from_user || null,
         approve_user: request.approve_user || null,
         type: request.type || null,
+        description: request.description || null,
         remark: request.remark || null,
         due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
         status: request.status || null,
@@ -183,6 +206,17 @@ export class RequestService {
       } else {
         await this.requestModel.findByIdAndDelete(requestId, { session })
         return { message: 'Request updated successfully' }
+      }
+    })
+  }
+
+  async getRequestsByUserId(to_user: string) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.find({ to_user: to_user }).session(session)
+      if (!request) {
+        throw new HttpException('Request not found', 404)
+      } else {
+        return request
       }
     })
   }

@@ -57,12 +57,14 @@ export class ProjectController {
 
   createProjectAsTopic = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const projectData = req.body
-    const project = await this.projectService.createProjectAsTopic(projectData)
+    const tokenPayload = getUser(req)
+    const project = await this.projectService.createProjectAsTopic(projectData, tokenPayload)
     ResponseHandler.sendSuccess(res, project, 'Create project as topic successfully')
   })
 
   getProjectsWithNullStatus = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const projects = await this.projectService.getProjectsWithNullStatus()
+    const tokenPayload = getUser(req)
+    const projects = await this.projectService.getProjectsWithNullStatus(tokenPayload._id)
     ResponseHandler.sendSuccess(res, projects)
   })
 
