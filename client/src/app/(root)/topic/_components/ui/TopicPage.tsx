@@ -43,22 +43,25 @@ const TopicPage = () => {
   }
 
   const handleSubmit = async (data: FormData) => {
-    setLoading(true)
-    try {
-      const response = await instance.post('/project/create-project-as-topic', data, {
-        withCredentials: true
-      })
-      console.log('Server response:', response.data)
-      toast.success('Topic submitted successfully!')
-      setIsDrawerOpen(false)
-      setRefresh((prev) => !prev)
-    } catch (error) {
-      console.error('Error submitting topic:', error)
-      toast.error('Failed to submit topic!')
-    } finally {
-      setLoading(false)
+  setLoading(true);
+  try {
+    const response = await instance.post('/project/create-project-as-topic', data, {
+      withCredentials: true
+    });
+    if (response.data.statusCode === 200) {
+      toast.success('Topic submitted successfully!');
+      setIsDrawerOpen(false);
+      setRefresh((prev) => !prev);
+    } else {
+      toast.error(response.data.message || 'Có lỗi xảy ra');
     }
+  } catch (error: unknown) {
+    toast.error('Leader already has a project');
+    console.log('Chi tiết lỗi:', error);
+  } finally {
+    setLoading(false);
   }
+};
 
   return (
     <div>

@@ -368,127 +368,141 @@ export class ProjectService {
     })
   }
 
-  async createProjectAsTopic(projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count'>, tokenPayload: TokenPayload) {
-  try {
-    return await runTransaction(async (session) => {
-      let leaderId = null
-      let status = null
+  async createProjectAsTopic(
+    projectData: Omit<IProject, '_id' | 'histories' | 'tasks' | 'mark' | 'slow_count'>,
+    tokenPayload: TokenPayload
+  ) {
+    try {
+      return await runTransaction(async (session) => {
+        let leaderId = null
+        let status = null
 
-      if (projectData.leader) {
-        const user = await this.userModel.findOne(
-          { email: { $eq: projectData.leader } },
-          { _id: 1, email: 1 },
+        if (projectData.leader) {
+          const user = await this.userModel.findOne(
+            typeof projectData.leader === 'string' && projectData.leader.includes('@')
+              ? { email: { $eq: projectData.leader } }
+              : { email: { $regex: new RegExp(`^${projectData.leader}@`, 'i') } },
+            { _id: 1, email: 1 },
+            { session }
+          )
+          if (!user) {
+            throw new HttpException('Leader email not found in users table', 404)
+          }
+          leaderId = user._id
+          status = 17
+
+          const existingProject = await this.projectModel.findOne({ leader: leaderId }).session(session)
+          if (existingProject) {
+            throw new HttpException('Leader already has a project', 400)
+          }
+        }
+
+        const project = await this.projectModel.create(
+          [
+            {
+              name: projectData.name,
+              description: projectData.description || '',
+              major: projectData.major,
+              field: projectData.field,
+              campus: projectData.campus,
+              category: projectData.category,
+              supervisor: tokenPayload._id || [],
+              members: [leaderId],
+              documents: projectData.documents ? [projectData.documents] : [], // Sửa từ documents thành document
+              histories: [],
+              tasks: [],
+              mark: null,
+              slow_count: 0,
+              updated_by: tokenPayload._id,
+              leader: leaderId,
+              status: status || 26,
+              stage: 1,
+              created_at: new Date(),
+              updated_at: new Date()
+            }
+          ],
           { session }
         )
+
+        if (!project || project.length === 0) {
+          throw new HttpException('Error at creating project as topic', 400)
+        }
+
+        const updater = await this.userModel
+          .findById(tokenPayload._id, { email: 1, first_name: 1, last_name: 1 })
+          .session(session)
+        if (!updater) {
+          throw new HttpException('User not found for the updater', 404)
+        }
+
+        const leader = await this.userModel
+          .findById(leaderId, { email: 1, first_name: 1, last_name: 1 })
+          .session(session)
+        if (leaderId && !leader) {
+          throw new HttpException('Leader not found', 404)
+        }
+
+        // Email content
+        const projectDetails = {
+          name: projectData.name,
+          description: projectData.description || 'No description provided.',
+          major: projectData.major,
+          field: projectData.field,
+          campus: projectData.campus,
+          category: projectData.category
+        }
+
+        const user = await this.userModel
+          .updateOne({ _id: tokenPayload._id }, { $set: { project: project[0]?._id } })
+          .session(session)
         if (!user) {
-          throw new HttpException('Leader email not found in users table', 404)
+          throw new HttpException('Updater not found', 404)
         }
-        leaderId = user._id
-        status = 17
-      }
 
-      const project = await this.projectModel.create(
-        [
-          {
-            name: projectData.name,
-            description: projectData.description || '',
-            major: projectData.major,
-            field: projectData.field,
-            campus: projectData.campus,
-            category: projectData.category,
-            supervisor: tokenPayload._id || [],
-            members: [],
-            documents: projectData.documents ? [projectData.documents] : [], // Sửa từ documents thành document
-            histories: [],
-            tasks: [],
-            mark: null,
-            slow_count: 0,
-            updated_by: tokenPayload._id,
-            leader: leaderId,
-            status: status || 26,
-            stage: 1,
-            created_at: new Date(),
-            updated_at: new Date()
+        const updaterEmail = await this.userModel.findById(tokenPayload._id, { email: 1 }).session(session)
+        if (!updaterEmail) {
+          throw new HttpException('Updater not found', 404)
+        }
+
+        // 2. Email content for the person who updated the project
+        const updateEmailContent = {
+          to: updater.email,
+          subject: 'Project Created Successfully',
+          templateName: 'project-update-notification',
+          context: {
+            first_name: updater.first_name || 'User',
+            last_name: updater.last_name || '',
+            projectDetails,
+            year: new Date().getFullYear(),
+            start_url: process.env.CLIENT_URL
           }
-        ],
-        { session }
-      )
-
-      if (!project || project.length === 0) {
-        throw new HttpException('Error at creating project as topic', 400)
-      }
-
-      const updater = await this.userModel.findById(tokenPayload._id, { email: 1, first_name: 1, last_name: 1 }).session(session)
-      if (!updater) {
-        throw new HttpException('User not found for the updater', 404)
-      }
-
-      const leader = await this.userModel.findById(leaderId, { email: 1, first_name: 1, last_name: 1 }).session(session)
-      if (leaderId && !leader) {
-        throw new HttpException('Leader not found', 404)
-      }
-
-      // Email content
-      const projectDetails = {
-        name: projectData.name,
-        description: projectData.description || 'No description provided.',
-        major: projectData.major,
-        field: projectData.field,
-        campus: projectData.campus,
-        category: projectData.category
-      }
-
-      const user = await this.userModel
-        .updateOne({ _id: tokenPayload._id }, { $set: { project: project[0]?._id } })
-        .session(session)
-      if (!user) {
-        throw new HttpException('Updater not found', 404)
-      }
-
-      const updaterEmail = await this.userModel.findById(tokenPayload._id, { email: 1 }).session(session)
-      if (!updaterEmail) {
-        throw new HttpException('Updater not found', 404)
-      }
-
-      // 2. Email content for the person who updated the project
-      const updateEmailContent = {
-        to: updater.email,
-        subject: 'Project Created Successfully',
-        templateName: 'project-update-notification',
-        context: {
-          first_name: updater.first_name || 'User',
-          last_name: updater.last_name || '',
-          projectDetails,
-          year: new Date().getFullYear(),
-          start_url: process.env.CLIENT_URL
         }
-      }
 
-      const leaderEmailContent = leader && {
-        to: leader.email,
-        subject: 'You Have Been Added to a New Project',
-        templateName: 'leader-project-notification',
-        context: {
-          leader_name: `${leader.first_name || ''} ${leader.last_name || ''}`.trim() || 'Leader',
-          projectDetails,
-          year: new Date().getFullYear(),
-          start_url: process.env.CLIENT_URL
+        const leaderEmailContent = leader && {
+          to: leader.email,
+          subject: 'You Have Been Added to a New Project',
+          templateName: 'leader-project-notification',
+          context: {
+            leader_name: `${leader.first_name || ''} ${leader.last_name || ''}`.trim() || 'Leader',
+            projectDetails,
+            year: new Date().getFullYear(),
+            start_url: process.env.CLIENT_URL
+          }
         }
-      }
 
-      // Gửi email (chỉ nếu không lỗi)
-      await this.emailQueue.addEmailJob(updateEmailContent)
-      if (leaderEmailContent) {
-        await this.emailQueue.addEmailJob(leaderEmailContent)
-      }
+        // Gửi email (chỉ nếu không lỗi)
+        await this.emailQueue.addEmailJob(updateEmailContent)
+        if (leaderEmailContent) {
+          await this.emailQueue.addEmailJob(leaderEmailContent)
+        }
 
-      return project[0]
-    })
-  } catch (error) {
-    console.error('Error in createProjectAsTopic:', error)
-    throw error // Để middleware xử lý và trả về mã lỗi phù hợp
+        return project[0]
+      })
+    } catch (error) {
+      console.error('Error in createProjectAsTopic:', error)
+      throw error  
+    }
   }
-}
 
   async getProjectsWithNullStatus(userId: string) {
     return runTransaction(async (session) => {
@@ -736,7 +750,10 @@ export class ProjectService {
 
       // Truy vấn theo chuỗi
       console.log('Attempting string query...')
-      const stringQuery = await this.projectModel.find({ supervisor: supervisorId }).lean().exec()
+      const stringQuery = await this.projectModel
+        .find({ supervisor: supervisorId, status: { $in: [3, 4, 17] } })
+        .lean()
+        .exec()
       console.log(`String query found ${stringQuery.length} projects`)
       projects = [...projects, ...stringQuery]
 
@@ -754,13 +771,16 @@ export class ProjectService {
         const objectId = new Types.ObjectId(supervisorId)
 
         console.log('Attempting ObjectId query...')
-        const objectIdQuery = await this.projectModel.find({ supervisor: objectId }).lean().exec()
+        const objectIdQuery = await this.projectModel
+          .find({ supervisor: objectId, status: { $in: [3, 4, 17] } })
+          .lean()
+          .exec()
         console.log(`ObjectId query found ${objectIdQuery.length} projects`)
         projects = [...projects, ...objectIdQuery]
 
         console.log('Attempting array ObjectId query...')
         const arrayObjectIdQuery = await this.projectModel
-          .find({ supervisor: { $in: [objectId] } })
+          .find({ supervisor: { $in: [objectId] }, status: { $in: [3, 4, 17] } })
           .lean()
           .exec()
         console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
@@ -768,7 +788,9 @@ export class ProjectService {
       }
 
       console.log('Attempting raw MongoDB query...')
-      const rawQuery = await this.projectModel.collection.find({ supervisor: { $in: [supervisorId] } }).toArray()
+      const rawQuery = await this.projectModel.collection
+        .find({ supervisor: { $in: [supervisorId] }, status: { $in: [3, 4, 17] } })
+        .toArray()
       console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
       projects = [...projects, ...rawQuery]
 
@@ -777,8 +799,8 @@ export class ProjectService {
       const populatedProjects = await this.projectModel
         .find({
           $or: [
-            { supervisor: supervisorId },
-            { supervisor: { $in: [supervisorId] } },
+            { supervisor: supervisorId, status: { $in: [3, 4, 17] } },
+            { supervisor: { $in: [supervisorId] }, status: { $in: [3, 4, 17] } },
             ...(Types.ObjectId.isValid(supervisorId)
               ? [
                   { supervisor: new Types.ObjectId(supervisorId) },

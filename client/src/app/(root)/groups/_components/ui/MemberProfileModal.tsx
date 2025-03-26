@@ -3,9 +3,9 @@
 import React from 'react'
 
 interface Member {
-  id: number
+  _id: number
   username: string
-  role: Array<string>
+  roles: Array<string>
   progress: number
   tasksCompleted: number
   status: string
@@ -22,7 +22,7 @@ const MemberProfileModal: React.FC<MemberProfileModalProps> = ({ member, onClose
       <div className='bg-white p-6 rounded-lg shadow-lg w-80'>
         <h2 className='text-xl font-bold mb-2'>{member.username}s Profile</h2>
         <p>
-          <strong>Role:</strong> {JSON.stringify(member.role)}
+          <strong>Role:</strong> {member.roles[0]}
         </p>
         <p>
           <strong>Progress:</strong> {member.progress}%

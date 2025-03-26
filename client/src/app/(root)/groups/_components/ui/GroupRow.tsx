@@ -1,11 +1,8 @@
 'use client'
 
-import * as Progress from '@radix-ui/react-progress'
-
 import React, { useEffect, useState } from 'react'
 import { Select, SelectItem } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
-
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,31 +10,26 @@ import MemberProfileModal from './MemberProfileModal'
 import { SelectContent } from '@radix-ui/react-select'
 import instance from '@/utils/axios'
 
+// Interface cho thành viên
 interface Member {
-  id: number
+ _id: number
   username: string
-  role: Array<string>
+  roles: Array<string>
   progress: number
   tasksCompleted: number
   status: string
 }
 
+// Interface cho nhóm (dự án)
 interface Group {
-  id: number
+  _id: string // Sửa từ "id" thành "_id" và dùng string
   name: string
-  status: string
-  progress: number
+  status: number // Dữ liệu thực tế là số (17, 21, v.v.)
   members: Member[]
 }
 
-const ProgressBar = ({ progress }: { progress: number }) => (
-  <Progress.Root className='relative w-full h-2 bg-gray-200 rounded overflow-hidden'>
-    <Progress.Indicator className='h-full bg-blue-500 transition-all' style={{ width: `${progress}%` }} />
-  </Progress.Root>
-)
-
 const GroupRow: React.FC = () => {
-  const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null)
+  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null) // Sửa thành string
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('All')
@@ -57,15 +49,14 @@ const GroupRow: React.FC = () => {
     fetchGroups()
   }, [])
 
-  const toggleGroup = (groupId: number) => {
-    // If the group being clicked is the currently expanded group, collapse it
+  const toggleGroup = (groupId: string) => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId)
   }
 
   const filteredGroups = groups.filter((group) => {
     return (
       group.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (statusFilter === 'All' || group.status === statusFilter)
+      (statusFilter === 'All' || group.status.toString() === statusFilter)
     )
   })
 
@@ -77,8 +68,8 @@ const GroupRow: React.FC = () => {
         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
           <SelectContent>
             <SelectItem value='All'>All Statuses</SelectItem>
-            <SelectItem value='Active'>Active</SelectItem>
-            <SelectItem value='Pending'>Pending</SelectItem>
+            <SelectItem value='17'>Active</SelectItem> {/* Giả sử 17 là Active */}
+            <SelectItem value='21'>Completed</SelectItem> {/* Giả sử 21 là Completed */}
           </SelectContent>
         </Select>
       </div>
@@ -89,49 +80,39 @@ const GroupRow: React.FC = () => {
             <TableCell>Group Name</TableCell>
             <TableCell>Members</TableCell>
             <TableCell>Status</TableCell>
-            <TableCell>Progress</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredGroups.map((group, idx) => (
-            <React.Fragment key={group?.id + '' + idx}>
+            <React.Fragment key={group?._id + '' + idx}>
               <TableRow>
                 <TableCell>{group?.name}</TableCell>
                 <TableCell>{group?.members.length}</TableCell>
                 <TableCell>{group?.status}</TableCell>
                 <TableCell>
-                  <ProgressBar progress={group?.progress} />
-                </TableCell>
-                <TableCell>
-                  <Button onClick={() => toggleGroup(group?.id)}>
-                    {expandedGroupId === group?.id ? 'Hide Details' : 'View Details'}
+                  <Button onClick={() => toggleGroup(group?._id)}>
+                    {expandedGroupId === group?._id ? 'Hide Details' : 'View Details'}
                   </Button>
                 </TableCell>
               </TableRow>
-              {expandedGroupId === group?.id && group?.members.length > 0 ? (
+              {expandedGroupId === group?._id && group?.members.length > 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5}>
+                  <TableCell colSpan={4}>
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableCell>Member Name</TableCell>
                           <TableCell>Role</TableCell>
-                          <TableCell>Progress</TableCell>
-                          <TableCell>Tasks Completed</TableCell>
                           <TableCell>Status</TableCell>
                           <TableCell>Action</TableCell>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {group?.members.map((member) => (
-                          <TableRow key={member?.id}>
+                          <TableRow key={member?._id}>
                             <TableCell>{member?.username}</TableCell>
-                            <TableCell>{member?.role}</TableCell>
-                            <TableCell>
-                              <ProgressBar progress={member?.progress} />
-                            </TableCell>
-                            <TableCell>{member?.tasksCompleted}</TableCell>
+                            <TableCell>{member?.roles[0]}</TableCell> {/* Hiển thị mảng roles */}
                             <TableCell>{member?.status}</TableCell>
                             <TableCell>
                               <Button onClick={() => setSelectedMember(member)}>View Profile</Button>
@@ -142,13 +123,13 @@ const GroupRow: React.FC = () => {
                     </Table>
                   </TableCell>
                 </TableRow>
-              ) : (
+              ) : expandedGroupId === group?._id ? (
                 <TableRow>
-                  <TableCell colSpan={5}>No members available for this group</TableCell>
+                  <TableCell colSpan={4}>No members available for this group</TableCell>
                 </TableRow>
-              )}
+              ) : null}
             </React.Fragment>
-          )) || <TableRow><TableCell colSpan={5}>No groups found</TableCell></TableRow>}
+          )) || <TableRow><TableCell colSpan={4}>No groups found</TableCell></TableRow>}
         </TableBody>
       </Table>
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />}
