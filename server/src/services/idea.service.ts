@@ -32,7 +32,10 @@ export class IdeaService {
 
   async createIdea(ideaData: CreateIdeaDto): Promise<IProject> {
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_idea' })
-    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+    if (!getDeadline || !getDeadline.deadline_date) {
+      throw new HttpException('Deadline create idea configuration is missing', 500)
+    }
+    if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException('The deadline for creating ideas has passed', 400)
     }
     const requiredFields: (keyof CreateIdeaDto)[] = ['name', 'campus', 'leader', 'members', 'field', 'major']
@@ -41,17 +44,19 @@ export class IdeaService {
     if (missingFields.length > 0) {
       throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
-    if (typeof ideaData.leader !== 'string') {
+    if (typeof ideaData.leader !== 'string' || !mongoose.Types.ObjectId.isValid(ideaData.leader)) {
       throw new HttpException('Invalid leader ID', 400)
     }
     const user = await this.userModel.findById(ideaData.leader)
+    if (!user) {
+      throw new HttpException('Leader not found', 404)
+    }
     if (!user?.roles?.includes('student')) {
-      throw new HttpException('This action is only available for students', 404)
+      throw new HttpException('This action is only available for students', 403)
     }
     const existingIdea = await this.projectModel.findOne({
-      members: { $in: [ideaData.leader] } // Kiểm tra xem userId có nằm trong mảng members không
+      $or: [{ members: { $in: [ideaData.leader] } }, { leader: ideaData.leader }]
     })
-
     if (existingIdea) {
       throw new HttpException(
         'You are already part of an existing idea. Please leave it before creating a new one.',
@@ -60,30 +65,34 @@ export class IdeaService {
     }
 
     return runTransaction(async (session) => {
-      const idea = new this.projectModel({
-        ...ideaData,
-        histories: [],
-        tasks: [],
-        slow_count: 0,
-        supervisor: [],
-        category: 1,
-        status: PROJECT_STATUS.PENDING
-      })
+      try {
+        const idea = new this.projectModel({
+          ...ideaData,
+          histories: [],
+          tasks: [],
+          slow_count: 0,
+          supervisor: [],
+          category: 1,
+          status: PROJECT_STATUS.PENDING
+        })
 
-      await idea.save({ session })
-      await this.userModel.updateOne(
-        { _id: ideaData.leader },
-        { $set: { status: USER_STATUS.ACTIVATED, project: idea._id } },
-        { session }
-      )
-      return idea
+        await idea.save({ session })
+        await this.userModel.updateOne(
+          { _id: ideaData.leader },
+          { $set: { status: USER_STATUS.ACTIVATED, project: idea._id } },
+          { session }
+        )
+        return idea
+      } catch (error) {
+        throw new HttpException('Failed to create idea', 500)
+      }
     })
   }
   async getIdeaStudent(userIds: string[]) {
     return runTransaction(async (session) => {
       const projects = await this.projectModel
         .find({
-          members: { $in: userIds }
+          $or: [{ members: { $in: userIds } }, { supervisor: { $in: userIds } }]
         })
         .populate('leader')
         .populate('supervisor')
@@ -128,40 +137,45 @@ export class IdeaService {
   async deleteIdea(projectId: string, userId: string) {
     // kiem tra date deadline
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
-    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+    if (!getDeadline || !getDeadline.deadline_date) {
+      throw new HttpException('Deadline create group configuration is missing', 500)
+    }
+    if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException(
         'The deadline for you to delete your current idea has expired. Please continue to complete this idea.',
         400
       )
     }
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new HttpException('Invalid project ID', 400)
+    }
     return runTransaction(async (session) => {
-      if (!mongoose.Types.ObjectId.isValid(projectId)) {
-        throw new HttpException('Invalid project ID', 400)
-      }
       const project = await this.projectModel
         .findOne({ _id: { $eq: projectId } })
         .session(session)
         .exec()
+      if (!project) {
+        throw new HttpException('Project not found', 404)
+      }
       if (project?.leader?.valueOf() !== userId) {
-        throw new HttpException('You are not the leader of this idea', 400)
+        throw new HttpException('You are not the leader of this idea', 403)
       }
       await this.projectModel
         .deleteOne({ _id: { $eq: projectId } })
         .session(session)
         .exec()
-      if (project.members && project.members.length > 0) {
+      if (project?.members && project?.members.length > 0) {
+        const memberIds = (project.members as IUser[]).map((member: IUser) => member._id)
         await this.userModel
-          .updateMany(
-            { _id: { $in: (project.members as IUser[]).map((member: IUser) => member._id) } },
-            { $set: { status: USER_STATUS.UN_GROUPED } },
-            { session }
-          )
+          .updateMany({ _id: { $in: memberIds } }, { $set: { status: USER_STATUS.UN_GROUPED } }, { session })
           .exec()
       }
-      if (!mongoose.Types.ObjectId.isValid(projectId)) {
-        throw new HttpException('Invalid project ID', 400)
+      if (project?.supervisor && project?.supervisor.length > 0) {
+        const supervisorIds = (project.supervisor as IUser[]).map((supervisor: IUser) => supervisor._id)
+        await this.userModel
+          .updateMany({ _id: { $in: supervisorIds } }, { $set: { status: USER_STATUS.AVAILABLE } }, { session })
+          .exec()
       }
-
       await this.inviteModel
         .deleteMany({ project: { $eq: projectId } })
         .session(session)
@@ -170,7 +184,10 @@ export class IdeaService {
   }
   async changeIdea(projectId: string, updateIdea: UpdateIdeaDto, userId: string): Promise<IProject> {
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
-    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+    if (!getDeadline || !getDeadline.deadline_date) {
+      throw new HttpException('Deadline create group configuration is missing', 500)
+    }
+    if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException(
         'The deadline for you to change your current idea has expired. Please continue to complete this idea.',
         400
@@ -183,40 +200,55 @@ export class IdeaService {
     if (missingFields.length > 0) {
       throw new HttpException(`${missingFields.join(', ')} are required`, 400)
     }
-
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new HttpException('Invalid project ID', 400)
+    }
     return runTransaction(async (session) => {
-      const project = await this.projectModel.findById(projectId).session(session).exec()
+      try {
+        const project = await this.projectModel.findById(projectId).session(session).exec()
 
-      if (!project) {
-        throw new HttpException('Project not found', 404)
+        if (!project) {
+          throw new HttpException('Project not found', 404)
+        }
+
+        // Kiểm tra quyền của người dùng
+        if (String(project.leader) !== userId) {
+          throw new HttpException('You are not the leader of this idea', 403)
+        }
+
+        // Cập nhật thông tin dự án
+        const { name, description } = updateIdea
+
+        if (name) project.name = name
+        if (description) project.description = description
+
+        project.updated_at = new Date() // Cập nhật thời gian sửa đổi
+
+        await project.save({ session })
+
+        return project
+      } catch (error) {
+        throw error instanceof HttpException ? error : new HttpException('Failed to update idea', 500)
       }
-
-      // Kiểm tra quyền của người dùng
-      if (String(project.leader) !== userId) {
-        throw new HttpException('You are not the leader of this idea', 400)
-      }
-
-      // Cập nhật thông tin dự án
-      const { name, description } = updateIdea
-
-      if (name) project.name = name
-      if (description) project.description = description
-
-      project.updated_at = new Date() // Cập nhật thời gian sửa đổi
-
-      await project.save({ session })
-
-      return project
     })
   }
   async memberLeaveGroup(projectId: string, userId: string) {
     // kiem tra date deadline
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
-    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+    if (!getDeadline || !getDeadline.deadline_date) {
+      throw new HttpException('Deadline create group configuration is missing', 500)
+    }
+    if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException(
         'The deadline for you to leave your current group has passed. Please continue to complete this idea.',
         400
       )
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new HttpException('Invalid user ID', 400)
+    }
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new HttpException('Invalid project ID', 400)
     }
     const session = await mongoose.startSession()
     session.startTransaction()
@@ -228,10 +260,6 @@ export class IdeaService {
         .populate<{ supervisor: IUser[] }>('supervisor')
         .session(session)
         .exec()
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new HttpException('Invalid user ID', 400)
-      }
-
       const user = await this.userModel.findById(userId).session(session).exec()
       if (!user) {
         throw new HttpException('User not found', 404)
@@ -239,20 +267,43 @@ export class IdeaService {
       if (!project) {
         throw new HttpException('Project not found', 404)
       }
-      if (!(project.members as IUser[]).map((member: IUser) => member._id?.valueOf()).includes(userId)) {
+      const isMember = (project.members as IUser[]).some((member: IUser) => member._id?.valueOf() === userId)
+      const isSupervisor = (project.supervisor as IUser[]).some(
+        (supervisor: IUser) => supervisor._id?.valueOf() === userId
+      )
+      if (isMember && !(project.members as IUser[]).map((member: IUser) => member._id?.valueOf()).includes(userId)) {
         throw new HttpException('User is not a member of the project', 400)
+      }
+      if (
+        isSupervisor &&
+        !(project.supervisor as IUser[]).map((supervisor: IUser) => supervisor._id?.valueOf()).includes(userId)
+      ) {
+        throw new HttpException('User is not a supervisor of the project', 400)
       }
       if (project?.leader?._id?.valueOf() === userId) {
         throw new HttpException('You are the leader of this idea. Please delete the idea instead.', 400)
       }
-      project.members = (project.members as IUser[]).filter(
-        (member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== userId
-      )
-      await project.save({ session })
-      user.status = USER_STATUS.UN_GROUPED
+      let newStatus: number
+      if (isMember) {
+        project.members = (project?.members as IUser[]).filter(
+          (member: IUser) => (member?._id as mongoose.Types.ObjectId).valueOf() !== userId
+        )
+        // user.status = USER_STATUS.UN_GROUPED
+        newStatus = USER_STATUS.UN_GROUPED
+      } else if (isSupervisor) {
+        project.supervisor = (project.supervisor as IUser[]).filter(
+          (supervisor: IUser) => (supervisor._id as mongoose.Types.ObjectId).valueOf() !== userId
+        )
+        newStatus = USER_STATUS.AVAILABLE
+      } else {
+        throw new HttpException('User is neither a member nor a supervisor of the project', 400)
+      }
+      // await this.userModel.updateOne({ _id: userId }, { $set: { project: null } }, { session })
+      // await project.save({ session })
       project.status = PROJECT_STATUS.PENDING
       await project.save({ session })
-      await user.save({ session })
+      // await user.save({ session })
+      await this.userModel.updateOne({ _id: userId }, { $set: { status: newStatus, project: null } }, { session })
       await session.commitTransaction()
       const toEmails = [
         ...(project.members as IUser[]).map((member: IUser) => member.email), // Lấy email của các thành viên
@@ -273,14 +324,18 @@ export class IdeaService {
       return project
     } catch (error) {
       await session.abortTransaction()
-      throw error
+      console.error('Error in Member Leave Group:', error)
+      throw error instanceof HttpException ? error : new HttpException('Internal server error', 500)
     } finally {
       session.endSession()
     }
   }
   async leaderKickMember(projectId: string, memberId: string, leaderId: string) {
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
-    if (getDeadline?.deadline_date && new Date() > new Date(getDeadline.deadline_date)) {
+    if (!getDeadline || !getDeadline.deadline_date) {
+      throw new HttpException('Deadline create group configuration is missing', 500)
+    }
+    if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException(
         'The deadline for you to kick member your current group has passed. Please continue to complete this idea.',
         400
@@ -313,17 +368,19 @@ export class IdeaService {
       if (!project) {
         throw new HttpException('Project not found', 404)
       }
-      if (!(project.members as IUser[]).map((member: IUser) => member._id?.valueOf()).includes(memberId)) {
+      if (!(project?.members as IUser[]).some((member: IUser) => member?._id?.valueOf() === memberId)) {
         throw new HttpException('This user is not a member of the project', 400)
       }
-      project.members = (project.members as IUser[]).filter(
-        (member: IUser) => (member._id as mongoose.Types.ObjectId).valueOf() !== memberId
+      project.members = (project?.members as IUser[]).filter(
+        (member: IUser) => (member?._id as mongoose.Types.ObjectId).valueOf() !== memberId
       )
-      await project.save({ session })
-      member.status = USER_STATUS.UN_GROUPED
-      await member.save({ session })
       project.status = PROJECT_STATUS.PENDING
       await project.save({ session })
+      await this.userModel.updateOne(
+        { _id: { $eq: memberId } },
+        { $set: { project: null, status: USER_STATUS.UN_GROUPED } },
+        { session }
+      )
       await session.commitTransaction()
       const toEmails = [
         ...(project.members as IUser[]).map((member: IUser) => member.email), // Lấy email của các thành viên
@@ -358,7 +415,8 @@ export class IdeaService {
       return project
     } catch (error) {
       await session.abortTransaction()
-      throw error
+      console.error('Error in Leader Kick Member:', error)
+      throw error instanceof HttpException ? error : new HttpException('Internal server error', 500)
     } finally {
       session.endSession()
     }

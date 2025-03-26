@@ -234,7 +234,7 @@ export class InviteService {
           project.members.push(user._id)
           await this.userModel.updateOne(
             { _id: invite.to_user },
-            { $set: { status: USER_STATUS.ACTIVATED } },
+            { $set: { status: USER_STATUS.ACTIVATED, project: project._id } },
             { session }
           )
         }
@@ -255,14 +255,14 @@ export class InviteService {
               project.supervisor.push(user._id)
               await this.userModel.updateOne(
                 { _id: invite.to_user },
-                { $set: { status: USER_STATUS.ACTIVATED } },
+                { $set: { status: USER_STATUS.ACTIVATED, project: project._id } },
                 { session }
               )
             } else if (numberOfGroupSupervisorJoined.length < Number(MaxGroupsPerTeacher?.param_value) - 1) {
               project.supervisor.push(user._id)
               await this.userModel.updateOne(
                 { _id: invite.to_user },
-                { $set: { status: USER_STATUS.AVAILABLE } },
+                { $set: { status: USER_STATUS.AVAILABLE, project: project._id } },
                 { session }
               )
             }
