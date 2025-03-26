@@ -3,10 +3,11 @@ import React from 'react'
 import IdeaAndTeam from './IdeaAndTeam'
 import Image from 'next/image'
 import { LineMdLoadingLoop } from '@/components/icons/Loading'
-import { useProject } from '@/hooks'
+import useIdea from '@/hooks/useIdea'
 
 export default function TeamPage() {
-  const { project, isLoading } = useProject()
+  const { project, isLoading } = useIdea()
+
   if (project) {
     return <IdeaAndTeam project={project} />
   }

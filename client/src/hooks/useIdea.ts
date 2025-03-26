@@ -1,8 +1,20 @@
 import instance from '@/utils/axios'
 import { toast } from 'sonner'
 import { AxiosError } from 'axios'
+import { useEffect, useState } from 'react'
+import { Project } from '@/types/project.type'
+import { RootState } from '@/types/store.type'
+import { useAppSelector } from './useStore'
 
 const useIdea = () => {
+  const [project, setProject] = useState<Project | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAppSelector((state: RootState) => state.auth)
+  useEffect(() => {
+    if (user?._id) {
+      getIdea(user?._id)
+    }
+  }, [user?._id])
   const getIdeaOfSupervisor = async () => {
     try {
       const response = await instance.get('/ideas/get-idea-supervisor', { withCredentials: true })
@@ -57,6 +69,16 @@ const useIdea = () => {
       }
     }
   }
+  const getIdea = async (userId: string) => {
+    try {
+      const response = await instance.get(`/ideas/get-idea-student/?userIds=${userId}`, { withCredentials: true })
+      setProject(response.data.data)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setTimeout(() => setIsLoading(false), 1000)
+    }
+  }
   const leaveGroup = async (projectId: string, userId: string) => {
     try {
       const response = await instance.patch(
@@ -91,6 +113,16 @@ const useIdea = () => {
       }
     }
   }
-  return { getIdeaOfSupervisor, deleteIdea, changeIdea, getUpdateIdea, leaveGroup, kickMember }
+  return {
+    getIdeaOfSupervisor,
+    deleteIdea,
+    changeIdea,
+    getUpdateIdea,
+    leaveGroup,
+    kickMember,
+    getIdea,
+    isLoading,
+    project
+  }
 }
 export default useIdea

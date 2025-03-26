@@ -106,17 +106,23 @@ export const SIDEBAR_LINKS = [
     href: '/team',
     label: 'Team',
     icon: <TeamIcon />,
-    roles: ['student']
+    roles: ['student', 'supervisor']
   },
   {
     href: '/my-request',
     label: 'My Request',
     icon: <MyRequestIcon />,
-    roles: ['supervisor']
+    roles: ['supervisor', 'student']
   },
   {
     href: '/list-supervisor',
     label: 'List Supervisors',
+    icon: <ListSupervisorIcon />,
+    roles: ['student']
+  },
+  {
+    href: '/list-idea-supervisor',
+    label: 'List Idea Supervisors',
     icon: <ListSupervisorIcon />,
     roles: ['student']
   }

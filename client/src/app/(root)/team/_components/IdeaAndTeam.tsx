@@ -224,7 +224,7 @@ const IdeaAndTeam: React.FC<IdeaDetailsProps> = ({ project }) => {
             </div>
             <div>
               <p className='font-bold'>Campus</p>
-              <p className='italic'>{idea?.campus.name}</p>
+              <p className='italic'>{idea?.campus?.name}</p>
             </div>
             <div>
               <p className='font-bold'>Field</p>
