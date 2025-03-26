@@ -501,7 +501,7 @@ export class ProjectService {
       })
     } catch (error) {
       console.error('Error in createProjectAsTopic:', error)
-      throw error  
+      throw error
     }
   }
 
@@ -631,100 +631,104 @@ export class ProjectService {
   }
 
   async getProjectsBySupervisor(supervisorId: string) {
-  return runTransaction(async (session) => {
-    const filter: any = {
-      supervisor: supervisorId,
-    };
+    return runTransaction(async (session) => {
+      const filter: any = {
+        supervisor: supervisorId
+      }
 
-    const projects = await this.projectModel
-      .find(filter)
-      .populate({ path: 'major'})
-      .populate({ path: 'field'})
-      .populate({ path: 'campus'})
-      .populate({
-        path: 'supervisor',
-        select: '_id display_name username email avatar',
+      const projects = await this.projectModel
+        .find(filter)
+        .populate({ path: 'major' })
+        .populate({ path: 'field' })
+        .populate({ path: 'campus' })
+        .populate({
+          path: 'supervisor',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'members',
+          select: '_id display_name username email roles'
+        })
+        .populate({
+          path: 'created_by',
+          select: '_id display_name username email avatar'
+        })
+        .populate({
+          path: 'updated_by',
+          select: '_id display_name username email avatar'
+        })
+        .sort({ created_at: -1 })
+        .select(
+          'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by tasks leader'
+        )
+        .session(session)
+
+      if (!projects) {
+        throw new HttpException('Error at getting projects', 400)
+      }
+      const tasksAll = await TaskModel.find({ project: projects.map((project) => project._id) }).exec()
+
+      const formattedProjects = projects.map((project: any) => {
+        const membersWithTaskStats =
+          project.members?.map((member: any) => {
+            const memberId = member._id.toString()
+            const role = project.leader && project.leader.equals(member._id) ? 'Leader' : 'Member'
+            console.log(memberId)
+            console.log(project.leader)
+            const memberTasks =
+              tasksAll?.filter((task: any) =>
+                task.assignees?.some((assignee: any) => assignee._id.toString() === memberId)
+              ) || []
+
+            const totalTask = memberTasks.length
+            const taskNotDone = memberTasks.filter(
+              (task: any) => task.status === 'todo' && task.is_completed === false
+            ).length
+            const taskDone = memberTasks.filter(
+              (task: any) => task.status === 'todo' && task.is_completed === true
+            ).length
+            const progress = taskDone > 0 ? Math.round((taskNotDone / taskDone) * 100) : 0
+
+            return {
+              _id: member._id,
+              display_name: member.display_name,
+              username: member.username,
+              email: member.email,
+              role,
+              totalTask,
+              taskNotDone,
+              taskDone,
+              progress: progress.toFixed(2)
+            }
+          }) || []
+
+        return {
+          _id: project._id,
+          name: project.name,
+          major: project.major || [],
+          field: project.field || [],
+          campus: project.campus ? project.campus : undefined,
+          mark: project.mark,
+          category: project.category,
+          status: project.status,
+          stage: project.stage,
+          slow_count: project.slow_count,
+          members: membersWithTaskStats,
+          supervisor: project.supervisor,
+          created_by: project.created_by,
+          updated_by: project.updated_by,
+          created_at: project.created_at,
+          updated_at: project.updated_at,
+          tasks: project.tasks
+        }
       })
-      .populate({
-        path: 'members',
-        select: '_id display_name username email roles',
-      })
-      .populate({
-        path: 'created_by',
-        select: '_id display_name username email avatar',
-      })
-      .populate({
-        path: 'updated_by',
-        select: '_id display_name username email avatar',
-      })
-      .sort({ created_at: -1 })
-      .select(
-        'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by tasks leader'
-      )
-      .session(session);
 
-    if (!projects) {
-      throw new HttpException('Error at getting projects', 400);
-    }
-    const tasksAll = await TaskModel.find({ project: projects.map((project) => project._id) }).exec();
-
-
-  const formattedProjects = projects.map((project: any) => {
-  const membersWithTaskStats = project.members?.map((member: any) => {
-    const memberId = member._id.toString();
-    const role = project.leader && project.leader.equals(member._id) ? 'Leader' : 'Member';
-    console.log(memberId)
-    console.log(project.leader)
-    const memberTasks = tasksAll?.filter((task: any) =>
-      task.assignees?.some((assignee: any) => assignee._id.toString() === memberId)
-    ) || [];
-
-    const totalTask = memberTasks.length;
-    const taskNotDone = memberTasks.filter((task: any) => task.status === 'todo' && task.is_completed === false).length;
-    const taskDone = memberTasks.filter((task: any) => task.status === 'todo' && task.is_completed === true).length;
-    const progress = taskDone > 0 ? Math.round((taskNotDone / taskDone) * 100) : 0;
-
-    return {
-      _id: member._id,
-      display_name: member.display_name,
-      username: member.username,
-      email: member.email,
-      role,  
-      totalTask,
-      taskNotDone,
-      taskDone,
-      progress: progress.toFixed(2),
-    };
-  }) || [];
-
-  return {
-    _id: project._id,
-    name: project.name,
-    major: project.major || [],
-    field: project.field || [],
-    campus: project.campus ? project.campus : undefined,
-    mark: project.mark,
-    category: project.category,
-    status: project.status,
-    stage: project.stage,
-    slow_count: project.slow_count,
-    members: membersWithTaskStats,
-    supervisor: project.supervisor,
-    created_by: project.created_by,
-    updated_by: project.updated_by,
-    created_at: project.created_at,
-    updated_at: project.updated_at,
-    tasks: project.tasks
-  };
-});
-
-    return {
-      list: formattedProjects,
-      total: formattedProjects.length,
-    };
-  });
-}
- 
+      return {
+        list: formattedProjects,
+        total: formattedProjects.length
+      }
+    })
+  }
 
   async getProjectsToReview(supervisorId: string) {
     return runTransaction(async (session) => {
