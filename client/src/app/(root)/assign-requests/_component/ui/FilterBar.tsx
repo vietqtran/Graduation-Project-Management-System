@@ -1,14 +1,15 @@
 'use client'
 
-import * as Dialog from '@radix-ui/react-dialog'
-
 import React, { useEffect, useRef, useState } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import RequestForm from './RequestForm'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
+import RequestDialog from './RequestDialog'
 import { STATUS_MASTER } from '@/constants/status.enum'
 import instance from '@/utils/axios'
 import { toast } from 'sonner'
@@ -30,7 +31,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
   const [status, setStatus] = useState('all')
   const [requestType, setRequestType] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [groupName, setGroupName] = useState<{ leaderId: string; leaderName: string }[]>([])
 
@@ -57,10 +58,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
             leaderName: project?.leader?.username
           }))
 
-          console.log(leaders)
-
           setGroupName(leaders)
-          console.log('Project names: ', leaders)
           setLoading(false)
         }
       } catch (error) {
@@ -72,6 +70,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
 
     fetchProjectIdeas()
   }, [])
+
   const handleApplyFilter = () => {
     onFilterChange({
       search: searchValue || undefined,
@@ -98,7 +97,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
     document: string
     due_date: string
   }) => {
-    console.log('Form data received:', data)
     currentFormData.current = data
   }
 
@@ -114,10 +112,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
       return
     }
 
-    console.log('Payload data before sending:', currentFormData.current)
-
     try {
-      const response = await instance.post(
+      await instance.post(
         '/request/create-request',
         {
           to_user: to_user,
@@ -132,126 +128,116 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
         }
       )
 
-      console.log('API response:', response.data)
       toast.success('Request created successfully!')
       setRefresh((prev) => !prev)
-      setIsDrawerOpen(false)
+      setIsDialogOpen(false)
       currentFormData.current = null
     } catch (error) {
       console.error('Error creating request:', error)
-      toast.error('ko tao moi request duoc')
+      toast.error('Failed to create request')
     }
   }
 
   return (
-    <div className='flex flex-wrap gap-4 items-center mb-4'>
-      <div className='flex gap-2'>
-        <Input
-          value={searchValue}
-          placeholder='Search by keyword'
-          onChange={(e) => setSearchValue(e.target.value)}
-          className='flex-1 w-[300px]'
-        />
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger>
-            <span>{status === 'all' ? 'All Status' : status}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>All Status</SelectItem>
-            <SelectItem value='assigned'>Assigned</SelectItem>
-            <SelectItem value='completed'>Completed</SelectItem>
-          </SelectContent>
-        </Select>
+    <Card className='p-4 mb-4'>
+      <div className='space-y-4'>
+        {/* Filters Section */}
+        <div className='flex flex-wrap gap-4'>
+          <div className='flex-1 min-w-[300px]'>
+            <Input
+              value={searchValue}
+              placeholder='Search by keyword'
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+          </div>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className='w-[180px]'>
+              <SelectValue placeholder='Select status' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>All Status</SelectItem>
+              <SelectItem value='assigned'>Assigned</SelectItem>
+              <SelectItem value='completed'>Completed</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={requestType} onValueChange={setRequestType}>
-          <SelectTrigger>
-            <span>{requestType === 'all' ? 'All Task Types' : requestType}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>All Request Types</SelectItem>
-            <SelectItem value='project'>Project</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={requestType} onValueChange={setRequestType}>
+            <SelectTrigger className='w-[180px]'>
+              <SelectValue placeholder='Select type' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>All Request Types</SelectItem>
+              <SelectItem value='project'>Project</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Input
-          type='date'
-          value={dateRange.start}
-          placeholder='Start Date'
-          onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-          className='flex-1'
-        />
-        <Input
-          type='date'
-          value={dateRange.end}
-          placeholder='End Date'
-          onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-          className='flex-1'
-        />
+          <div className='flex gap-2'>
+            <Input
+              type='date'
+              value={dateRange.start}
+              placeholder='Start Date'
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className='w-[180px]'
+            />
+            <Input
+              type='date'
+              value={dateRange.end}
+              placeholder='End Date'
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className='w-[180px]'
+            />
+          </div>
 
-        <Button variant='default' size='sm' onClick={handleApplyFilter}>
-          Apply Filter
-        </Button>
-
-        <Button variant='outline' size='sm' onClick={handleClear}>
-          Clear Filter
-        </Button>
-      </div>
-
-      <div className='flex gap-2 justify-center items-center'>
-        <div className='flex gap-2 justify-center items-center'>
-          <div className='flex flex-wrap gap-4 items-center justify-center'>
-            {loading
-              ? 'Loading...'
-              : groupName.map((group, index) => {
-                  const labelColors = [
-                    'border-red-500',
-                    'border-purple-500',
-                    'border-blue-500',
-                    'border-green-500',
-                    'border-orange-500'
-                  ]
-
-                  const groupIndex = index % labelColors.length
-                  return (
-                    <Label
-                      onClick={() => {
-                        setUserId(group.leaderId)
-                        console.log(group.leaderId)
-                      }}
-                      key={index}
-                      className={`text-center rounded-full border-2 ${labelColors[groupIndex]} p-2`}
-                    >
-                      {`Group ${index + 1} | ${group.leaderName}`}
-                    </Label>
-                  )
-                })}
+          <div className='flex gap-2'>
+            <Button variant='default' onClick={handleApplyFilter}>
+              Apply Filter
+            </Button>
+            <Button variant='outline' onClick={handleClear}>
+              Clear Filter
+            </Button>
           </div>
         </div>
 
-        <Button className='bg-yellow-500 text-white' size='sm' onClick={() => setIsDrawerOpen(true)}>
-          Add Request
-        </Button>
+        {/* Groups Section */}
+        <div className='space-y-2'>
+          <Label>Available Groups</Label>
+          <ScrollArea className='h-[100px] border rounded-md p-2'>
+            <div className='flex flex-wrap gap-2'>
+              {loading
+                ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className='h-8 w-[200px]' />)
+                : groupName.map((group, index) => {
+                    const badgeVariants = ['default', 'secondary', 'destructive', 'outline'] as const
+                    const variant = badgeVariants[index % badgeVariants.length]
+                    return (
+                      <Badge
+                        key={group.leaderId}
+                        variant={variant}
+                        className='cursor-pointer hover:opacity-80'
+                        onClick={() => {
+                          setUserId(group.leaderId)
+                        }}
+                      >
+                        Group {index + 1} | {group.leaderName}
+                      </Badge>
+                    )
+                  })}
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Add Request Button */}
+        <div className='flex justify-end'>
+          <Button onClick={() => setIsDialogOpen(true)}>Add Request</Button>
+        </div>
       </div>
 
-      <Dialog.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className='fixed inset-0 bg-black bg-opacity-30' />
-          <Dialog.Content className='fixed top-0 right-0 w-1/2 h-full bg-white shadow-lg p-6 flex flex-col'>
-            <div className='flex-1 overflow-y-auto'>
-              <RequestForm onClose={() => setIsDrawerOpen(false)} onSubmit={handleSubmit} />
-            </div>
-            <div className='flex justify-end gap-6'>
-              <Button variant='outline' onClick={() => setIsDrawerOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant='default' onClick={confirmSubmit}>
-                Submit
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </div>
+      <RequestDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSubmit={handleSubmit}
+        onConfirm={confirmSubmit}
+      />
+    </Card>
   )
 }
 

@@ -8,7 +8,7 @@ import { useAppSelector } from '@/hooks'
 export default function Team() {
   const { user } = useAppSelector((state) => state.auth)
 
-  if (user?.roles.includes('student') && user?.project !== null) {
+  if (user?.roles.includes('student') && !!user.project) {
     return (
       <div>
         <SubmitRequest />
