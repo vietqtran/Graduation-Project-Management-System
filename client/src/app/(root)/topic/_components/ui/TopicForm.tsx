@@ -288,7 +288,6 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
                       <SelectValue placeholder='Select category' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='1'>From Student</SelectItem>
                       <SelectItem value='2'>From Teacher</SelectItem>
                       <SelectItem value='3'>From School</SelectItem>
                     </SelectContent>
