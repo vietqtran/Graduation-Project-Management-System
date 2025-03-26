@@ -53,7 +53,7 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
 
   return (
     <div className='grid gap-6 p-5 md:grid-cols-2 lg:grid-cols-3'>
-      {projects.map((project) => (
+      {projects.list?.map((project) => (
         <Card
           key={project._id}
           className='cursor-pointer hover:shadow-md transition-shadow'
@@ -110,15 +110,15 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
               </div>
             </div>
 
-            {project.supervisor.length > 0 && (
+            {project?.supervisor?.length > 0 && (
               <div className='w-full'>
                 <p className='text-sm font-medium mb-2'>Supervisor</p>
                 <div className='flex items-center gap-2'>
                   <Avatar className='h-8 w-8'>
-                    <AvatarImage src={project.supervisor[0].avatar} alt={project.supervisor[0].display_name} />
+                    <AvatarImage src={project.supervisor.avatar} alt={project.supervisor.display_name} />
                     <AvatarFallback>
-                      {project.supervisor[0].first_name[0]}
-                      {project.supervisor[0].last_name[0]}
+                      {project?.supervisor?.first_name}
+                      {project?.supervisor?.last_name}
                     </AvatarFallback>
                   </Avatar>
                   <span className='text-sm'>{project.supervisor[0].display_name}</span>
