@@ -86,7 +86,7 @@ const IdeaTable: React.FC<IdeaTableProps> = ({ ideas, startIndex, setFilteredIde
         )
 
         if (response.status === 200) {
-          toast.success('Idea accepted successfully')
+          toast.error('Idea rejected successfully')
 
           setFilteredIdeas((prevIdeas) => {
             return prevIdeas.map((idea) => (idea._id === id ? { ...idea, status: STATUS_MASTER.REJECTED } : idea))
