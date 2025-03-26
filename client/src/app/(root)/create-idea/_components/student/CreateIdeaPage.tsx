@@ -1,14 +1,14 @@
 'use client'
 
-import { useAppSelector, useProject, useRouter } from '@/hooks'
-
+import { useAppSelector, useRouter } from '@/hooks'
+import UseIdea from '@/hooks/useIdea'
 import CreateIdeaStudent from './CreateIdeaStudent'
 import Image from 'next/image'
 import React from 'react'
 import { toast } from 'sonner'
 
 export default function CreateIdeaPage() {
-  const { project, isLoading } = useProject()
+  const { project, isLoading } = UseIdea()
   const router = useRouter()
   const { user } = useAppSelector((state) => state.auth)
 
