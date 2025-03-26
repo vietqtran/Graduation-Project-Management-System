@@ -12,4 +12,7 @@ router.delete('/delete-request/:id', requestController.deleteRequest)
 router.get('/get-request-by-id/:id', requestController.getRequestById)
 router.get('/get-requests-by-user/:userId', requestController.getRequestsByUserId)
 router.patch('/update-request/:requestId', requestController.updateRequest)
+router.get('/student', requestController.getStudentRequests)
+router.post('/student/upload', requestController.uploadDocument)
+router.post('/student/submit', requestController.submitRequest)
 export { router as requestRoutes }

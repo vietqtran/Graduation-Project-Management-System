@@ -112,7 +112,7 @@ export const SIDEBAR_LINKS = [
     href: '/my-request',
     label: 'My Request',
     icon: <MyRequestIcon />,
-    roles: ['supervisor']
+    roles: ['supervisor', 'student']
   },
   {
     href: '/list-supervisor',
