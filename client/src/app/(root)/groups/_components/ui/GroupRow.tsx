@@ -115,7 +115,6 @@ const GroupRow: React.FC = () => {
                           <TableCell>Role</TableCell>
                           <TableCell>Total Task</TableCell>
                           <TableCell>Task Not Done</TableCell>
-                          <TableCell>Task Doing</TableCell>
                           <TableCell>Task Done</TableCell>
                           <TableCell>Progress</TableCell>
                           <TableCell>Action</TableCell>
@@ -128,7 +127,6 @@ const GroupRow: React.FC = () => {
                             <TableCell>{member?.role}</TableCell>
                             <TableCell>{member?.totalTask}</TableCell>
                             <TableCell>{member?.taskNotDone}</TableCell>
-                            <TableCell>{member?.taskDoing}</TableCell>
                             <TableCell>{member?.taskDone}</TableCell>
                             <TableCell>
                               <ProgressBar progress={parseFloat(member?.progress)} />

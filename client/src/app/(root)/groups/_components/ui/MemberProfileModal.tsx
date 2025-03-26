@@ -39,9 +39,6 @@ const MemberProfileModal: React.FC<MemberProfileModalProps> = ({ member, onClose
           <strong>Tasks Not Completed:</strong>  {member.taskNotDone}
         </p>
         <p>
-          <strong>Tasks Doing:</strong>  {member.taskDoing}
-        </p>
-        <p>
           <strong>Total task:</strong>  {member.totalTask}
         </p>
         <button className='mt-4 px-4 py-2 bg-gray-300 rounded' onClick={onClose}>

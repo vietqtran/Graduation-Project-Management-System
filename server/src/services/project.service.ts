@@ -659,7 +659,7 @@ export class ProjectService {
       })
       .sort({ created_at: -1 })
       .select(
-        'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by tasks'
+        'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by tasks leader'
       )
       .session(session);
 
@@ -679,13 +679,10 @@ export class ProjectService {
       task.assignees?.some((assignee: any) => assignee._id.toString() === memberId)
     ) || [];
 
-
-
     const totalTask = memberTasks.length;
-    const taskNotDone = memberTasks.filter((task: any) => task.status === 'todo').length;
-    const taskDoing = memberTasks.filter((task: any) => task.status === 'in-progress').length;
-    const taskDone = memberTasks.filter((task: any) => task.status === 'done').length;
-    const progress = taskDone > 0 ? (taskNotDone + taskDoing) / taskDone : 0;
+    const taskNotDone = memberTasks.filter((task: any) => task.status === 'todo' && task.is_completed === false).length;
+    const taskDone = memberTasks.filter((task: any) => task.status === 'todo' && task.is_completed === true).length;
+    const progress = taskDone > 0 ? Math.round((taskNotDone / taskDone) * 100) : 0;
 
     return {
       _id: member._id,
@@ -695,7 +692,6 @@ export class ProjectService {
       role,  
       totalTask,
       taskNotDone,
-      taskDoing,
       taskDone,
       progress: progress.toFixed(2),
     };
