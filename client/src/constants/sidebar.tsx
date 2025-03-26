@@ -122,7 +122,7 @@ export const SIDEBAR_LINKS = [
   },
   {
     href: '/list-idea-supervisor',
-    label: 'List Idea Supervisors',
+    label: 'List Ideas Of Supervisor',
     icon: <ListSupervisorIcon />,
     roles: ['student']
   }
