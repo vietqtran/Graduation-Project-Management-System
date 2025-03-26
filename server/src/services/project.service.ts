@@ -447,10 +447,7 @@ export class ProjectService {
         const projectDetails = {
           name: projectData.name,
           description: projectData.description || 'No description provided.',
-          major: projectData.major,
-          field: projectData.field,
-          campus: projectData.campus,
-          category: projectData.category
+          category: projectData.category === 2 ? 'From Teacher' : 'From School',
         }
 
         const user = await this.userModel
@@ -486,6 +483,7 @@ export class ProjectService {
           context: {
             leader_name: `${leader.first_name || ''} ${leader.last_name || ''}`.trim() || 'Leader',
             projectDetails,
+            supervisor_name: `${updater.first_name || ''} ${updater.last_name || ''}`.trim() || 'Supervisor',
             year: new Date().getFullYear(),
             start_url: process.env.CLIENT_URL
           }
@@ -901,7 +899,7 @@ export class ProjectService {
     return runTransaction(async (session) => {
       console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
 
-      const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).session(session)
+      const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).populate('leader').session(session)
       if (!project) {
         console.log('Project not found:', projectId)
         throw new HttpException('Project not found', 404)
@@ -938,19 +936,22 @@ export class ProjectService {
       }
 
       console.log(`✅ Project status updated to ${status}`)
+      const leaderEmail = await this.userModel.findOne(
+        { _id: project.leader },)
 
       await this.emailQueue.addEmailJob({
-        to: userId,
+        to: leaderEmail?.email || '',
         subject: `Project Status Updated: ${status}`,
         templateName: 'project-status-update',
         context: {
+          leaderName: leaderEmail?.display_name,
           projectTitle: project.name,
           status,
           year: new Date().getFullYear(),
           start_url: process.env.CLIENT_URL
         }
       })
-      console.log(`📧 Notification email sent to ${userId}`)
+      console.log(`📧 Notification email sent to ${leaderEmail}`)
 
       await session.commitTransaction()
       console.log('✅ Transaction committed successfully')
