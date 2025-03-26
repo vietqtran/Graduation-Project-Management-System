@@ -1,19 +1,21 @@
 import * as dotenv from 'dotenv'
-import mongoose, { Model } from 'mongoose'
 
 import RequestModel, { IRequest } from '@/models/request.model'
 import UserModel, { IUser } from '@/models/user.model'
-import { HttpException } from '@/shared/exceptions/http.exception'
+import mongoose, { Model } from 'mongoose'
+
 import { CreateRequestDto } from '@/dtos/request/create-request.dto'
-import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
-import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
-import { RequestStatus } from '@/constants/request-status.enum'
 import { EmailQueue } from '@/queues/email.queue'
-import { MailService } from './mail.service'
-import { runTransaction } from '@/helpers/transaction-helper'
+import { HttpException } from '@/shared/exceptions/http.exception'
 import { IUploadDocument } from '@/models/document.model'
-import { session } from 'passport'
+import { MailService } from './mail.service'
+import { RequestStatus } from '@/constants/request-status.enum'
+import { STATUS_MASTER } from '@/constants/status'
+import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
+import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
 import { create } from 'domain'
+import { runTransaction } from '@/helpers/transaction-helper'
+import { session } from 'passport'
 
 dotenv.config()
 
@@ -190,12 +192,11 @@ export class RequestService {
 
   async getAllRequests(tokenPayload: any) {
     const userId = tokenPayload._id // Lấy userId từ token
-
     if (!userId) {
       throw new Error('User ID not found in token')
     }
 
-    return this.requestModel.find({ from_user: userId }).populate('to_user').populate('approve_user')
+    return await this.requestModel.find({ from_user: userId }).populate('to_user').populate('approve_user')
   }
 
   async deleteRequest(requestId: string, tokenPayload: any) {
@@ -217,6 +218,46 @@ export class RequestService {
         throw new HttpException('Request not found', 404)
       } else {
         return request
+      }
+    })
+  }
+
+  async getStudentRequests(studentId: string) {
+    return runTransaction(async (session) => {
+      const requests = await this.requestModel
+        .find({ to_user: studentId })
+        .populate('to_user')
+        .populate('from_user')
+        .populate('documents')
+        .session(session)
+      return requests ?? []
+    })
+  }
+
+  async uploadDocument({ documentIds, requestId }: { documentIds: string[]; requestId: string }) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.findById(requestId).session(session)
+      if (!request) {
+        throw new HttpException('Request not found', 404)
+      } else {
+        await this.requestModel.findByIdAndUpdate(
+          requestId,
+          { $push: { documents: { $each: documentIds } } },
+          { session }
+        )
+        return { message: 'Request updated successfully' }
+      }
+    })
+  }
+
+  async submitRequest(requestId: string) {
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.findById(requestId).session(session)
+      if (!request) {
+        throw new HttpException('Request not found', 404)
+      } else {
+        await this.requestModel.findByIdAndUpdate(requestId, { status: 'submitted' }, { session })
+        return { message: 'Request summited' }
       }
     })
   }

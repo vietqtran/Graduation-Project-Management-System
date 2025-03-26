@@ -38,7 +38,6 @@ export class IdeaService {
     if (new Date() > new Date(getDeadline.deadline_date)) {
       throw new HttpException('The deadline for creating ideas has passed', 400)
     }
-    // Kiểm tra các trường bắt buộc trong một lần
     const requiredFields: (keyof CreateIdeaDto)[] = ['name', 'campus', 'leader', 'members', 'field', 'major']
     const missingFields = requiredFields.filter((field) => !ideaData[field])
 

@@ -22,7 +22,9 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       const document = new this.uploadDocumentModel(documentData)
       const savedDocument = await document.save()
-      await this.projectModel.findByIdAndUpdate(documentData.project_id, { $push: { documents: savedDocument._id } })
+      await this.projectModel
+        .findByIdAndUpdate(documentData.project_id, { $push: { documents: savedDocument._id } })
+        .session(session)
       return savedDocument
     })
   }
