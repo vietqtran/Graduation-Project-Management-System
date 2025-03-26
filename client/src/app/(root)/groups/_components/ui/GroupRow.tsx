@@ -146,7 +146,11 @@ const GroupRow: React.FC = () => {
                 </TableRow>
               ) : null}
             </React.Fragment>
-          )) || <TableRow><TableCell colSpan={4}>No groups found</TableCell></TableRow>}
+          )) || (
+            <TableRow>
+              <TableCell colSpan={4}>No groups found</TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
       {selectedMember && <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />}
