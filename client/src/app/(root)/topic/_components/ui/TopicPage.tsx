@@ -43,25 +43,25 @@ const TopicPage = () => {
   }
 
   const handleSubmit = async (data: FormData) => {
-  setLoading(true);
-  try {
-    const response = await instance.post('/project/create-project-as-topic', data, {
-      withCredentials: true
-    });
-    if (response.data.statusCode === 200) {
-      toast.success('Topic submitted successfully!');
-      setIsDrawerOpen(false);
-      setRefresh((prev) => !prev);
-    } else {
-      toast.error(response.data.message || 'Có lỗi xảy ra');
+    setLoading(true)
+    try {
+      const response = await instance.post('/project/create-project-as-topic', data, {
+        withCredentials: true
+      })
+      if (response.data.statusCode === 200) {
+        toast.success('Topic submitted successfully!')
+        setIsDrawerOpen(false)
+        setRefresh((prev) => !prev)
+      } else {
+        toast.error(response.data.message || 'Có lỗi xảy ra')
+      }
+    } catch (error: unknown) {
+      toast.error('Leader already has a project')
+      console.log('Chi tiết lỗi:', error)
+    } finally {
+      setLoading(false)
     }
-  } catch (error: unknown) {
-    toast.error('Leader already has a project');
-    console.log('Chi tiết lỗi:', error);
-  } finally {
-    setLoading(false);
   }
-};
 
   return (
     <div>
@@ -90,11 +90,7 @@ const TopicPage = () => {
               <Button variant='outline' onClick={() => setIsDrawerOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                className='w-32'
-                onClick={() => formRef.current?.submit()}
-                disabled={loading}
-              >
+              <Button className='w-32' onClick={() => formRef.current?.submit()} disabled={loading}>
                 {loading ? 'Submitting...' : 'Submit'}
               </Button>
             </div>
