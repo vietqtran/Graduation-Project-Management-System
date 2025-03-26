@@ -8,13 +8,31 @@ import { useAppSelector } from './useStore'
 
 const useIdea = () => {
   const [project, setProject] = useState<Project | null>(null)
+  const [supervisorProjects, setSupervisorProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useAppSelector((state: RootState) => state.auth)
   useEffect(() => {
-    if (user?._id) {
-      getIdea(user?._id)
+    // if (user?._id) {
+    //   getIdea(user?._id)
+    // }
+    const fetchData = async () => {
+      if (!user?._id) return
+      setIsLoading(true)
+      try {
+        if (user.roles.includes('student')) {
+          await getIdea(user?._id)
+        } else if (user.roles.includes('supervisor')) {
+          getIdeaSupervisorJoined(user?._id)
+        }
+      } catch (error) {
+        console.error('Error fetching idea:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [user?._id])
+    fetchData()
+  }, [user])
+
   const getIdeaOfSupervisor = async () => {
     try {
       const response = await instance.get('/ideas/get-idea-supervisor', { withCredentials: true })
@@ -25,6 +43,19 @@ const useIdea = () => {
       } else {
         toast.error('An unexpected error occurred')
       }
+    }
+  }
+  const getIdeaSupervisorJoined = async (supervisedId: string) => {
+    try {
+      const response = await instance.get(`/ideas/supervisor-join/?supervisedId=${supervisedId}`, {
+        withCredentials: true
+      })
+      setSupervisorProjects(response.data.data)
+      return response.data
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setTimeout(() => setIsLoading(false), 1000)
     }
   }
   const deleteIdea = async (projectId: string, userId: string) => {
@@ -122,7 +153,9 @@ const useIdea = () => {
     kickMember,
     getIdea,
     isLoading,
-    project
+    project,
+    getIdeaSupervisorJoined,
+    supervisorProjects
   }
 }
 export default useIdea

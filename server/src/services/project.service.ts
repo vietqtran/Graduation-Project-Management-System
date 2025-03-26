@@ -500,7 +500,7 @@ export class ProjectService {
       })
     } catch (error) {
       console.error('Error in createProjectAsTopic:', error)
-      throw error  
+      throw error
     }
   }
 
