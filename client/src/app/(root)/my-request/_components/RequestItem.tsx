@@ -9,6 +9,7 @@ import { enUS } from 'date-fns/locale'
 import { formatDistanceToNow } from 'date-fns'
 import instance from '@/utils/axios'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 interface RequestItemProps {
   request: Request
@@ -23,7 +24,7 @@ export function RequestItem({ request, onClickOpenUploadModal, id, isSumitted }:
     addSuffix: true,
     locale: enUS
   })
-
+  const { refresh } = useRouter()
   const handleSubmit = async () => {
     try {
       const { data } = await instance.post(`/request/student/submit`, { id }, { withCredentials: true })
@@ -34,6 +35,8 @@ export function RequestItem({ request, onClickOpenUploadModal, id, isSumitted }:
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      refresh()
     }
   }
 

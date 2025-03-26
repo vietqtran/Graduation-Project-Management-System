@@ -167,13 +167,13 @@ export class IdeaService {
       if (project?.members && project?.members.length > 0) {
         const memberIds = (project.members as IUser[]).map((member: IUser) => member._id)
         await this.userModel
-          .updateMany({ _id: { $in: memberIds } }, { $set: { status: USER_STATUS.UN_GROUPED } }, { session })
+          .updateMany({ _id: { $in: memberIds } }, { $set: { status: USER_STATUS.UN_GROUPED, project: null } }, { session })
           .exec()
       }
       if (project?.supervisor && project?.supervisor.length > 0) {
         const supervisorIds = (project.supervisor as IUser[]).map((supervisor: IUser) => supervisor._id)
         await this.userModel
-          .updateMany({ _id: { $in: supervisorIds } }, { $set: { status: USER_STATUS.AVAILABLE } }, { session })
+          .updateMany({ _id: { $in: supervisorIds } }, { $set: { status: USER_STATUS.AVAILABLE, project: null } }, { session })
           .exec()
       }
       await this.inviteModel
