@@ -2,11 +2,11 @@ import { NextFunction, Request, Response } from 'express'
 
 import { ApproveRequestDto } from '@/dtos/request/approve-request.dto'
 import { DenyRequestDto } from '@/dtos/request/deny-request.dto'
+import { HttpException } from '@/shared/exceptions/http.exception'
+import { RequestService } from '@/services/request.service'
+import { ResponseHandler } from '@/middlewares/response-handler.middleware'
 import { asyncHandler } from '@/helpers/async-handler'
 import { getUser } from '@/helpers/auth-helper'
-import { ResponseHandler } from '@/middlewares/response-handler.middleware'
-import { RequestService } from '@/services/request.service'
-import { HttpException } from '@/shared/exceptions/http.exception'
 
 export class RequestController {
   private readonly requestService: RequestService
@@ -87,5 +87,23 @@ export class RequestController {
     const updateRequestDto = req.body
     const request = await this.requestService.updateRequest(requestId, tokenPayload._id, updateRequestDto)
     ResponseHandler.sendSuccess(res, request, 'Update request successfully')
+  })
+
+  getStudentRequests = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const tokenPayload = getUser(req)
+    const requests = await this.requestService.getStudentRequests(tokenPayload._id)
+    ResponseHandler.sendSuccess(res, requests)
+  })
+
+  uploadDocument = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const requestData = req.body
+    const document = await this.requestService.uploadDocument(requestData)
+    ResponseHandler.sendSuccess(res, document, 'Upload document successfully')
+  })
+
+  submitRequest = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const requestData = req.body
+    const request = await this.requestService.submitRequest(requestData.id)
+    ResponseHandler.sendSuccess(res, request, 'Submit request successfully')
   })
 }
