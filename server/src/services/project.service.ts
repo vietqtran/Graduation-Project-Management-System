@@ -18,6 +18,7 @@ import { MailService } from './mail.service'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
 import { send } from 'process'
+import { TaskModel } from '@/models/task.model'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -630,114 +631,104 @@ export class ProjectService {
   }
 
   async getProjectsBySupervisor(supervisorId: string) {
-    return runTransaction(async (session) => {
-      console.log('🔍 Supervisor ID from token:', supervisorId)
+  return runTransaction(async (session) => {
+    const filter: any = {
+      supervisor: supervisorId,
+    };
 
-      const sampleProject = await this.projectModel.findOne().lean().exec()
-      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
-
-      let projects: any[] = []
-
-      // Truy vấn theo chuỗi
-      console.log('Attempting string query...')
-      const stringQuery = await this.projectModel
-        .find({ supervisor: supervisorId, status: STATUS_MASTER.APPROVED })
-        .lean()
-        .exec()
-      console.log(`String query found ${stringQuery.length} projects`)
-      projects = [...projects, ...stringQuery]
-
-      // Truy vấn theo mảng string
-      console.log('Attempting array string query...')
-      const arrayStringQuery = await this.projectModel
-        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
-        .lean()
-        .exec()
-      console.log(`Array string query found ${arrayStringQuery.length} projects`)
-      projects = [...projects, ...arrayStringQuery]
-
-      // Kiểm tra nếu supervisorId hợp lệ (ObjectId)
-      if (Types.ObjectId.isValid(supervisorId)) {
-        const objectId = new Types.ObjectId(supervisorId)
-
-        console.log('Attempting ObjectId query...')
-        const objectIdQuery = await this.projectModel
-          .find({ supervisor: objectId, status: STATUS_MASTER.APPROVED })
-          .lean()
-          .exec()
-        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
-        projects = [...projects, ...objectIdQuery]
-
-        console.log('Attempting array ObjectId query...')
-        const arrayObjectIdQuery = await this.projectModel
-          .find({ supervisor: { $in: [objectId] }, status: STATUS_MASTER.APPROVED })
-          .lean()
-          .exec()
-        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
-        projects = [...projects, ...arrayObjectIdQuery]
-      }
-
-      console.log('Attempting raw MongoDB query...')
-      const rawQuery = await this.projectModel.collection
-        .find({ supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED })
-        .toArray()
-      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
-      projects = [...projects, ...rawQuery]
-
-      // Truy vấn với populate
-      console.log('Attempting populated query...')
-      const populatedProjects = await this.projectModel
-        .find({
-          $or: [
-            { supervisor: supervisorId, status: STATUS_MASTER.APPROVED },
-            { supervisor: { $in: [supervisorId] }, status: STATUS_MASTER.APPROVED },
-            ...(Types.ObjectId.isValid(supervisorId)
-              ? [
-                  { supervisor: new Types.ObjectId(supervisorId), status: STATUS_MASTER.APPROVED },
-                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] }, status: STATUS_MASTER.APPROVED }
-                ]
-              : [])
-          ]
-        })
-        .populate('leader')
-        .populate('supervisor')
-        .populate('major')
-        .populate('field')
-        .populate('campus')
-        .populate({
-          path: 'members',
-          populate: [
-            { path: 'major', select: 'name' },
-            { path: 'field', select: 'name' }
-          ]
-        })
-        .populate({
-          path: 'documents',
-          populate: { path: 'user', select: 'display_name email' }
-        })
-        .session(session)
-        .exec()
-      console.log(`Populated projects found: ${populatedProjects.length}`)
-      projects = [...projects, ...populatedProjects]
-
-      if (!projects || projects.length === 0) {
-        console.log('No projects found for supervisor after all query attempts')
-        return []
-      }
-
-      // Loại bỏ project trùng lặp dựa trên _id
-      const uniqueProjects = Array.from(
-        new Map(
-          projects
-            .filter((p) => p && p._id) // Đảm bảo project có _id hợp lệ
-            .map((p: any) => [p._id.toString(), p]) // Dùng Map để loại bỏ trùng
-        ).values()
+    const projects = await this.projectModel
+      .find(filter)
+      .populate({ path: 'major'})
+      .populate({ path: 'field'})
+      .populate({ path: 'campus'})
+      .populate({
+        path: 'supervisor',
+        select: '_id display_name username email avatar',
+      })
+      .populate({
+        path: 'members',
+        select: '_id display_name username email roles',
+      })
+      .populate({
+        path: 'created_by',
+        select: '_id display_name username email avatar',
+      })
+      .populate({
+        path: 'updated_by',
+        select: '_id display_name username email avatar',
+      })
+      .sort({ created_at: -1 })
+      .select(
+        'name major field campus mark category status stage slow_count members supervisor created_at updated_at created_by updated_by tasks'
       )
+      .session(session);
 
-      console.log(`Final unique projects count: ${uniqueProjects.length}`)
-      return uniqueProjects
-    })
-  }
+    if (!projects) {
+      throw new HttpException('Error at getting projects', 400);
+    }
+    const tasksAll = await TaskModel.find({ project: projects.map((project) => project._id) }).exec();
+
+
+  const formattedProjects = projects.map((project: any) => {
+  const membersWithTaskStats = project.members?.map((member: any) => {
+    const memberId = member._id.toString();
+    const role = project.leader && project.leader.equals(member._id) ? 'Leader' : 'Member';
+    console.log(memberId)
+    console.log(project.leader)
+    const memberTasks = tasksAll?.filter((task: any) =>
+      task.assignees?.some((assignee: any) => assignee._id.toString() === memberId)
+    ) || [];
+
+
+
+    const totalTask = memberTasks.length;
+    const taskNotDone = memberTasks.filter((task: any) => task.status === 'todo').length;
+    const taskDoing = memberTasks.filter((task: any) => task.status === 'in-progress').length;
+    const taskDone = memberTasks.filter((task: any) => task.status === 'done').length;
+    const progress = taskDone > 0 ? (taskNotDone + taskDoing) / taskDone : 0;
+
+    return {
+      _id: member._id,
+      display_name: member.display_name,
+      username: member.username,
+      email: member.email,
+      role,  
+      totalTask,
+      taskNotDone,
+      taskDoing,
+      taskDone,
+      progress: progress.toFixed(2),
+    };
+  }) || [];
+
+  return {
+    _id: project._id,
+    name: project.name,
+    major: project.major || [],
+    field: project.field || [],
+    campus: project.campus ? project.campus : undefined,
+    mark: project.mark,
+    category: project.category,
+    status: project.status,
+    stage: project.stage,
+    slow_count: project.slow_count,
+    members: membersWithTaskStats,
+    supervisor: project.supervisor,
+    created_by: project.created_by,
+    updated_by: project.updated_by,
+    created_at: project.created_at,
+    updated_at: project.updated_at,
+    tasks: project.tasks
+  };
+});
+
+    return {
+      list: formattedProjects,
+      total: formattedProjects.length,
+    };
+  });
+}
+ 
 
   async getProjectsToReview(supervisorId: string) {
     return runTransaction(async (session) => {
