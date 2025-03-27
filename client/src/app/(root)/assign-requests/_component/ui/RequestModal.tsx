@@ -49,7 +49,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       remark: request.remark || '',
       type: request.type || 'project',
       description: request.description || '',
-      due_date: request.due_date || '',
+      due_date: request.due_date || ''
     }
   })
 
@@ -65,7 +65,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       remark: request.remark || '',
       type: request.type || 'project',
       description: request.description || '',
-      due_date: request.due_date || '',
+      due_date: request.due_date || ''
     })
   }, [request, form])
 
@@ -171,12 +171,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
                 <ul className='list-disc pl-5'>
                   {request.documents.map((doc, index) => (
                     <li key={index}>
-                      <a
-                        href={doc}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-blue-500 underline'
-                      >
+                      <a href={doc} target='_blank' rel='noopener noreferrer' className='text-blue-500 underline'>
                         {doc.split('/').pop() || 'Document'}
                       </a>
                     </li>

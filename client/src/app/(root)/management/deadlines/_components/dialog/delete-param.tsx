@@ -9,9 +9,11 @@ import { ParametersResponse } from '@/types/management.type'
 interface DeleteParamDialogProps {
   parameter: ParametersResponse[0]
   onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const DeleteParamDialog = ({ parameter, onClose }: DeleteParamDialogProps) => {
+const DeleteParamDialog = ({ parameter, onClose, open, onOpenChange }: DeleteParamDialogProps) => {
   const { deleteParameter } = useManagement()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -26,7 +28,7 @@ const DeleteParamDialog = ({ parameter, onClose }: DeleteParamDialogProps) => {
   }
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Parameter</DialogTitle>

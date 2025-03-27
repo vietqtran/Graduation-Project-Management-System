@@ -29,7 +29,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
       remark: '',
       description: '',
       document: '',
-      due_date: '',
+      due_date: ''
     }
   })
 

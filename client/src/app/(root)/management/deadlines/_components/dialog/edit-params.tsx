@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import useManagement from '@/hooks/useManagement'
+import { ParametersResponse } from '@/types/management.type'
 
 // Validation Schema
 const paramSchema = z.object({
@@ -22,17 +23,13 @@ const paramSchema = z.object({
 type ParamFormValues = z.infer<typeof paramSchema>
 
 interface EditParamDialogProps {
-  parameter: {
-    _id: string
-    param_name: string
-    param_value: string
-    param_type: 'string' | 'number' | 'boolean' | 'date'
-    description?: string
-  }
+  parameter: ParametersResponse[0]
   onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const EditParamDialog = ({ parameter, onClose }: EditParamDialogProps) => {
+const EditParamDialog = ({ parameter, onClose, open, onOpenChange }: EditParamDialogProps) => {
   const { updateParameter } = useManagement()
 
   const {
@@ -61,15 +58,20 @@ const EditParamDialog = ({ parameter, onClose }: EditParamDialogProps) => {
   }, [parameter, reset])
 
   const onSubmit = async (data: ParamFormValues) => {
-    const response = await updateParameter({ _id: parameter._id, ...data })
-    if (response === true) {
-      reset()
-      onClose()
+    try {
+      const response = await updateParameter({ _id: parameter._id, ...data })
+      if (response === true) {
+        reset()
+        onOpenChange(false)
+        onClose()
+      }
+    } catch (error) {
+      console.error('Error updating parameter:', error)
     }
   }
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Parameter</DialogTitle>
