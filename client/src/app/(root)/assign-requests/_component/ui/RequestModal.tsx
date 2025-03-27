@@ -1,12 +1,12 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Form, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import instance from '@/utils/axios'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -49,9 +49,12 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       remark: request.remark || '',
       type: request.type || 'project',
       description: request.description || '',
-      due_date: request.due_date || ''
+      due_date: request.due_date || '',
     }
   })
+
+  const [uploading, setUploading] = useState(false)
+  const [documentId, setDocumentId] = useState<string | null>(null)
 
   useEffect(() => {
     form.reset({
@@ -62,9 +65,26 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       remark: request.remark || '',
       type: request.type || 'project',
       description: request.description || '',
-      due_date: request.due_date || ''
+      due_date: request.due_date || '',
     })
   }, [request, form])
+
+  const handleUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      // Giả định đây là logic tải file lên server, thay bằng API thực tế của bạn
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await instance.post('/upload', formData, { withCredentials: true })
+      setDocumentId(response.data.documentId) // Giả định server trả về documentId
+      toast.success('Document uploaded successfully!')
+    } catch (error) {
+      console.error('Error uploading document:', error)
+      toast.error('Failed to upload document!')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit: SubmitHandler<FormValues> = async (data) => {
     if (type !== 'update') return
@@ -143,6 +163,52 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
                 </FormItem>
               )}
             />
+
+            {/* Hiển thị danh sách tài liệu trong chế độ chi tiết */}
+            {type === 'detail' && request.documents && request.documents.length > 0 && (
+              <div className='col-span-2'>
+                <FormLabel>Documents</FormLabel>
+                <ul className='list-disc pl-5'>
+                  {request.documents.map((doc, index) => (
+                    <li key={index}>
+                      <a
+                        href={doc}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-blue-500 underline'
+                      >
+                        {doc.split('/').pop() || 'Document'}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tải lên tài liệu trong chế độ cập nhật */}
+            {type === 'update' && (
+              <div className='col-span-2'>
+                <FormLabel>Upload Document</FormLabel>
+                <FormControl>
+                  <Input
+                    type='file'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleUpload(file)
+                    }}
+                    disabled={uploading}
+                  />
+                </FormControl>
+                <Button
+                  type='button'
+                  onClick={() => documentId && toast.success('Document already uploaded!')}
+                  disabled={uploading || !!documentId}
+                  className='mt-2'
+                >
+                  {uploading ? 'Uploading...' : documentId ? 'Uploaded' : 'Upload'}
+                </Button>
+              </div>
+            )}
 
             <FormField
               name='due_date'

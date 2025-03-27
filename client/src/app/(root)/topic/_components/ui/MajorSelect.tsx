@@ -45,7 +45,7 @@ const MajorSelection: React.FC<MajorSelectProps> = ({ onMajorSelect }) => {
       ) : hasData ? (
         <>
           <button
-            className='p-2 rounded-md border bg-blue-700 border-gray-300 '
+            className='p-2 rounded-md border bg-blue-700 border-gray-300 white text-white'
             onClick={() => onMajorSelect(null, true)}
           >
             Select all majors

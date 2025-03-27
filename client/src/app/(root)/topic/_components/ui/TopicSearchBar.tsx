@@ -9,9 +9,11 @@ import { useEffect, useState } from 'react'
 
 export default function TopicSearchBar({
   onOpenForm,
+  onOpenFormProject,
   onSearch
 }: {
   onOpenForm: () => void
+  onOpenFormProject: () => void
   onSearch: (searchTerm: string, sortOrder: string, filterFieldId: string) => void
 }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -84,7 +86,11 @@ export default function TopicSearchBar({
           </SelectContent>
         </Select>
         <Button onClick={onOpenForm} className='flex items-center w-full md:w-1/4'>
-          <PlusCircle className='mr-2' /> Submit Topic
+          <PlusCircle className='mr-2' /> Submit New Topic
+        </Button>
+
+        <Button onClick={onOpenFormProject} className='flex items-center w-full md:w-1/4'>
+          <PlusCircle className='mr-2' /> Submit New Project 
         </Button>
       </div>
     </div>

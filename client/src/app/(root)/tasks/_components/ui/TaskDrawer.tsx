@@ -15,7 +15,6 @@ import { User } from '@/types/user.type'
 import { format } from 'date-fns'
 import instance from '@/utils/axios'
 import { toast } from 'sonner'
-import useClickOutside from '@/hooks/useClickOutside'
 import { useProject } from '@/hooks'
 
 interface TaskDrawerProps {
@@ -174,13 +173,8 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({ task, onClose, onUpdate, isView
     })
   }
 
-  const ref = useClickOutside<HTMLDivElement>(() => onClose())
-
   return (
-    <div
-      ref={ref}
-      className='fixed z-[120] right-0 max-h-screen min-h-screen top-0 overflow-y-auto bg-background border-l shadow-lg overflow-hidden flex flex-col'
-    >
+    <div className='fixed z-[120] right-0 max-h-screen min-h-screen top-0 overflow-y-auto bg-background border-l shadow-lg overflow-hidden flex flex-col'>
       <div className='p-4 border-b flex items-center justify-between'>
         <h2 className='text-xl font-semibold'>Task Details</h2>
         <Button variant='ghost' size='icon' onClick={onClose} aria-label='Close'>

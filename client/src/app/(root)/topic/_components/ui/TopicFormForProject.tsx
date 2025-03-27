@@ -30,6 +30,12 @@ interface Campus {
   description: string
 }
 
+interface TopicName {
+  _id: string
+  name: string
+  description: string
+}
+
 interface FormData {
   name: string
   description: string
@@ -66,6 +72,7 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
   const [majors, setMajors] = useState<Major[]>([])
   const [fields, setFields] = useState<Field[]>([])
   const [campuses, setCampuses] = useState<Campus[]>([])
+  const [topicnames, setTopicnames] = useState<TopicName[]>([])
 
   useEffect(() => {
     const fetchMajors = async () => {
@@ -98,9 +105,20 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
       }
     }
 
+    const fetchTopicnames = async () => {
+      try {
+        const response = await instance.get('/project/get-project-with-null-status', { withCredentials: true })
+        setTopicnames(response.data.data)
+      } catch (error) {
+        console.error('Error fetching topicnames:', error)
+        toast.error('Failed to load topicnames')
+      }
+    }
+
     fetchMajors()
     fetchFields()
     fetchCampuses()
+    fetchTopicnames()
   }, [])
 
   async function handleUpload(file: File) {
@@ -148,23 +166,32 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
   return (
     <div>
       <div className='bg-white grid p-1 gap-4'>
-        <h2 className='text-2xl font-bold text-center mt-12'>Submit a New Topic</h2>
+        <h2 className='text-2xl font-bold text-center mt-12'>Submit a New Project with existed topic</h2>
         <Form {...form}>
           <form className='grid grid-cols-2 gap-4' onSubmit={form.handleSubmit(handleSubmit)}>
-            <FormField
+             <FormField
               control={form.control}
               name='name'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Topic Name</FormLabel>
-                  <FormControl>
-                    <Input type='text' placeholder='Enter topic name' {...field} />
-                  </FormControl>
+                  <FormLabel>Select topic name</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select major' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {topicnames.map((topicname) => (
+                        <SelectItem key={topicname._id} value={topicname.name}>
+                          {topicname.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+ 
             <FormField
               control={form.control}
               name='description'
@@ -317,7 +344,6 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
   )
 })
 
-// Gán displayName cho component
 TopicForm.displayName = 'TopicForm'
 
 export default TopicForm
