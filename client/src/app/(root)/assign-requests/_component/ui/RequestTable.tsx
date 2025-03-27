@@ -90,6 +90,15 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
     }
   }
 
+  const statusColorMap: Record<string, string> = {
+    assigned: 'text-blue-500',
+    submitted: 'text-green-500',
+    completed: 'text-purple-700',
+    'in-progress': 'text-orange-500',
+    overdue: 'text-red-500',
+    'n/a': 'text-gray-500'
+  }
+
   return (
     <>
       <Table>
@@ -107,7 +116,9 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
         <TableBody>
           {currentRequests?.map((request) => (
             <TableRow key={request._id}>
-              <TableCell>{request?.status || 'N/A'}</TableCell>
+              <TableCell className={statusColorMap[request?.status.toLowerCase()] || 'text-gray-500'}>
+                {request?.status || 'N/A'}
+              </TableCell>
               <TableCell>{request?.remark || 'N/A'}</TableCell>
               <TableCell>{request?.updated_at ? new Date(request.updated_at).toLocaleString() : 'N/A'}</TableCell>
               <TableCell>{request?.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</TableCell>

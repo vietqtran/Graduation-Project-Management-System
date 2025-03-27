@@ -171,6 +171,7 @@ export class RequestService {
         .find({ from_user: userId })
         .populate('to_user')
         .populate('approve_user')
+        .populate('documents')
         .session(session)
         .lean()
 
@@ -182,6 +183,7 @@ export class RequestService {
         type: request.type || null,
         description: request.description || null,
         remark: request.remark || null,
+        documents: request.documents || null,
         due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
         status: request.status || null,
         created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
