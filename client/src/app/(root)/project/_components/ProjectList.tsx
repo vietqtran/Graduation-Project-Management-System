@@ -1,8 +1,8 @@
 'use client'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { BookOpen, Building, Calendar, Users } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Avatar,AvatarFallback,AvatarImage } from '@/components/ui/avatar'
+import { BookOpen,Building,Calendar,Users } from 'lucide-react'
+import { Card,CardContent,CardDescription,CardFooter,CardHeader,CardTitle } from '@/components/ui/card'
 
 import { Badge } from '@/components/ui/badge'
 import { Project } from '@/types/project.type'
@@ -13,35 +13,35 @@ interface ProjectListProps {
 }
 
 const getStatusText = (status: number) => {
-  const statusMap: Record<number, { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    1: { text: 'Required', variant: 'secondary' },
-    2: { text: 'Waiting', variant: 'secondary' },
-    3: { text: 'Pending', variant: 'secondary' },
-    4: { text: 'Rejected', variant: 'destructive' },
-    5: { text: 'Closed', variant: 'destructive' },
-    6: { text: 'Expired', variant: 'destructive' },
-    7: { text: 'Registered', variant: 'secondary' },
-    8: { text: 'Activated', variant: 'default' },
-    9: { text: 'Processing', variant: 'secondary' },
-    10: { text: 'Completed', variant: 'default' },
-    11: { text: 'Matched', variant: 'default' },
-    12: { text: 'Unmatched', variant: 'secondary' },
-    14: { text: 'Scheduled', variant: 'secondary' },
-    15: { text: 'Draft', variant: 'secondary' },
-    16: { text: 'Submitted', variant: 'secondary' },
-    17: { text: 'Approved', variant: 'default' },
-    18: { text: 'Cancelled', variant: 'destructive' },
-    19: { text: 'Blocked', variant: 'destructive' },
-    20: { text: 'Inactive', variant: 'secondary' },
-    21: { text: 'Ungrouped', variant: 'secondary' },
-    22: { text: 'Available', variant: 'default' },
-    23: { text: 'Pass', variant: 'default' },
-    24: { text: 'Failed', variant: 'destructive' },
-    26: { text: 'Topic', variant: 'secondary' }
+  const statusMap: Record<number,{ text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    1: { text: 'Required',variant: 'secondary' },
+    2: { text: 'Waiting',variant: 'secondary' },
+    3: { text: 'Pending',variant: 'secondary' },
+    4: { text: 'Rejected',variant: 'destructive' },
+    5: { text: 'Closed',variant: 'destructive' },
+    6: { text: 'Expired',variant: 'destructive' },
+    7: { text: 'Registered',variant: 'secondary' },
+    8: { text: 'Activated',variant: 'default' },
+    9: { text: 'Processing',variant: 'secondary' },
+    10: { text: 'Completed',variant: 'default' },
+    11: { text: 'Matched',variant: 'default' },
+    12: { text: 'Unmatched',variant: 'secondary' },
+    14: { text: 'Scheduled',variant: 'secondary' },
+    15: { text: 'Draft',variant: 'secondary' },
+    16: { text: 'Submitted',variant: 'secondary' },
+    17: { text: 'Approved',variant: 'default' },
+    18: { text: 'Cancelled',variant: 'destructive' },
+    19: { text: 'Blocked',variant: 'destructive' },
+    20: { text: 'Inactive',variant: 'secondary' },
+    21: { text: 'Ungrouped',variant: 'secondary' },
+    22: { text: 'Available',variant: 'default' },
+    23: { text: 'Pass',variant: 'default' },
+    24: { text: 'Failed',variant: 'destructive' },
+    26: { text: 'Topic',variant: 'secondary' }
   }
 
-  if (statusMap[status]) return statusMap[status]
-  return { text: 'Unknown', variant: 'secondary' }
+  if (statusMap[ status ]) return statusMap[ status ]
+  return { text: 'Unknown',variant: 'secondary' }
 }
 
 export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
@@ -53,7 +53,7 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
 
   return (
     <div className='grid gap-6 p-5 md:grid-cols-2 lg:grid-cols-3'>
-      {projects.list?.map((project) => (
+      {projects?.map((project) => (
         <Card
           key={project._id}
           className='cursor-pointer hover:shadow-md transition-shadow'
@@ -102,8 +102,8 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
                 <Avatar className='h-8 w-8'>
                   <AvatarImage src={project?.leader?.avatar} alt={project?.leader?.display_name} />
                   <AvatarFallback>
-                    {project?.leader?.first_name[0]}
-                    {project?.leader?.last_name[0]}
+                    {project?.leader?.first_name[ 0 ]}
+                    {project?.leader?.last_name[ 0 ]}
                   </AvatarFallback>
                 </Avatar>
                 <span className='text-sm'>{project?.leader?.display_name}</span>
@@ -115,13 +115,13 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
                 <p className='text-sm font-medium mb-2'>Supervisor</p>
                 <div className='flex items-center gap-2'>
                   <Avatar className='h-8 w-8'>
-                    <AvatarImage src={project.supervisor.avatar} alt={project.supervisor.display_name} />
+                    <AvatarImage src={project.supervisor[ 0 ].avatar} alt={project.supervisor[ 0 ].display_name} />
                     <AvatarFallback>
-                      {project?.supervisor?.first_name}
-                      {project?.supervisor?.last_name}
+                      {project?.supervisor[ 0 ]?.first_name}
+                      {project?.supervisor[ 0 ]?.last_name}
                     </AvatarFallback>
                   </Avatar>
-                  <span className='text-sm'>{project.supervisor[0].display_name}</span>
+                  <span className='text-sm'>{project.supervisor[ 0 ].display_name}</span>
                 </div>
               </div>
             )}
