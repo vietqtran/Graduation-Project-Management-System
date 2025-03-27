@@ -42,6 +42,16 @@ export class IdeaController {
       next(error)
     }
   })
+  getIdeaSupervisorJoin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const supervisedId = req.query.supervisedId as string
+      const projects = await this.ideaService.getIdeaSupervisorJoin(supervisedId)
+      ResponseHandler.sendSuccess(res, projects)
+    } catch (error) {
+      console.error('Error in getIdeaSupervisorJoin controller:', error)
+      next(error)
+    }
+  })
   deleteIdea = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
       const projectId = req.query.projectId as string

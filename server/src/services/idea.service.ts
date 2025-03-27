@@ -134,6 +134,56 @@ export class IdeaService {
     const IdeaOfSupervisor = await this.projectModel.find({ category: 2 }).populate('supervisor')
     return IdeaOfSupervisor
   }
+  async getIdeaSupervisorJoin(supervisorId: string): Promise<IProject[]> {
+    // Kiểm tra tính hợp lệ của supervisorId
+    if (!mongoose.Types.ObjectId.isValid(supervisorId)) {
+      throw new HttpException('Invalid supervisor ID', 400)
+    }
+    const supervisor = await this.userModel.findById(supervisorId)
+    if (!supervisor) {
+      throw new HttpException('Supervisor not found', 404)
+    }
+    if (!(supervisor?.roles ?? []).includes('supervisor')) {
+      throw new HttpException('This user is not a supervisor', 403)
+    }
+    try {
+      const projects = await this.projectModel
+        .find({ supervisor: { $in: [supervisorId] } })
+        .populate({
+          path: 'leader',
+          select: 'first_name last_name display_name email avatar' // Lấy các trường cần thiết
+        })
+        .populate({
+          path: 'members',
+          select: 'first_name last_name display_name email avatar'
+        })
+        .populate({
+          path: 'supervisor',
+          select: 'first_name last_name display_name email avatar'
+        })
+        .populate({
+          path: 'major',
+          select: 'name description'
+        })
+        .populate({
+          path: 'field',
+          select: 'name description'
+        })
+        .populate({
+          path: 'campus',
+          select: 'name'
+        })
+        .exec()
+
+      if (!projects || projects.length === 0) {
+        throw new HttpException('No projects found for this supervisor', 404)
+      }
+
+      return projects
+    } catch (error) {
+      throw error instanceof HttpException ? error : new HttpException('Failed to fetch projects for supervisor', 500)
+    }
+  }
   async deleteIdea(projectId: string, userId: string) {
     // kiem tra date deadline
     const getDeadline = await this.deadlineModel.findOne({ deadline_key: 'create_group' })
@@ -167,13 +217,21 @@ export class IdeaService {
       if (project?.members && project?.members.length > 0) {
         const memberIds = (project.members as IUser[]).map((member: IUser) => member._id)
         await this.userModel
-          .updateMany({ _id: { $in: memberIds } }, { $set: { status: USER_STATUS.UN_GROUPED, project: null } }, { session })
+          .updateMany(
+            { _id: { $in: memberIds } },
+            { $set: { status: USER_STATUS.UN_GROUPED, project: null } },
+            { session }
+          )
           .exec()
       }
       if (project?.supervisor && project?.supervisor.length > 0) {
         const supervisorIds = (project.supervisor as IUser[]).map((supervisor: IUser) => supervisor._id)
         await this.userModel
-          .updateMany({ _id: { $in: supervisorIds } }, { $set: { status: USER_STATUS.AVAILABLE, project: null } }, { session })
+          .updateMany(
+            { _id: { $in: supervisorIds } },
+            { $set: { status: USER_STATUS.AVAILABLE, project: null } },
+            { session }
+          )
           .exec()
       }
       await this.inviteModel
