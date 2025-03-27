@@ -191,7 +191,17 @@ const BoardPage = ({ project_id }: BoardPageProps) => {
       </SimpleBar>
       {selectedTask && (
         <>
-          <div className='fixed inset-0 z-[110] h-screen w-screen bg-black/50'></div>
+          <div
+            onClick={() => {
+              if (project_id) {
+                replace(`/tasks/${project_id}`)
+              } else {
+                replace('/tasks')
+              }
+              setSelectedTask(null)
+            }}
+            className='fixed inset-0 z-[110] h-screen w-screen bg-black/50'
+          ></div>
           <TaskDrawer
             isViewOnly={!!project_id}
             task={selectedTask}
