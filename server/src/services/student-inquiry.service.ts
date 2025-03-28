@@ -1,6 +1,7 @@
 import { STUDENT_INQUIRY_STATUS } from '@/constants/status'
 import {
   StaffAnswerStudentInquiryDto,
+  StaffGetInquiryByIdDto,
   StaffGetListStudentInquiriesDto
 } from '@/dtos/student-inquiry/manage-student-inquiry.dto'
 import { StudentCreateInquiryDto, StudentGetListInquiriesDto } from '@/dtos/student-inquiry/student-inquiry.dto'
@@ -20,7 +21,7 @@ export class StudentInquiryService {
     return runTransaction(async (session) => {
       const { content, title } = body
       await this.studentInquiryModel.create(
-        { title, content, status: STUDENT_INQUIRY_STATUS.PROCESSING, created_by: user._id, updated_by: user._id },
+        [{ title, content, status: STUDENT_INQUIRY_STATUS.PROCESSING, created_by: user._id, updated_by: user._id }],
         { session }
       )
     })
@@ -96,6 +97,14 @@ export class StudentInquiryService {
         list: inquiries,
         total: inquiries.length
       }
+    })
+  }
+
+  async staffGetInquiryById(body: StaffGetInquiryByIdDto) {
+    return runTransaction(async (session) => {
+      const { _id } = body
+      const inquiry = await this.studentInquiryModel.findOne({ _id }).session(session)
+      return inquiry
     })
   }
 }
