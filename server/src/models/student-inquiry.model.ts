@@ -3,6 +3,7 @@ import { IUser } from './user.model'
 import { STUDENT_INQUIRY_STATUS } from '@/constants/status'
 
 export interface IStudentInquiry extends Document {
+  titile: string
   content: string
   status: number
   created_by: IUser['_id']
@@ -16,6 +17,12 @@ export interface IStudentInquiry extends Document {
 
 export const StudentInquirySchema = new Schema<IStudentInquiry>(
   {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true,
+      maxlength: [200, 'Title cannot exceed 200 characters']
+    },
     content: {
       type: String,
       required: [true, 'Content is required'],
