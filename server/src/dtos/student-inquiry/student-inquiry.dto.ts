@@ -4,6 +4,10 @@ import { Transform, Type } from 'class-transformer'
 import { IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator'
 
 export class StudentCreateInquiryDto {
+  @IsNotEmpty({ message: 'Title is required' })
+  @IsString({ message: 'Title must be a string' })
+  title: string
+
   @IsNotEmpty({ message: 'Content is required' })
   @IsString({ message: 'Content must be a string' })
   content: string
