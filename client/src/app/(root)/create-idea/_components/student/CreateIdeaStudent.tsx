@@ -514,5 +514,5 @@ export default function CreateIdea() {
         )}
       </div>
     </div>
-  );
+  )
 }
