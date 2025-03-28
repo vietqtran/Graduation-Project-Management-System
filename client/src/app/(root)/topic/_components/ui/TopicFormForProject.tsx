@@ -169,7 +169,7 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
         <h2 className='text-2xl font-bold text-center mt-12'>Submit a New Project with existed topic</h2>
         <Form {...form}>
           <form className='grid grid-cols-2 gap-4' onSubmit={form.handleSubmit(handleSubmit)}>
-             <FormField
+            <FormField
               control={form.control}
               name='name'
               render={({ field }) => (
@@ -191,7 +191,7 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
                 </FormItem>
               )}
             />
- 
+
             <FormField
               control={form.control}
               name='description'

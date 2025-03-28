@@ -14,7 +14,6 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import useManagement from '@/hooks/useManagement'
 import { DeadlinesResponse } from '@/types/management.type'
-
 // Enable custom parsing for Day.js
 dayjs.extend(customParseFormat)
 
@@ -33,9 +32,11 @@ type DeadlineFormValues = z.infer<typeof deadlineSchema>
 interface EditDeadlineDialogProps {
   deadline: DeadlinesResponse[0]
   onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
+const EditDeadlineDialog = ({ deadline, onClose, open, onOpenChange }: EditDeadlineDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { updateDeadline } = useManagement()
 
@@ -67,20 +68,25 @@ const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
 
   const onSubmit = async (data: DeadlineFormValues) => {
     setIsSubmitting(true)
-    const response = await updateDeadline({
-      deadline_key: data.deadline_key,
-      deadline_date: data.deadline_date,
-      semester: data.semester
-    })
+    try {
+      const response = await updateDeadline({
+        deadline_key: data.deadline_key,
+        deadline_date: data.deadline_date,
+        semester: data.semester
+      })
 
-    if (response) {
-      onClose()
+      if (response) {
+        reset()
+        onOpenChange(false)
+        onClose()
+      }
+    } finally {
+      setIsSubmitting(false)
     }
-    setIsSubmitting(false)
   }
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Deadline</DialogTitle>
