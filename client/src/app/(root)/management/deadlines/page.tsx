@@ -26,6 +26,9 @@ const ManageDeadlines = () => {
   const [selectedParam, setSelectedParam] = useState<ParametersResponse[0] | null>(null)
   const [selectedDeleteParam, setSelectedDeleteParam] = useState<ParametersResponse[0] | null>(null)
   const [selectedDeadline, setSelectedDeadline] = useState<DeadlinesResponse[0] | null>(null)
+  const [isEditParamDialogOpen, setIsEditParamDialogOpen] = useState(false)
+  const [isDeleteParamDialogOpen, setIsDeleteParamDialogOpen] = useState(false)
+  const [isEditDeadlineDialogOpen, setIsEditDeadlineDialogOpen] = useState(false)
   const [semester, setSemester] = useState('SP25')
   const debouncedSemester = useDebounce(semester, 1000)
 
@@ -45,26 +48,32 @@ const ManageDeadlines = () => {
 
   const handleOpenParamDialog = (param: ParametersResponse[0]) => {
     setSelectedParam(param)
+    setIsEditParamDialogOpen(true)
   }
 
   const handleCloseParamDialog = () => {
-    setTimeout(() => setSelectedParam(null), 300) // Delay to ensure dialog is closed before removing the data
+    setIsEditParamDialogOpen(false)
+    setSelectedParam(null)
   }
 
   const handleOpenDeleteParamDialog = (param: ParametersResponse[0]) => {
     setSelectedDeleteParam(param)
+    setIsDeleteParamDialogOpen(true)
   }
 
   const handleCloseDeleteParamDialog = () => {
-    setTimeout(() => setSelectedDeleteParam(null), 300) // Delay to ensure dialog is closed before removing the data
+    setIsDeleteParamDialogOpen(false)
+    setSelectedDeleteParam(null)
   }
 
   const handleOpenDeadlineDialog = (deadline: DeadlinesResponse[0]) => {
     setSelectedDeadline(deadline)
+    setIsEditDeadlineDialogOpen(true)
   }
 
   const handleCloseDeadlineDialog = () => {
-    setTimeout(() => setSelectedDeadline(null), 300) // Delay to ensure dialog is closed before removing the data
+    setIsEditDeadlineDialogOpen(false)
+    setSelectedDeadline(null)
   }
 
   return (
@@ -113,7 +122,7 @@ const ManageDeadlines = () => {
                   <TableCell>{dayjs(deadline?.created_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
                   <TableCell>{dayjs(deadline?.updated_at).format(CONSTANTS.FORMAT.DATE_TIME)}</TableCell>
                   <TableCell>
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button variant='outline' size='sm'>
                           <Ellipsis />
@@ -175,7 +184,7 @@ const ManageDeadlines = () => {
                 <TableCell>{parameter?.param_type}</TableCell>
                 <TableCell>{parameter?.description}</TableCell>
                 <TableCell>
-                  <DropdownMenu>
+                  <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button variant='outline' size='sm'>
                         <Ellipsis />
@@ -196,6 +205,8 @@ const ManageDeadlines = () => {
       {selectedParam && (
         <EditParamDialog
           parameter={selectedParam}
+          open={isEditParamDialogOpen}
+          onOpenChange={setIsEditParamDialogOpen}
           onClose={() => {
             handleCloseParamDialog()
             fetchParameters()
@@ -205,6 +216,8 @@ const ManageDeadlines = () => {
       {selectedDeleteParam && (
         <DeleteParamDialog
           parameter={selectedDeleteParam}
+          open={isDeleteParamDialogOpen}
+          onOpenChange={setIsDeleteParamDialogOpen}
           onClose={() => {
             handleCloseDeleteParamDialog()
             fetchParameters()
@@ -214,6 +227,8 @@ const ManageDeadlines = () => {
       {selectedDeadline && (
         <EditDeadlineDialog
           deadline={selectedDeadline}
+          open={isEditDeadlineDialogOpen}
+          onOpenChange={setIsEditDeadlineDialogOpen}
           onClose={() => {
             handleCloseDeadlineDialog()
             fetchDeadlines()

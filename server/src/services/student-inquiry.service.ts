@@ -1,6 +1,7 @@
 import { STUDENT_INQUIRY_STATUS } from '@/constants/status'
 import {
   StaffAnswerStudentInquiryDto,
+  StaffGetInquiryByIdDto,
   StaffGetListStudentInquiriesDto
 } from '@/dtos/student-inquiry/manage-student-inquiry.dto'
 import { StudentCreateInquiryDto, StudentGetListInquiriesDto } from '@/dtos/student-inquiry/student-inquiry.dto'
@@ -18,9 +19,9 @@ export class StudentInquiryService {
 
   async studentCreateInquiry(body: StudentCreateInquiryDto, user: TokenPayload) {
     return runTransaction(async (session) => {
-      const { content } = body
+      const { content, title } = body
       await this.studentInquiryModel.create(
-        { content, status: STUDENT_INQUIRY_STATUS.PROCESSING, created_by: user._id, updated_by: user._id },
+        [{ title, content, status: STUDENT_INQUIRY_STATUS.PROCESSING, created_by: user._id, updated_by: user._id }],
         { session }
       )
     })
@@ -42,7 +43,7 @@ export class StudentInquiryService {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('_id content status created_at created_by answer answered_at')
+        .select('_id title content status created_at created_by answer answered_at')
         .session(session)
 
       return {
@@ -89,13 +90,21 @@ export class StudentInquiryService {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select('_id content status answer answered_at answered_by created_at created_by')
+        .select('_id title content status answer answered_at answered_by created_at created_by')
         .session(session)
 
       return {
         list: inquiries,
         total: inquiries.length
       }
+    })
+  }
+
+  async staffGetInquiryById(body: StaffGetInquiryByIdDto) {
+    return runTransaction(async (session) => {
+      const { _id } = body
+      const inquiry = await this.studentInquiryModel.findOne({ _id }).session(session)
+      return inquiry
     })
   }
 }

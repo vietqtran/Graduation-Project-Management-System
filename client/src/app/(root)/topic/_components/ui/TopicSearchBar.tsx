@@ -90,7 +90,7 @@ export default function TopicSearchBar({
         </Button>
 
         <Button onClick={onOpenFormProject} className='flex items-center w-full md:w-1/4'>
-          <PlusCircle className='mr-2' /> Submit New Project 
+          <PlusCircle className='mr-2' /> Submit New Project
         </Button>
       </div>
     </div>

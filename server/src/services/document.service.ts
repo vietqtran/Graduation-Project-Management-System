@@ -57,12 +57,12 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       const skip = (page - 1) * limit
       const documents = await UploadDocument.find({ user: userId })
-          .populate('user', 'username email display_name')
-          .populate('project_id', 'name')
-          .skip(skip)
-          .limit(limit)
-          .sort({ created_at: -1 })
-          .session(session)
+        .populate('user', 'username email display_name')
+        .populate('project_id', 'name')
+        .skip(skip)
+        .limit(limit)
+        .sort({ created_at: -1 })
+        .session(session)
       const total = await UploadDocument.countDocuments({ user: userId }).session(session)
 
       return { documents, total }
@@ -80,12 +80,12 @@ export class UploadDocumentService {
     return runTransaction(async (session) => {
       const skip = (page - 1) * limit
       const documents = await UploadDocument.find({ project_id: projectId })
-          .populate('user', 'username email display_name avatar display_name')
-          .populate('project_id', 'name')
-          .skip(skip)
-          .limit(limit)
-          .sort({ created_at: -1 })
-          .session(session)
+        .populate('user', 'username email display_name avatar display_name')
+        .populate('project_id', 'name')
+        .skip(skip)
+        .limit(limit)
+        .sort({ created_at: -1 })
+        .session(session)
       const total = await UploadDocument.countDocuments({ project_id: projectId }).session(session)
 
       return { documents, total }

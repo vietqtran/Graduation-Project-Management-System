@@ -68,7 +68,11 @@ const TopicPage = () => {
 
   return (
     <div>
-      <TopicSearchBar onOpenForm={() => setIsDrawerOpen(true)} onOpenFormProject={() => setIsDrawerOpenProject(true)} onSearch={handleSearch} />
+      <TopicSearchBar
+        onOpenForm={() => setIsDrawerOpen(true)}
+        onOpenFormProject={() => setIsDrawerOpenProject(true)}
+        onSearch={handleSearch}
+      />
       <div className='flex gap-6 mt-4'>
         <MajorSelection onMajorSelect={handleMajorSelect} />
         <TopicList
