@@ -1,4 +1,4 @@
-import { Newspaper, Users } from 'lucide-react'
+import { Mail, Newspaper, Users } from 'lucide-react'
 
 import AssignTaskIcon from '@/components/icons/AssignTaskIcon'
 import CreateIdeaIcon from '@/components/icons/CreateIdeaIcon'
@@ -26,16 +26,22 @@ export const SIDEBAR_LINKS = [
     icon: <ProjectIcon />,
     roles: ['student', 'supervisor']
   },
+  // {
+  //   href: '/news',
+  //   label: 'News Center',
+  //   icon: <Newspaper />
+  // },
   {
-    href: '/news',
-    label: 'News Center',
-    icon: <Newspaper />
+    href: '/student-inquiry',
+    label: 'Student Inquiry',
+    icon: <Mail />,
+    roles: ['student', 'supervisor', 'admin', 'supervisor', 'staff']
   },
   {
     href: '/documents',
     label: 'Documents',
     icon: <HugeiconsDocumentAttachment />,
-    roles: ['student', 'supervisor', 'admin', 'supervisor', 'staff']
+    roles: ['student', 'supervisor', 'supervisor']
   },
   {
     href: '/tasks',
@@ -47,13 +53,13 @@ export const SIDEBAR_LINKS = [
     href: '/idea',
     label: 'Idea',
     icon: <IdeaIcon />,
-    roles: ['student', 'supervisor']
+    roles: ['supervisor']
   },
   {
     href: '/topic',
     label: 'Submit Topic',
     icon: <SubmitTopicIcon />,
-    roles: ['student', 'supervisor']
+    roles: ['supervisor']
   },
   {
     href: '/groups',

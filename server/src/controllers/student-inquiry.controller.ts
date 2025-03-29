@@ -36,4 +36,10 @@ export class StudentInquiryController {
     const inquiries = await this.studentInquiryService.staffGetListStudentInquiries(body)
     ResponseHandler.sendSuccess(res, inquiries)
   })
+
+  staffGetInquiryById = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const body = req.body
+    const inquiry = await this.studentInquiryService.staffGetInquiryById(body)
+    ResponseHandler.sendSuccess(res, inquiry)
+  })
 }

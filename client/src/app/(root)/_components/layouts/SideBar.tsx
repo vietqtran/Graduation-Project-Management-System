@@ -11,7 +11,6 @@ import { useAppSelector, usePathname } from '@/hooks'
 
 const SideBar = () => {
   const user = useAppSelector((state) => state.auth.user)
-  console.log(user)
   const [isExpanse, setIsExpanse] = useState(true)
   const pathName = usePathname()
 

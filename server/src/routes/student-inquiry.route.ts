@@ -1,6 +1,7 @@
 import { StudentInquiryController } from '@/controllers/student-inquiry.controller'
 import {
   StaffAnswerStudentInquiryDto,
+  StaffGetInquiryByIdDto,
   StaffGetListStudentInquiriesDto
 } from '@/dtos/student-inquiry/manage-student-inquiry.dto'
 import { StudentCreateInquiryDto, StudentGetListInquiriesDto } from '@/dtos/student-inquiry/student-inquiry.dto'
@@ -29,6 +30,11 @@ router.post(
   '/staff-get-list-student-inquiries',
   validateDto(StaffGetListStudentInquiriesDto),
   studentInquiryController.staffGetListStudentInquiries
+)
+router.post(
+  '/staff-get-inquiry-by-id',
+  validateDto(StaffGetInquiryByIdDto),
+  studentInquiryController.staffGetInquiryById
 )
 
 export { router as studentInquiryRoutes }

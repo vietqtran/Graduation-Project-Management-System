@@ -49,3 +49,9 @@ export class StaffGetListStudentInquiriesDto {
   @Transform(({ value }) => processSortObject(value, { created_at: -1 }, validFields))
   sort?: SortObject
 }
+
+export class StaffGetInquiryByIdDto {
+  @IsNotEmpty({ message: 'Inquiry ID is required' })
+  @IsMongoId({ message: 'Invalid Inquiry ID format' })
+  _id: string
+}
