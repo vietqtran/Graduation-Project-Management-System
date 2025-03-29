@@ -20,8 +20,8 @@ export class RequestController {
       const tokenPayload = getUser(req)
       const userId = tokenPayload._id
 
-      console.log('Token payload:', tokenPayload)
-      console.log('User ID from token:', userId)
+      // console.log('Token payload:', tokenPayload)
+      // console.log('User ID from token:', userId)
 
       const requests = await this.requestService.getUserRequests(userId) // ✅ Lấy request theo from_user
       ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully')

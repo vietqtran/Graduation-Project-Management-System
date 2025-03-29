@@ -92,8 +92,8 @@ export class ProjectController {
     try {
       const tokenPayload = getUser(req)
       const supervisorId = tokenPayload._id
-      console.log('Token payload:', tokenPayload)
-      console.log('Supervisor ID from token:', supervisorId)
+      // console.log('Token payload:', tokenPayload)
+      // console.log('Supervisor ID from token:', supervisorId)
 
       const projects = await this.projectService.getProjectsBySupervisor(supervisorId)
       ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')
@@ -107,8 +107,8 @@ export class ProjectController {
     try {
       const tokenPayload = getUser(req)
       const supervisorId = tokenPayload._id
-      console.log('Token payload:', tokenPayload)
-      console.log('Supervisor ID from token:', supervisorId)
+      // console.log('Token payload:', tokenPayload)
+      // console.log('Supervisor ID from token:', supervisorId)
 
       const projects = await this.projectService.getProjectsToReview(supervisorId)
       ResponseHandler.sendSuccess(res, projects, 'Get projects by supervisor successfully')

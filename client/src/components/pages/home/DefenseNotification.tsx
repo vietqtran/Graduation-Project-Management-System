@@ -12,7 +12,7 @@ export default function DefenseNotification() {
     const fetchEligibility = async () => {
       try {
         const response = await instance.get('/request/check-eligibility', { withCredentials: true })
-        setIsPassed(response.data)
+        setIsPassed(response.data.data)
       } catch (error) {
         console.error('API Error:', error)
         toast.error('Lỗi khi kiểm tra điều kiện bảo vệ!')
@@ -22,7 +22,6 @@ export default function DefenseNotification() {
 
     fetchEligibility()
   }, [])
-
   return (
     <div className='flex items-center justify-center h-screen w-screen-full'>
       <Card className='w-full h-full flex flex-col items-center justify-center shadow-lg rounded-none border border-gray-300 bg-white'>

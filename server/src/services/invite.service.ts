@@ -101,6 +101,10 @@ export class InviteService {
         }
         const numberOfGroupSupervisorJoined = await this.projectModel.find({
           supervisor: { $in: [existingUser?._id] }
+          // $and :[
+          //   { supervisor: { $in: [existingUser?._id] } },
+          //   {status: 17}
+          // ]
         })
         if (numberOfGroupSupervisorJoined.length >= Number(MaxGroupsPerTeacher?.param_value)) {
           throw new HttpException(
@@ -108,6 +112,8 @@ export class InviteService {
             400
           )
         }
+      }else {
+        throw new HttpException('You can only invite student or supervisor to your project', 400);
       }
       const existingInvite = await this.inviteModel
         .findOne({
