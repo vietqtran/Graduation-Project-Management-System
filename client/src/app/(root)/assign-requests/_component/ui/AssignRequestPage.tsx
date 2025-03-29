@@ -16,6 +16,7 @@ interface Request {
   status: string
   created_at?: Date
   updated_at?: Date
+  selectedProjectId?: string
   setRefresh: React.Dispatch<React.SetStateAction<boolean>>
 }
 

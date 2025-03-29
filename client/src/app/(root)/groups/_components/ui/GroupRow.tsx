@@ -29,6 +29,7 @@ interface Group {
   name: string
   status: number
   members: Member[]
+  requestProgress: number
 }
 
 const ProgressBar = ({ progress }: { progress: number }) => (
@@ -89,6 +90,7 @@ const GroupRow: React.FC = () => {
             <TableCell>Group Name</TableCell>
             <TableCell>Members</TableCell>
             <TableCell>Status</TableCell>
+            <TableCell>Request Progress</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHeader>
@@ -98,7 +100,10 @@ const GroupRow: React.FC = () => {
               <TableRow>
                 <TableCell>{group?.name}</TableCell>
                 <TableCell>{group?.members.length}</TableCell>
-                <TableCell>{group?.status}</TableCell>
+                <TableCell>{group?.status === 17 ? 'Active' : 'Completed'}</TableCell>
+                <TableCell>
+                  <ProgressBar progress={group?.requestProgress} />
+                </TableCell>
                 <TableCell>
                   <Button onClick={() => toggleGroup(group?._id)}>
                     {expandedGroupId === group?._id ? 'Hide Details' : 'View Details'}
