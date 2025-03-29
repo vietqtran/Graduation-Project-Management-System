@@ -49,7 +49,7 @@ const DefenseNotification = () => {
       setCurrentUser(user)
     }
     fetchUser()
-  }, [me])
+  }, [])
 
   useEffect(() => {
     const fetchEligibility = async () => {
