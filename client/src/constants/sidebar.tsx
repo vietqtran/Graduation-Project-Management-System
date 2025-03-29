@@ -35,7 +35,7 @@ export const SIDEBAR_LINKS = [
     href: '/documents',
     label: 'Documents',
     icon: <HugeiconsDocumentAttachment />,
-    roles: ['student', 'supervisor', 'admin', 'supervisor', 'staff']
+    roles: ['student', 'supervisor', 'supervisor']
   },
   {
     href: '/tasks',
@@ -47,13 +47,13 @@ export const SIDEBAR_LINKS = [
     href: '/idea',
     label: 'Idea',
     icon: <IdeaIcon />,
-    roles: ['student', 'supervisor']
+    roles: ['supervisor']
   },
   {
     href: '/topic',
     label: 'Submit Topic',
     icon: <SubmitTopicIcon />,
-    roles: ['student', 'supervisor']
+    roles: ['supervisor']
   },
   {
     href: '/groups',

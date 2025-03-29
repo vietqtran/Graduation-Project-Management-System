@@ -1,19 +1,19 @@
 'use client'
 
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { DeadlinesResponse } from '@/types/management.type'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import dayjs from 'dayjs'
+import { useForm } from 'react-hook-form'
 import useManagement from '@/hooks/useManagement'
-import { DeadlinesResponse } from '@/types/management.type'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 // Enable custom parsing for Day.js
 dayjs.extend(customParseFormat)
@@ -25,6 +25,7 @@ const deadlineSchema = z.object({
     (val) => (typeof val === 'string' ? dayjs(val).toDate() : val),
     z.date({ required_error: 'Deadline date is required' })
   ),
+  deadline_time: z.string().min(1, 'Time is required'),
   semester: z.string().min(1, 'Semester is required')
 })
 
@@ -39,6 +40,11 @@ const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { updateDeadline } = useManagement()
 
+  // Format the time for the time input (HH:MM format)
+  const getTimeFromDate = (date: Date) => {
+    return dayjs(date).format('HH:mm')
+  }
+
   const {
     register,
     handleSubmit,
@@ -51,16 +57,19 @@ const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
     defaultValues: {
       deadline_key: deadline.deadline_key,
       deadline_date: dayjs(deadline.deadline_date).toDate(),
+      deadline_time: getTimeFromDate(dayjs(deadline.deadline_date).toDate()),
       semester: deadline.semester
     }
   })
 
   const selectedDate = watch('deadline_date')
+  const selectedTime = watch('deadline_time')
 
   useEffect(() => {
     reset({
       deadline_key: deadline.deadline_key,
       deadline_date: dayjs(deadline.deadline_date).toDate(),
+      deadline_time: getTimeFromDate(dayjs(deadline.deadline_date).toDate()),
       semester: deadline.semester
     })
   }, [deadline, reset])
@@ -79,6 +88,11 @@ const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
     setIsSubmitting(false)
   }
 
+  // Format the current date for display
+  const formattedDate = selectedDate 
+    ? dayjs(selectedDate).format('YYYY-MM-DD') 
+    : ''
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
@@ -93,24 +107,34 @@ const EditDeadlineDialog = ({ deadline, onClose }: EditDeadlineDialogProps) => {
             {errors.deadline_key && <p className='text-red-500 text-sm'>{errors.deadline_key.message}</p>}
           </div>
 
-          {/* Deadline Date (Shadcn Date Picker with Day.js) */}
+          {/* Calendar directly in the form */}
           <div>
-            <Label htmlFor='deadline_date'>Deadline Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant='outline' className='w-full'>
-                  {selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD HH:mm:ss') : 'Pick a date & time'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0'>
-                <Calendar
-                  mode='single'
-                  selected={selectedDate}
-                  onSelect={(date) => date && setValue('deadline_date', dayjs(date).toDate())}
-                />
-              </PopoverContent>
-            </Popover>
+            <Label>Deadline Date</Label>
+            <div className="border rounded-md p-2 mt-1">
+              <Calendar
+                mode='single'
+                selected={selectedDate}
+                onSelect={(date) => date && setValue('deadline_date', date)}
+                className="mx-auto"
+              />
+            </div>
             {errors.deadline_date && <p className='text-red-500 text-sm'>{errors.deadline_date.message}</p>}
+          </div>
+
+          {/* Time Input */}
+          <div>
+            <Label htmlFor='deadline_time'>Time</Label>
+            <Input 
+              id='deadline_time' 
+              type='time' 
+              {...register('deadline_time')} 
+            />
+            {errors.deadline_time && <p className='text-red-500 text-sm'>{errors.deadline_time.message}</p>}
+          </div>
+
+          {/* Selected Date and Time Display */}
+          <div className="text-sm text-muted-foreground">
+            Selected: {formattedDate} {selectedTime}
           </div>
 
           {/* Semester */}
