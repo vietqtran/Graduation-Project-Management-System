@@ -12,7 +12,7 @@ export default function DefenseNotification() {
     const fetchEligibility = async () => {
       try {
         const response = await instance.get('/request/check-eligibility', { withCredentials: true })
-        setIsPassed(response.data.isPassed)
+        setIsPassed(response.data)
       } catch (error) {
         console.error('API Error:', error)
         toast.error('Lỗi khi kiểm tra điều kiện bảo vệ!')

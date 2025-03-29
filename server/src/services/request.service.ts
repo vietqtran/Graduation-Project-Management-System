@@ -301,30 +301,41 @@ export class RequestService {
 
   async checkEligibility(userId: string) {
     return runTransaction(async (session) => {
-      const findProject = await ProjectModel.findOne({ members: userId }).session(session);
-        if (!findProject) return false;
+      const findProject = await ProjectModel.findOne({ members: userId }).session(session)
+      if (!findProject) return false
 
-        const leader = await UserModel.findById(findProject.leader).populate('planned_semester').session(session);
-        if (!leader || !leader.planned_semester) return false;
+      const leader = await UserModel.findById(findProject.leader).populate('planned_semester').session(session)
+      if (!leader || !leader.planned_semester) return false
 
-        const semester = leader.planned_semester;
+      const semester = leader.planned_semester
 
-        const [totalRequests, completedCount, deadline] = await Promise.all([
-            RequestModel.countDocuments({ to_user: userId }).session(session),
-            RequestModel.countDocuments({ to_user: userId, status: 'completed' }).session(session),
-            DeadlineModel.findOne({ deadline_key: 'thesis_defense', semester: semester }).session(session),
-        ]);
+      const [totalRequests, completedCount, deadline] = await Promise.all([
+        RequestModel.countDocuments({ to_user: userId }).session(session),
+        RequestModel.countDocuments({ to_user: userId, status: 'completed' }).session(session),
+        DeadlineModel.findOne({ deadline_key: 'thesis_defense', semester: semester }).session(session)
+      ])
 
-        if (totalRequests === 0) return false;
-        if (!deadline || !deadline.deadline_date) {
-            throw new HttpException('Deadline not found', 404);
-        }
+      console.log({ totalRequests, completedCount, deadline })
 
-        const currentDate = new Date();
-        const deadlineDate = new Date(deadline.deadline_date);
+      if (totalRequests === 0) return false
+      if (!deadline || !deadline.deadline_date) {
+        throw new HttpException('Deadline not found', 404)
+      }
 
-        const completionRate = completedCount / totalRequests;
-        return completionRate > 0.7 && currentDate >= deadlineDate;
-    });
+      const currentDate = new Date()
+      const deadlineDate = new Date(deadline.deadline_date)
+
+      if (isNaN(deadlineDate.getTime())) {
+        throw new Error('Invalid deadline date format!')
+      }
+
+      const currentTimestamp = currentDate.getTime()
+      const deadlineTimestamp = deadlineDate.getTime()
+      const completionRate = completedCount / totalRequests
+      console.log('Current Date:', currentDate, typeof currentDate)
+      console.log('Deadline Date:', deadlineDate, typeof deadlineDate)
+      console.log('Completion Rate:', completionRate)
+      return completionRate > 0.7 && currentTimestamp >= deadlineTimestamp
+    })
   }
 }
