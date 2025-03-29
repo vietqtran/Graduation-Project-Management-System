@@ -56,7 +56,6 @@ const TeamRoleStudent: React.FC<IdeaDetailsProps> = ({ project }) => {
   const handleDeleteClick = async () => {
     if (!project) return
 
-    // Hiển thị modal xác nhận xóa
     setShowDeleteConfirmation(true)
   }
   const confirmDelete = async () => {

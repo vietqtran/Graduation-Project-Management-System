@@ -93,12 +93,15 @@ export class RequestService {
           throw new Error('Request creation failed, _id not found')
         }
 
-        await this.statusQueue.addStatusJob(request[0]._id.toString(), request[0].due_date)
+        await this.statusQueue.addStatusJob((request[0]._id as mongoose.Types.ObjectId).toHexString(), request[0].due_date)
       } catch (error: unknown) {
         const err = error as Error
         console.error(`Failed to add status job for request: ${err.message}`)
       }
 
+      console.log(request[0])
+      console.log(request[0]._id)
+      console.log(request[0].due_date)
       return {
         request: request[0],
         requestData: requestData

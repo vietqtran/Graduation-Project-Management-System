@@ -43,7 +43,7 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground overflow-y-scroll;
+    @apply bg-white text-black overflow-y-scroll;
   }
 }
 
@@ -55,4 +55,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+input {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
