@@ -236,7 +236,7 @@ export class ProjectService {
       const formattedProject = {
         _id: project._id,
         name: project.name,
-        major: project.major,
+        major: projectId ? (await this.projectModel.findById(projectId).select('major').exec())?.major : undefined,
         field: project.field,
         campus: project.campus,
         mark: project.mark,
@@ -336,12 +336,16 @@ export class ProjectService {
     const { search = '', projectId } = body
     const currentSemester = getCurrentSemester()
     return runTransaction(async (session) => {
+      const project = await this.projectModel.findById(projectId).session(session);
+
       const students = await this.userModel
         .find({
           roles: 'student',
           planned_semester: currentSemester,
           status: USER_STATUS.UN_GROUPED,
           $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          major: project ? project.major : undefined,
+          campus: project ? project.campus : undefined,
           //if projectId is truthy, filter by projectId
           ...(projectId && { project: { $ne: projectId } })
         })
@@ -355,11 +359,15 @@ export class ProjectService {
   async staffGetListAvailableSupervisors(body: staffGetListAvailableSupervisorsDto) {
     const { search = '', projectId } = body
     return runTransaction(async (session) => {
+      const project = await this.projectModel.findById(projectId).session(session);
+
       const supervisors = await this.userModel
         .find({
           roles: 'supervisor',
           status: USER_STATUS.AVAILABLE,
           $or: [{ display_name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }],
+          major: project ? project.major : undefined,
+          campus: project ? project.campus : undefined,
           ...(projectId && { project: { $ne: projectId } })
         })
         .select('display_name username email avatar')
