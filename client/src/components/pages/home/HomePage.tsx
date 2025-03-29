@@ -15,10 +15,10 @@ const HomePage = () => {
               height={100}
             />
           </div>
-          <CardTitle className='text-xl font-semibold mt-4'>Tiếp tục làm project đi nhé!</CardTitle>
+          <CardTitle className='text-xl font-semibold mt-4'>Keep working on your project!</CardTitle>
         </CardHeader>
         <CardContent className='text-center text-gray-600'>
-          Keep continuing to learn and apply what you have learned.
+          Continue learning and applying what you have learned.
         </CardContent>
       </Card>
     </div>
