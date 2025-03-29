@@ -4,18 +4,15 @@ import RequestModel, { IRequest } from '@/models/request.model'
 import UserModel, { IUser } from '@/models/user.model'
 import mongoose, { Model } from 'mongoose'
 
-import { CreateRequestDto } from '@/dtos/request/create-request.dto'
+import { RequestStatus } from '@/constants/request-status.enum'
+import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
+import { runTransaction } from '@/helpers/transaction-helper'
+import DeadlineModel from '@/models/deadline.model'
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import { IUploadDocument } from '@/models/document.model'
-import { MailService } from './mail.service'
-import { RequestStatus } from '@/constants/request-status.enum'
-import { STATUS_MASTER } from '@/constants/status'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
-import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
-import { create } from 'domain'
-import { runTransaction } from '@/helpers/transaction-helper'
-import { session } from 'passport'
+import { MailService } from './mail.service'
+import ProjectModel from '@/models/project.model'
 
 dotenv.config()
 
@@ -62,6 +59,43 @@ export class RequestService {
       if (!request || request.length === 0) {
         throw new HttpException('Error at creating request', 400)
       }
+
+      const formatDate = (due_date: Date) => {
+        return new Date(due_date).toLocaleString('en-US', {
+          month: 'numeric',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+        })
+      }
+
+      const formatDescription = (description: string) => {
+        return description
+          .split('\n') // Tách từng dòng
+          .map((description) => `${description.trim()}`) // Thêm dấu đầu dòng
+          .join('<br>') // Ghép lại với thẻ xuống dòng HTML
+      }
+
+      this.emailQueue.addEmailJob({
+        to: toUser.email,
+        subject: 'You have a new request from your supervisor',
+        templateName: 'new-request',
+        context: {
+          year: new Date().getFullYear(),
+          start_url: `${process.env.CLIENT_URL}/assign-requests`,
+          request: {
+            type: request[0].type,
+            from_user: tokenPayload.username,
+            description: formatDescription(request[0].description),
+            remark: request[0].remark,
+            due_date: formatDate(request[0].due_date),
+            status: request[0].status
+          }
+        }
+      })
 
       return {
         request: request[0],
@@ -172,6 +206,7 @@ export class RequestService {
         .populate('to_user')
         .populate('approve_user')
         .populate('documents')
+        .sort({ created_at: -1 })
         .session(session)
         .lean()
 
@@ -261,6 +296,46 @@ export class RequestService {
         await this.requestModel.findByIdAndUpdate(requestId, { status: 'submitted' }, { session })
         return { message: 'Request summited' }
       }
+    })
+  }
+
+  async checkEligibility(userId: string) {
+    return runTransaction(async (session) => {
+      const findProject = await ProjectModel.findOne({ members: userId }).session(session)
+      if (!findProject) return false
+
+      const leader = await UserModel.findById(findProject.leader).populate('planned_semester').session(session)
+      if (!leader || !leader.planned_semester) return false
+
+      const semester = leader.planned_semester
+
+      const [totalRequests, completedCount, deadline] = await Promise.all([
+        RequestModel.countDocuments({ to_user: userId }).session(session),
+        RequestModel.countDocuments({ to_user: userId, status: 'completed' }).session(session),
+        DeadlineModel.findOne({ deadline_key: 'thesis_defense', semester: semester }).session(session)
+      ])
+
+      console.log({ totalRequests, completedCount, deadline })
+
+      if (totalRequests === 0) return false
+      if (!deadline || !deadline.deadline_date) {
+        throw new HttpException('Deadline not found', 404)
+      }
+
+      const currentDate = new Date()
+      const deadlineDate = new Date(deadline.deadline_date)
+
+      if (isNaN(deadlineDate.getTime())) {
+        throw new Error('Invalid deadline date format!')
+      }
+
+      const currentTimestamp = currentDate.getTime()
+      const deadlineTimestamp = deadlineDate.getTime()
+      const completionRate = completedCount / totalRequests
+      console.log('Current Date:', currentDate, typeof currentDate)
+      console.log('Deadline Date:', deadlineDate, typeof deadlineDate)
+      console.log('Completion Rate:', completionRate)
+      return completionRate > 0.7 && currentTimestamp >= deadlineTimestamp
     })
   }
 }

@@ -106,4 +106,11 @@ export class RequestController {
     const request = await this.requestService.submitRequest(requestData.id)
     ResponseHandler.sendSuccess(res, request, 'Submit request successfully')
   })
+
+  checkEligibility = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const tokenPayload = getUser(req)
+    const userId = tokenPayload._id
+    const isEligible = await this.requestService.checkEligibility(userId)
+    ResponseHandler.sendSuccess(res, isEligible)
+  })
 }
