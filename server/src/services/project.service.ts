@@ -426,7 +426,7 @@ export class ProjectService {
               mark: null,
               slow_count: 0,
               updated_by: tokenPayload._id,
-              leader: leaderId,
+              leader: leaderId || null,
               status: status || 26,
               stage: 1,
               created_at: new Date(),
@@ -496,7 +496,7 @@ export class ProjectService {
             projectDetails,
             supervisor_name: `${updater.first_name || ''} ${updater.last_name || ''}`.trim() || 'Supervisor',
             year: new Date().getFullYear(),
-            start_url: process.env.CLIENT_URL
+            start_url: `${process.env.CLIENT_URL}/team`
           }
         }
 
