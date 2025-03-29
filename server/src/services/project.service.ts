@@ -981,6 +981,29 @@ export class ProjectService {
       return projects
     })
   }
+
+  async getAllProjectsByUserId(userId: string) {
+    return runTransaction(async (session) => {
+      const projects = await this.projectModel
+        .find({ members: userId, supervisor: { $ne: userId }})
+        .populate('members')
+        .populate('leader')
+        .populate('supervisor')
+        .populate('major')
+        .populate('field')
+        .populate('campus')
+        .populate('documents')
+        .session(session)
+        .exec()
+
+      if (!projects || projects.length === 0) {
+        
+      }
+
+      return projects
+    })
+  }
+
 }
 
 export default new ProjectService()

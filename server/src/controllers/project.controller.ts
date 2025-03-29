@@ -160,4 +160,14 @@ export class ProjectController {
       return ResponseHandler.sendError(res, error)
     }
   })
+
+  getAllProjectsByUserId = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tokenPayload = getUser(req)
+      const projects = await this.projectService.getAllProjectsByUserId(tokenPayload._id)
+      return ResponseHandler.sendSuccess(res, projects, 'Get all projects successfully')
+    } catch (error) {
+      return ResponseHandler.sendError(res, error)
+    }
+  })
 }

@@ -36,6 +36,7 @@ router.delete('/delete-topic/:id', projectController.deleteTopic)
 router.get('/get-projects-by-supervisor', projectController.getProjectsBySupervisor)
 router.get('/get-projects-to-review', projectController.getProjectsToReview)
 router.get('/get-project-leader-for-supervisor', projectController.getProjectLeaderForSupervisor)
+router.get('/get-all', projectController.getAllProjectsByUserId)
 
 // Add new route for getting project members
 router.get('/:projectId/members', (req, res, next) => projectController.getProjectMembers(req, res, next))
