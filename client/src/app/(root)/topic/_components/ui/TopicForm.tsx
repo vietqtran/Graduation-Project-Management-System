@@ -148,7 +148,7 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
   return (
     <div>
       <div className='bg-white grid p-1 gap-4'>
-        <h2 className='text-2xl font-bold text-center mt-12'>Submit a New Topic</h2>
+        <h2 className='text-2xl font-bold text-center mt-12'>Submit a new Topic</h2>
         <Form {...form}>
           <form className='grid grid-cols-2 gap-4' onSubmit={form.handleSubmit(handleSubmit)}>
             <FormField
@@ -292,20 +292,6 @@ const TopicForm = forwardRef<{ submit: () => void }, TopicFormProps>(({ onSubmit
                       <SelectItem value='3'>From School</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='leader'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Leader (optional)</FormLabel>
-                  <FormControl>
-                    <Input type='text' placeholder='Enter leader code' {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,7 +1,7 @@
-import DefenseNotification from '@/components/pages/home/DefenseNotification'
+import Show from "@/components/pages/home/Show";
 
-const page = () => {
-  return <DefenseNotification />
-}
+const Page = () => {
+  return <Show />;
+};
 
-export default page
+export default Page;
