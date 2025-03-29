@@ -675,8 +675,6 @@ export class ProjectService {
           project.members?.map((member: any) => {
             const memberId = member._id.toString()
             const role = project.leader && project.leader.equals(member._id) ? 'Leader' : 'Member'
-            console.log(memberId)
-            console.log(project.leader)
             const memberTasks =
               tasksAll?.filter((task: any) =>
                 task.assignees?.some((assignee: any) => assignee._id.toString() === memberId)
@@ -741,61 +739,44 @@ export class ProjectService {
 
   async getProjectsToReview(supervisorId: string) {
     return runTransaction(async (session) => {
-      console.log('🔍 Supervisor ID from token:', supervisorId)
 
       const sampleProject = await this.projectModel.findOne().lean().exec()
-      console.log('Sample project supervisor field structure:', sampleProject?.supervisor)
-
       let projects: any[] = []
 
-      // Truy vấn theo chuỗi
-      console.log('Attempting string query...')
       const stringQuery = await this.projectModel
         .find({ supervisor: supervisorId, status: { $in: [3, 4, 17] } })
         .lean()
         .exec()
-      console.log(`String query found ${stringQuery.length} projects`)
       projects = [...projects, ...stringQuery]
 
-      // Truy vấn theo mảng string
-      console.log('Attempting array string query...')
       const arrayStringQuery = await this.projectModel
         .find({ supervisor: { $in: [supervisorId] } })
         .lean()
         .exec()
-      console.log(`Array string query found ${arrayStringQuery.length} projects`)
       projects = [...projects, ...arrayStringQuery]
 
       // Kiểm tra nếu supervisorId hợp lệ (ObjectId)
       if (Types.ObjectId.isValid(supervisorId)) {
         const objectId = new Types.ObjectId(supervisorId)
 
-        console.log('Attempting ObjectId query...')
         const objectIdQuery = await this.projectModel
           .find({ supervisor: objectId, status: { $in: [3, 4, 17] } })
           .lean()
           .exec()
-        console.log(`ObjectId query found ${objectIdQuery.length} projects`)
         projects = [...projects, ...objectIdQuery]
 
-        console.log('Attempting array ObjectId query...')
         const arrayObjectIdQuery = await this.projectModel
           .find({ supervisor: { $in: [objectId] }, status: { $in: [3, 4, 17] } })
           .lean()
           .exec()
-        console.log(`Array ObjectId query found ${arrayObjectIdQuery.length} projects`)
         projects = [...projects, ...arrayObjectIdQuery]
       }
 
-      console.log('Attempting raw MongoDB query...')
       const rawQuery = await this.projectModel.collection
         .find({ supervisor: { $in: [supervisorId] }, status: { $in: [3, 4, 17] } })
         .toArray()
-      console.log(`Raw MongoDB query found ${rawQuery.length} documents`)
       projects = [...projects, ...rawQuery]
 
-      // Truy vấn với populate
-      console.log('Attempting populated query...')
       const populatedProjects = await this.projectModel
         .find({
           $or: [
@@ -827,15 +808,12 @@ export class ProjectService {
         })
         .session(session)
         .exec()
-      console.log(`Populated projects found: ${populatedProjects.length}`)
       projects = [...projects, ...populatedProjects]
 
       if (!projects || projects.length === 0) {
-        console.log('No projects found for supervisor after all query attempts')
         return []
       }
 
-      // Loại bỏ project trùng lặp dựa trên _id
       const uniqueProjects = Array.from(
         new Map(
           projects
@@ -844,7 +822,6 @@ export class ProjectService {
         ).values()
       )
 
-      console.log(`Final unique projects count: ${uniqueProjects.length}`)
       return uniqueProjects
     })
   }
@@ -856,21 +833,15 @@ export class ProjectService {
 
     return runTransaction(async (session) => {
       try {
-        console.log('🆔 Supervisor ID:', supervisorId)
-
         const supervisorObjectId = new Types.ObjectId(supervisorId)
-
-        // Tìm project có leader hợp lệ
         const projects = await this.projectModel
           .find({
             supervisor: supervisorObjectId,
-            leader: { $ne: null } // Chỉ lấy project có leader không null
+            leader: { $ne: null }  
           })
           .populate<{ leader: { id: string; name: string; email: string } }>('leader', 'id name email')
           .session(session)
           .exec()
-
-        console.log('📌 Projects found:', projects.length)
 
         if (!projects.length) {
           return []  
@@ -883,9 +854,6 @@ export class ProjectService {
             leaders.push(project.leader)
           }
         }
-
-        console.log('👨‍💼 Leaders found:', leaders)
-
         return leaders
       } catch (error) {
         console.error('❌ Error in getProjectLeadersBySupervisor:', error)
@@ -907,14 +875,11 @@ export class ProjectService {
 
   async approveIdea(projectId: string, status: STATUS_MASTER, userId: string) {
     return runTransaction(async (session) => {
-      console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
-
       const project = await this.projectModel
         .findOne({ _id: new Types.ObjectId(projectId) })
         .populate('leader')
         .session(session)
       if (!project) {
-        console.log('Project not found:', projectId)
         throw new HttpException('Project not found', 404)
       }
 
@@ -948,7 +913,6 @@ export class ProjectService {
         throw new HttpException('Failed to update user', 400)
       }
 
-      console.log(`✅ Project status updated to ${status}`)
       const leaderEmail = await this.userModel.findOne({ _id: project.leader })
 
       await this.emailQueue.addEmailJob({
@@ -963,11 +927,8 @@ export class ProjectService {
           start_url: process.env.CLIENT_URL
         }
       })
-      console.log(`📧 Notification email sent to ${leaderEmail}`)
 
       await session.commitTransaction()
-      console.log('✅ Transaction committed successfully')
-
       return { message: 'Project status updated successfully', project }
     })
   }
@@ -984,8 +945,6 @@ export class ProjectService {
 
       const availableSlot = 5 - countSlot
       await session.commitTransaction()
-      console.log('✅ Transaction committed successfully')
-
       return { message: 'Count available slot successfully', availableSlot }
     })
   }
