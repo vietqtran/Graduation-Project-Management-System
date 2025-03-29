@@ -98,88 +98,91 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
     return () => subscription.unsubscribe()
   }, [form, onSubmit])
   const handleUpload = async (file: File, leaderId: string) => {
-  if (!currentUser || !leaderId) {
-    toast.error('User or Leader ID not found!');
-    return;
+    if (!currentUser || !leaderId) {
+      toast.error('User or Leader ID not found!')
+      return
+    }
+
+    setUploading(true)
+    let fileData = null
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Step 1: Get the presigned URL
+      const presignedResponse = await instance.post(
+        '/upload/presigned-urls',
+        {
+          files: [{ fileName: file.name, contentType: file.type }],
+          userLogin: currentUser.name
+        },
+        { withCredentials: true }
+      )
+
+      if (!presignedResponse.data || presignedResponse.data.length === 0) {
+        throw new Error('Failed to get presigned URL')
+      }
+
+      const { presignedUrl, key } = presignedResponse.data[0]
+
+      // Step 2: Upload the file to S3 using the presigned URL
+      const uploadResponse = await instance.put(presignedUrl, file, {
+        headers: { 'Content-Type': file.type },
+        responseType: 'blob'
+      })
+
+      if (uploadResponse.status !== 200) {
+        throw new Error('Failed to upload file to S3')
+      }
+
+      // Step 3: Generate the file URL for storage
+      const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
+
+      // Step 4: Fetch project by leaderId
+      const projectByLeader = await instance.get('/project/get-project-leader-for-supervisor', {
+        withCredentials: true
+      })
+
+      const selectedProject = projectByLeader.data.data.find((p: Project) => p.leader === leaderId)
+      const selectedProjectId = selectedProject ? selectedProject._id : null
+
+      if (!selectedProjectId) {
+        throw new Error('Selected project not found')
+      }
+
+      // Prepare the fileData object for document data
+      fileData = {
+        file_url: fileUrl,
+        file_type: file.type,
+        file_size: file.size,
+        original_name: file.name,
+        key
+      }
+
+      // Step 5: Prepare documentData
+      const documentData = {
+        title: `Request Document - ${leaderId}`,
+        description: `Document for request ${leaderId}`,
+        project_id: selectedProjectId,
+        user: currentUser.id,
+        ...fileData
+      }
+
+      // Step 6: Save the document reference in the database
+      const documentResponse = await instance.post('/documents', documentData, { withCredentials: true })
+
+      setDocumentId(documentResponse.data.documentId)
+      toast.success('Document uploaded successfully!')
+
+      // Optionally trigger any other submission if needed
+      // onSubmit([documentResponse.data._id]);
+    } catch (error) {
+      console.error('Error uploading document:', error)
+      toast.error('Failed to upload document!')
+    } finally {
+      setUploading(false)
+    }
   }
-
-  setUploading(true);
-  let fileData = null;
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Step 1: Get the presigned URL
-    const presignedResponse = await instance.post('/upload/presigned-urls', {
-      files: [{ fileName: file.name, contentType: file.type }],
-      userLogin: currentUser.name
-    }, { withCredentials: true });
-
-    if (!presignedResponse.data || presignedResponse.data.length === 0) {
-      throw new Error('Failed to get presigned URL');
-    }
-
-    const { presignedUrl, key } = presignedResponse.data[0];
-
-    // Step 2: Upload the file to S3 using the presigned URL
-    const uploadResponse = await instance.put(presignedUrl, file, {
-      headers: { 'Content-Type': file.type },
-      responseType: 'blob'
-    });
-
-    if (uploadResponse.status !== 200) {
-      throw new Error('Failed to upload file to S3');
-    }
-
-    // Step 3: Generate the file URL for storage
-    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-
-    // Step 4: Fetch project by leaderId
-    const projectByLeader = await instance.get('/project/get-project-leader-for-supervisor', {
-      withCredentials: true
-    });
-
-    const selectedProject = projectByLeader.data.data.find((p: Project) => p.leader === leaderId);
-    const selectedProjectId = selectedProject ? selectedProject._id : null;
-
-    if (!selectedProjectId) {
-      throw new Error('Selected project not found');
-    }
-
-    // Prepare the fileData object for document data
-    fileData = {
-      file_url: fileUrl,
-      file_type: file.type,
-      file_size: file.size,
-      original_name: file.name,
-      key
-    };
-
-    // Step 5: Prepare documentData
-    const documentData = {
-      title: `Request Document - ${leaderId}`,
-      description: `Document for request ${leaderId}`,
-      project_id: selectedProjectId,
-      user: currentUser.id,
-      ...fileData
-    };
-
-    // Step 6: Save the document reference in the database
-    const documentResponse = await instance.post('/documents', documentData, { withCredentials: true });
-
-    setDocumentId(documentResponse.data.documentId);
-    toast.success('Document uploaded successfully!');
-
-    // Optionally trigger any other submission if needed
-    // onSubmit([documentResponse.data._id]);
-
-  } catch (error) {
-    console.error('Error uploading document:', error);
-    toast.error('Failed to upload document!');
-  } finally {
-    setUploading(false);
-  }
-};
 
   return (
     <div>
@@ -274,8 +277,8 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
                       onChange={(e) => {
                         if (e.target.files && e.target.files.length > 0) {
                           const file = e.target.files[0]
-                          setSelectedFile(file)  
-                          field.onChange(file)  
+                          setSelectedFile(file)
+                          field.onChange(file)
                         }
                       }}
                       disabled={uploading}

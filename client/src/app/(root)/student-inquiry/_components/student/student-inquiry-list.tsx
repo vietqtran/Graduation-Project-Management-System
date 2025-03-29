@@ -323,29 +323,29 @@ const StudentInquiryList = () => {
       </div>
 
       {/* Pagination Controls */}
-        <div className='mt-4'>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href='#'
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setPage((prev) => Math.max(prev - 1, 1))
-                  }}
-                />
-              </PaginationItem>
-              {renderPageLinks()}
-              <PaginationItem>
-                <PaginationNext
-                  href='#'
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setPage((prev) => Math.min(prev + 1, totalPages))
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
+      <div className='mt-4'>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href='#'
+                onClick={(e) => {
+                  e.preventDefault()
+                  setPage((prev) => Math.max(prev - 1, 1))
+                }}
+              />
+            </PaginationItem>
+            {renderPageLinks()}
+            <PaginationItem>
+              <PaginationNext
+                href='#'
+                onClick={(e) => {
+                  e.preventDefault()
+                  setPage((prev) => Math.min(prev + 1, totalPages))
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
         </Pagination>
       </div>
     </div>

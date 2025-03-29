@@ -331,7 +331,7 @@ const TeamRoleStudent: React.FC<IdeaDetailsProps> = ({ project }) => {
         </CardFooter>
       </Card>
       {showChangeModal && (
-        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+        <div className='fixed inset-0 z-[999999999999999999] flex items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-md w-96'>
             <h3 className='text-lg font-semibold text-center'>Change Project Idea</h3>
 
@@ -380,7 +380,7 @@ const TeamRoleStudent: React.FC<IdeaDetailsProps> = ({ project }) => {
 
       {/* Modal xác nhận xóa */}
       {showDeleteConfirmation && (
-        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+        <div className='fixed inset-0 z-[999999999999] flex items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-md'>
             <h3 className='text-lg font-semibold'>Are you sure you want to delete this idea?</h3>
             <div className='mt-4 flex gap-4'>
@@ -402,7 +402,7 @@ const TeamRoleStudent: React.FC<IdeaDetailsProps> = ({ project }) => {
       )}
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+        <div className='fixed inset-0 z-[999999999999] flex items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-md'>
             <h3 className='text-lg font-semibold text-green-500'>Idea Deleted Successfully!</h3>
             <div className='mt-4'>
@@ -439,7 +439,7 @@ const TeamRoleStudent: React.FC<IdeaDetailsProps> = ({ project }) => {
       )}
 
       {showKickConfirmation && (
-        <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
+        <div className='fixed inset-0 flex z-[999999999999] items-center justify-center bg-gray-800 bg-opacity-50'>
           <div className='bg-white p-6 rounded-md'>
             <h3 className='text-lg font-semibold'>Are you sure you want to kick this member?</h3>
             <div className='mt-4 flex gap-4'>

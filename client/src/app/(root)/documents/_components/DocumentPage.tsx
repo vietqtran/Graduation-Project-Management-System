@@ -31,7 +31,7 @@ export default function DocumentManager() {
     if (user?.project) {
       fetchDocuments()
     }
-  }, [user?.project, page])
+  }, [page])
 
   async function fetchDocuments() {
     try {

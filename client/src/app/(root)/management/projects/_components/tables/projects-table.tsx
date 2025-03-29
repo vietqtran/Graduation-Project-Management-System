@@ -163,9 +163,7 @@ const ProjectsTable = () => {
   }
 
   const getCategoryBadge = (category: 1 | 2) => {
-    return (
-      <Badge variant={category === 1 ? 'default' : 'secondary'}>{category === 1 ? 'Student' : 'Supervisor'}</Badge>
-    )
+    return <Badge variant={category === 1 ? 'default' : 'secondary'}>{category === 1 ? 'Student' : 'Supervisor'}</Badge>
   }
 
   const TableSkeleton = () => (

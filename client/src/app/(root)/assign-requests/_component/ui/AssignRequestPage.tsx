@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+
 import FilterBar from './FilterBar'
 import RequestTable from './RequestTable'
 import instance from '@/utils/axios'
@@ -78,7 +79,7 @@ const RequestsPage: React.FC = () => {
     } else {
       fetchRequests()
     }
-  }, [userId, refresh])
+  }, [])
 
   useEffect(() => {
     let filtered = requests

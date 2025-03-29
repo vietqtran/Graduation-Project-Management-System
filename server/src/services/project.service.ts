@@ -1,6 +1,8 @@
 import { Model, Types } from 'mongoose'
 import { PROJECT_STATUS, STATUS_MASTER, USER_STATUS } from '@/constants/status'
+import ParameterModel, { IParameter } from '@/models/parameter.model'
 import ProjectModel, { IProject } from '@/models/project.model'
+import RequestModel, { IRequest } from '@/models/request.model'
 import {
   StaffGetDetailProjectDto,
   StaffGetListProjectsDto,
@@ -13,13 +15,11 @@ import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/hel
 
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { MailService } from './mail.service'
+import { TaskModel } from '@/models/task.model'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
 import { send } from 'process'
-import { TaskModel } from '@/models/task.model'
-import RequestModel, { IRequest } from '@/models/request.model'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
@@ -607,6 +607,7 @@ export class ProjectService {
         .populate({ path: 'members', select: '_id display_name username email avatar first_name last_name' })
         .populate({ path: 'created_by', select: '_id display_name username email avatar' })
         .populate({ path: 'updated_by', select: '_id display_name username email avatar' })
+        .populate('documents')
         .session(session)
 
       if (!project) {

@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid'
 export const useAuth = () => {
   const dispatch = useAppDispatch()
   const { getDeviceInformation } = useDevice()
-  const { push, replace, refresh } = useRouter()
+  const { push, replace } = useRouter()
 
   const signUp = async ({
     email,
@@ -111,14 +111,15 @@ export const useAuth = () => {
   const logOut = async () => {
     try {
       await axios.post('/auth/log-out', {}, { withCredentials: true })
-      dispatch(
-        setUser({
-          user: null
-        })
-      )
       localStorage.removeItem('device_id')
-      replace('/auth/sign-in')
-      refresh()
+      setTimeout(() => {
+        dispatch(
+          setUser({
+            user: null
+          })
+        )
+        replace('/auth/sign-in')
+      }, 500)
     } catch (error) {
       console.log(error)
     }

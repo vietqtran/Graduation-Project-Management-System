@@ -1,7 +1,9 @@
 'use client'
-import { Label } from '@/components/ui/label'
-import React, { useState, useEffect } from 'react'
+
 import { FaFilter, FaSort } from 'react-icons/fa'
+import React, { useEffect, useState } from 'react'
+
+import { Label } from '@/components/ui/label'
 
 interface LabelItem {
   text: string

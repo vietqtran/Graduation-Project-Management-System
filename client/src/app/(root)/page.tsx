@@ -1,7 +1,5 @@
-import Show from "@/components/pages/home/Show";
-
 const Page = () => {
-  return <Show />;
+  return <div></div>;
 };
 
 export default Page;

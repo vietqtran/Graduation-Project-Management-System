@@ -1,13 +1,14 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import React, { useMemo, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import instance from '@/utils/axios'
-import React, { useState, useMemo } from 'react'
-import { toast } from 'sonner'
-import RequestModal from './RequestModal'
+
+import { Button } from '@/components/ui/button'
 import ConfirmModal from './ConfirmModal'
+import RequestModal from './RequestModal'
+import instance from '@/utils/axios'
+import { toast } from 'sonner'
 
 interface Request {
   _id: string
@@ -123,25 +124,9 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
               </TableCell>
               <TableCell>{request?.remark || 'N/A'}</TableCell>
               <TableCell>
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: (() => {
-                      if (!request?.description) return 'N/A'
-
-                      const parts = request.description
-                        .split('-')
-                        .map((item) => item.trim())
-                        .filter(Boolean)
-
-                      if (parts.length === 0) return 'N/A'
-
-                      return [
-                        parts[0], // Giữ nguyên câu đầu tiên
-                        ...parts.slice(1).map((item) => `• ${item}`) // Thêm dấu "•" cho các dòng sau
-                      ].join('<br />')
-                    })()
-                  }}
-                />
+                <span>
+                  {request?.description}
+                </span>
               </TableCell>
               <TableCell>{request?.updated_at ? new Date(request.updated_at).toLocaleString() : 'N/A'}</TableCell>
               <TableCell>{request?.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</TableCell>
