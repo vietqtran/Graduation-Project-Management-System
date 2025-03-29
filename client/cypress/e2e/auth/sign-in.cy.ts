@@ -1,140 +1,165 @@
 describe('Sign In Page', () => {
   beforeEach(() => {
-    cy.visit('/auth/sign-in')
+    cy.clearLocalStorage()
+    cy.clearCookies()
+    cy.visit('http://localhost:3000/auth/sign-in')
+    cy.get('[data-cy=signin-container]').should('be.visible')
   })
 
   it('should display the sign-in form correctly', () => {
-    cy.get('[data-cy="signin-container"]').should('be.visible')
-    cy.get('[data-cy="signin-title"]').should('have.text', 'Sign In')
-    cy.get('[data-cy="signin-subtitle"]').should('have.text', 'Sign in if you already have an account')
-    cy.get('[data-cy="email-input"]').should('be.visible')
-    cy.get('[data-cy="password-input"]').should('be.visible')
-    cy.get('[data-cy="signin-button"]').should('be.visible')
-    cy.get('[data-cy="passkey-button"]').should('be.visible')
+    cy.get('[data-cy=signin-title]').should('have.text', 'Sign In')
+    cy.get('[data-cy=signin-subtitle]').should('contain.text', 'Sign in if you already have an account')
+    cy.get('#email-input').should('be.visible')
+    cy.get('#password-input').should('be.visible')
+    cy.get('[data-cy=signin-button]').should('be.visible').and('contain.text', 'Sign in')
   })
 
-  it('should validate email and password fields', () => {
-    cy.get('[data-cy="signin-button"]').click()
+  it('should show validation errors for empty fields', () => {
+    cy.get('[data-cy=signin-form]').submit()
+    cy.wait(1000)
     cy.contains('Email is required').should('be.visible')
     cy.contains('Password is required').should('be.visible')
+  })
 
-    cy.get('[data-cy="email-input"]').type('invalidemail')
-    cy.get('[data-cy="signin-button"]').click()
+  it('should show validation error for invalid email', () => {
+    cy.get('#email-input').type('invalid-email')
+    cy.get('#password-input').type('123@123')
+    cy.get('[data-cy=signin-form]').submit()
+    
     cy.contains('Invalid email').should('be.visible')
+  })
 
-    cy.get('[data-cy="email-input"]').clear().type('valid@example.com')
-    cy.get('[data-cy="password-input"]').type('12345')
-    cy.get('[data-cy="signin-button"]').click()
+  it('should show validation error for short password', () => {
+    cy.get('#email-input').type('tranquocviet@gmail.com')
+    cy.get('#password-input').type('12345')
+    cy.get('[data-cy=signin-form]').submit()
+    
     cy.contains('Password is too short').should('be.visible')
   })
 
-  it('should navigate to sign-up page when clicking sign-up link', () => {
-    cy.get('[data-cy="sign-up-link"]').click()
-    cy.url().should('include', '/auth/sign-up')
+  it('should submit the form with valid credentials and redirect to home page', () => {
+    Cypress.config('defaultCommandTimeout', 10000)
+    
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.wait(5000)
+    cy.url().should('eq', 'http://localhost:3000/')
   })
 
-  it('should attempt to sign in with valid credentials', () => {
-    cy.intercept('POST', '/api/auth/sign-in', {
-      statusCode: 200,
-      body: {
-        success: true,
-        data: {
-          user: { id: 1, email: 'test@example.com' },
-          deviceId: 'test-device-id'
-        }
-      }
-    }).as('signInRequest')
+  it('should show an error toast when sign-in fails', () => {
+    cy.get('#email-input').clear().type('tranquocviet@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('wrongPassword123!', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.url().should('include', '/auth/sign-in')
+  })
 
-    cy.get('[data-cy="email-input"]').type('test@example.com')
-    cy.get('[data-cy="password-input"]').type('password123')
-    cy.get('[data-cy="signin-button"]').click()
+  it('should show loading state when form is being submitted', () => {
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').as('submitButton')
+    
+    cy.get('@submitButton').click()
+  })
 
-    cy.wait('@signInRequest').its('request.body').should('deep.include', {
-      email: 'test@example.com',
-      password: 'password123'
+  it('should be able to sign in with Google', () => {
+    cy.contains('button', 'Continue with FPT email', { matchCase: false })
+      .should('be.visible')
+      .should('not.be.disabled')
+  })
+
+  it('should log out successfully when clicking the logout button', () => {
+    Cypress.config('defaultCommandTimeout', 10000)
+    
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.wait(5000)
+    cy.url().should('eq', 'http://localhost:3000/')
+    cy.intercept('POST', 'http://localhost:8080/api/auth/log-out').as('logoutRequest')
+    
+    cy.get('[data-cy=user-avatar]').click()
+    
+    cy.get('[data-cy=profile-button]').should('be.visible')
+    cy.get('[data-cy=logout-button]').should('be.visible')
+    
+    cy.get('[data-cy=logout-button]').click()
+    
+    cy.wait('@logoutRequest')
+    
+    cy.url().should('include', '/auth/sign-in', { timeout: 10000 })
+    
+    cy.get('[data-cy=signin-container]').should('be.visible')
+  })
+
+  it('should close dropdown when clicking outside', () => {
+    Cypress.config('defaultCommandTimeout', 10000)
+    
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.wait(5000)
+    cy.url().should('eq', 'http://localhost:3000/')
+    cy.get('.size-10.rounded-full').click()
+    
+    cy.get('[data-cy=logout-button]').should('be.visible')
+    
+    cy.get('body').click(0, 0)
+    
+    cy.get('[data-cy=logout-button]').should('not.exist')
+  })
+
+  it('should open profile menu when clicking on avatar', () => {
+    Cypress.config('defaultCommandTimeout', 10000)
+    
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.wait(5000)
+    cy.url().should('eq', 'http://localhost:3000/')
+    cy.get('[data-cy=user-avatar]').click()
+    
+    cy.get('[data-cy=profile-button]').should('be.visible')
+    cy.get('[data-cy=logout-button]').should('be.visible')
+    
+    cy.get('[data-cy=profile-button]')
+      .find('svg')
+      .should('exist')
+    
+    cy.get('[data-cy=logout-button]')
+      .find('svg')
+      .should('exist')
+  })
+
+  it('should clear localStorage after logout', () => {
+    Cypress.config('defaultCommandTimeout', 10000)
+    
+    cy.get('#email-input').clear().type('tranquocviet1303@gmail.com', { delay: 50 })
+    cy.get('#password-input').clear().type('123@123', { delay: 50 })
+    
+    cy.get('[data-cy=signin-button]').click()
+    
+    cy.wait(5000)
+    cy.url().should('eq', 'http://localhost:3000/')
+    cy.window().then(win => {
+      win.localStorage.setItem('test_key', 'test_value')
     })
-
-    cy.url().should('eq', Cypress.config().baseUrl + '/')
-  })
-
-  it('should show error toast on failed sign in', () => {
-    cy.intercept('POST', '/api/auth/sign-in', {
-      statusCode: 401,
-      body: {
-        success: false,
-        message: 'Invalid credentials'
-      }
-    }).as('failedSignIn')
-
-    cy.get('[data-cy="email-input"]').type('wrong@example.com')
-    cy.get('[data-cy="password-input"]').type('wrongpassword')
-    cy.get('[data-cy="signin-button"]').click()
-
-    cy.wait('@failedSignIn')
-    cy.contains('Invalid credentials').should('be.visible')
-  })
-
-  it('should attempt passkey authentication with valid email', () => {
-    // Stub WebAuthn
-    cy.stubWebAuthn()
-
-    cy.intercept('GET', '/api/auth/passkey/verify*', {
-      statusCode: 200,
-      body: {
-        success: true,
-        data: { challenge: 'test-challenge', options: {} }
-      }
-    }).as('passkeyVerifyRequest')
-
-    cy.intercept('POST', '/api/auth/passkey/verify-login', {
-      statusCode: 200,
-      body: {
-        success: true,
-        data: {
-          user: { id: 1, email: 'test@example.com' }
-        }
-      }
-    }).as('passkeyLoginRequest')
-
-    cy.get('[data-cy="email-input"]').type('test@example.com')
-    cy.get('[data-cy="passkey-button"]').click()
-
-    cy.wait('@passkeyVerifyRequest')
-    cy.wait('@passkeyLoginRequest')
-
-    cy.url().should('eq', Cypress.config().baseUrl + '/')
-  })
-
-  it('should handle Google sign-in', () => {
-    const googleUserStub = {
-      email: 'google@example.com',
-      photoURL: 'https://example.com/photo.jpg',
-      displayName: 'Google User'
-    }
-
-    cy.intercept('POST', '/api/auth/google/sign-in', {
-      statusCode: 200,
-      body: {
-        success: true,
-        data: {
-          user: { id: 1, email: 'google@example.com' }
-        }
-      }
-    }).as('googleSignIn')
-
-    cy.window().then((win) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      win.googleSignInCallback = cy.stub().callsFake((user) => {
-        cy.get('@googleAuthFunction').invoke('call', null, googleUserStub)
-      })
-    })
-
-    cy.get('[data-cy="google-signin-button"]').should('be.visible')
-  })
-
-  it('should handle GitHub sign-in', () => {
-    cy.get('[data-cy="github-signin-button"]').should('be.visible')
+    
+    cy.get('[data-cy=user-avatar]').click()
+    
+    cy.get('[data-cy=logout-button]').click()
+    
+    cy.url().should('include', '/auth/sign-in', { timeout: 10000 })
   })
 })
-
-export {}

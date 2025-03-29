@@ -28,12 +28,13 @@ const Header = () => {
   }
 
   return (
-    <header className='z-[99] box-content bg-background fixed top-0 inset-x-0 w-full h-16 border-b'>
+    <header className='z-[99] box-content bg-background fixed top-0 inset-x-0 w-full h-16 border-b' data-cy="header">
       <div className='size-full gap-2 flex items-center justify-end py-2 px-4'>
-        <div className='relative' ref={dropdownRef}>
+        <div className='relative' ref={dropdownRef} data-cy="user-dropdown">
           <div
             className='cursor-pointer size-10 min-w-10 rounded-full border overflow-hidden'
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            data-cy="user-avatar"
           >
             <Image
               src={user?.avatar || 'https://avatar.iran.liara.run/public/boy'}
@@ -45,10 +46,11 @@ const Header = () => {
           </div>
 
           {isDropdownOpen && (
-            <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border'>
+            <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border' data-cy="dropdown-menu">
               <button
                 className='block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2'
                 onClick={() => setIsDropdownOpen(false)}
+                data-cy="profile-button"
               >
                 <User size={16} />
                 Profile
@@ -56,6 +58,7 @@ const Header = () => {
               <button
                 className='block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2'
                 onClick={handleLogout}
+                data-cy="logout-button"
               >
                 <LogOut size={16} />
                 Logout
