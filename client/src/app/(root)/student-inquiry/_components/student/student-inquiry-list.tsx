@@ -323,7 +323,6 @@ const StudentInquiryList = () => {
       </div>
 
       {/* Pagination Controls */}
-      {total > limit && (
         <div className='mt-4'>
           <Pagination>
             <PaginationContent>
@@ -347,9 +346,8 @@ const StudentInquiryList = () => {
                 />
               </PaginationItem>
             </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+        </Pagination>
+      </div>
     </div>
   )
 }
