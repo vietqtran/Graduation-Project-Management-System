@@ -696,7 +696,7 @@ export class ProjectService {
             const taskDone = memberTasks.filter(
               (task: any) => task.status === 'todo' && task.is_completed === true
             ).length
-            const progress = taskDone > 0 ? Math.round((taskNotDone / taskDone) * 100) : 0
+            const progress = taskDone > 0 ? Math.round((taskDone / totalTask) * 100) : 0
 
             return {
               _id: member._id,
@@ -707,14 +707,15 @@ export class ProjectService {
               totalTask,
               taskNotDone,
               taskDone,
-              progress: progress.toFixed(2)
+              progress: progress
             }
           }) || []
 
-        const projectRequests = requestsAll.filter((req) => req.to_user === project.leader?.toString())
+        const projectRequests = requestsAll.filter((req) => (req.to_user as Types.ObjectId).equals(project.leader));
         const totalRequests = projectRequests.length
-        const completedRequests = projectRequests.filter((req) => req.status === 'completed').length
-        const requestProgress = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0
+        const completedRequests = projectRequests.filter((req) => req.status === 'submitted').length
+        const requestProgress = totalRequests > 0 ? Math.round((completedRequests / totalRequests) * 100) : 0
+
         return {
           _id: project._id,
           name: project.name,
@@ -735,7 +736,7 @@ export class ProjectService {
           tasks: project.tasks,
           totalRequests,
           completedRequests,
-          requestProgress: requestProgress.toFixed(2)
+          requestProgress: requestProgress
         }
       })
 
