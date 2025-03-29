@@ -20,12 +20,10 @@ export const FieldSchema = new Schema<IField>(
       trim: true,
       maxlength: [500, 'Description cannot exceed 500 characters']
     },
-    major: 
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Major'
-      }
-    
+    major: {
+      type: Schema.Types.ObjectId,
+      ref: 'Major'
+    }
   },
   {
     timestamps: {

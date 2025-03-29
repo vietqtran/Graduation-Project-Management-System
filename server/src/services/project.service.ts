@@ -13,7 +13,7 @@ import { getCurrentSemester, getSemesterDates, getSemesterFromDate } from '@/hel
 
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import { IParameter } from '@/models/parameter.model'
+import ParameterModel, { IParameter } from '@/models/parameter.model'
 import { MailService } from './mail.service'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
@@ -941,6 +941,8 @@ export class ProjectService {
   }
 
   async checkAvailableSlot(userId: string) {
+    const paramForSupervisor = await ParameterModel.findOne({ param_name: 'MaxMembersPerGroup' }).exec()
+    let maxMembersPerGroup = paramForSupervisor?.param_value
     return runTransaction(async (session) => {
       const countSlot = await this.projectModel
         .countDocuments({
@@ -950,7 +952,8 @@ export class ProjectService {
         })
         .session(session)
 
-      const availableSlot = 5 - countSlot
+      const maxMembersPerGroupValue = Number(maxMembersPerGroup ?? 0)
+      const availableSlot = maxMembersPerGroupValue - countSlot
       await session.commitTransaction()
       return { message: 'Count available slot successfully', availableSlot }
     })
