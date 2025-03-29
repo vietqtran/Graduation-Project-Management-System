@@ -19,9 +19,11 @@ import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { runTransaction } from '@/helpers/transaction-helper'
 import { send } from 'process'
 import { TaskModel } from '@/models/task.model'
+import RequestModel, { IRequest } from '@/models/request.model'
 
 export class ProjectService {
   private readonly projectModel: Model<IProject>
+  private readonly requestModel: Model<IRequest>
   private readonly userModel: Model<IUser>
   private readonly parameterModel: Model<IParameter>
   private readonly emailQueue: EmailQueue
@@ -29,6 +31,7 @@ export class ProjectService {
 
   constructor() {
     this.projectModel = ProjectModel
+    this.requestModel = RequestModel
     this.userModel = UserModel
     this.mailService = new MailService()
     this.emailQueue = new EmailQueue(this.mailService)
@@ -665,6 +668,7 @@ export class ProjectService {
         throw new HttpException('Error at getting projects', 400)
       }
       const tasksAll = await TaskModel.find({ project: projects.map((project) => project._id) }).exec()
+      const requestsAll = await RequestModel.find({ to_user: { $in: projects.map(p => p.leader) } }).exec()
 
       const formattedProjects = projects.map((project: any) => {
         const membersWithTaskStats =
@@ -700,6 +704,10 @@ export class ProjectService {
             }
           }) || []
 
+        const projectRequests = requestsAll.filter(req => req.to_user === project.leader?.toString());
+        const totalRequests = projectRequests.length;
+        const completedRequests = projectRequests.filter(req => req.status === 'completed').length
+        const requestProgress = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0
         return {
           _id: project._id,
           name: project.name,
@@ -717,7 +725,10 @@ export class ProjectService {
           updated_by: project.updated_by,
           created_at: project.created_at,
           updated_at: project.updated_at,
-          tasks: project.tasks
+          tasks: project.tasks,
+          totalRequests,
+          completedRequests,
+          requestProgress: requestProgress.toFixed(2)
         }
       })
 
@@ -862,10 +873,9 @@ export class ProjectService {
         console.log('📌 Projects found:', projects.length)
 
         if (!projects.length) {
-          return [] // Không có leader thì trả về mảng rỗng thay vì lỗi
+          return []  
         }
 
-        // Lọc danh sách leader không trùng lặp
         const leaders: { id: string; name: string; email: string }[] = []
 
         for (const project of projects) {
