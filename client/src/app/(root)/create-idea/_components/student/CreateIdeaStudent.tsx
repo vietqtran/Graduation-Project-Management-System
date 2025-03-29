@@ -1,16 +1,18 @@
 'use client'
+
 import React, { useState } from 'react'
-import { useAppSelector } from '@/hooks'
+
+import { AxiosError } from 'axios'
+import { Campus } from '@/types/campus.type'
 import { Field } from '@/types/field.type'
 import { Major } from '@/types/major.type'
-import { Campus } from '@/types/campus.type'
-import { useRouter } from '@/hooks/useRouter'
-import useMajor from '@/hooks/public/useMajor'
-import useField from '@/hooks/public/useField'
-import useCampus from '@/hooks/public/useCampus'
 import instance from '@/utils/axios'
-import { AxiosError } from 'axios'
 import { toast } from 'sonner'
+import { useAppSelector } from '@/hooks'
+import useCampus from '@/hooks/public/useCampus'
+import useField from '@/hooks/public/useField'
+import useMajor from '@/hooks/public/useMajor'
+import { useRouter } from '@/hooks/useRouter'
 
 // Định nghĩa types cho formData và errors
 interface FormData {
