@@ -4,7 +4,8 @@ import { FilterQuery, Model, UpdateQuery } from 'mongoose'
 import InviteModel, { IInvite } from '@/models/invite.model'
 import ProjectModel, { IProject } from '@/models/project.model'
 import UserModel, { IUser } from '@/models/user.model'
-
+import FieldModel, { IField } from '@/models/field.model'
+import MajorModel, { IMajor } from '@/models/major.model'
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
 import { MailService } from './mail.service'
@@ -21,6 +22,8 @@ export class IdeaService {
   private readonly mailService: MailService
   private readonly deadlineModel: Model<IDeadline>
   private readonly inviteModel: Model<IInvite>
+  private readonly fieldModel: Model<IField>
+  private readonly majorModel: Model<IMajor>
   constructor() {
     this.projectModel = ProjectModel
     this.userModel = UserModel
@@ -28,6 +31,8 @@ export class IdeaService {
     this.emailQueue = new EmailQueue(this.mailService)
     this.deadlineModel = DeadlineModel
     this.inviteModel = InviteModel
+    this.fieldModel = FieldModel
+    this.majorModel = MajorModel
   }
 
   async createIdea(ideaData: CreateIdeaDto): Promise<IProject> {
@@ -62,6 +67,43 @@ export class IdeaService {
         'You are already part of an existing idea. Please leave it before creating a new one.',
         400
       )
+    }
+
+    // Lấy danh sách field từ database
+    const fields = (await this.fieldModel.find({ _id: { $in: ideaData.field } })) as IField[]
+
+    // Lấy tất cả major liên quan: từ ideaData.major và từ field.major
+    const allMajorIds = [...new Set([...ideaData.major, ...fields.map((field) => String(field.major))])]
+
+    // Lấy danh sách major từ database để tra cứu tên
+    const majors = (await this.majorModel.find({ _id: { $in: allMajorIds } })) as IMajor[]
+    const majorMap = new Map(majors.map((m) => [String(m._id), m.name]))
+
+    // Chuyển danh sách major của người dùng thành Set
+    const userMajors = new Set(ideaData.major.map(String))
+
+    // 1. Kiểm tra field không hợp lệ
+    const invalidFields = fields.filter((field) => {
+      const fieldMajor = String(field.major)
+      return !userMajors.has(fieldMajor)
+    })
+
+    if (invalidFields.length > 0) {
+      const errorMessages = invalidFields.map((field) => {
+        const fieldMajorName = majorMap.get(String(field.major)) || 'Unknown Major'
+        const selectedMajors = [...userMajors].map((m) => majorMap.get(m) || 'Unknown Major')
+        return `${field.name} requires major: ${fieldMajorName}, but you selected: ${selectedMajors.join(', ')}.`
+      })
+      throw new Error(errorMessages.join(' '))
+    }
+
+    // 2. Kiểm tra xem mỗi major có ít nhất 1 field liên quan không
+    const fieldMajorsSet = new Set(fields.map((field) => String(field.major)))
+    const missingMajors = ideaData.major.filter((major) => !fieldMajorsSet.has(major.toString()))
+
+    if (missingMajors.length > 0) {
+      const missingMajorNames = missingMajors.map((m) => majorMap.get(m) || 'Unknown Major')
+      throw new Error(`You must select at least one field for the following majors: ${missingMajorNames.join(', ')}.`)
     }
 
     return runTransaction(async (session) => {

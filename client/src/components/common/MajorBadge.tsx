@@ -11,9 +11,9 @@ type Props = {
 const MajorBadge = ({ name, description }: Props) => {
   const getMajorBadgeStyle = () => {
     switch (name) {
-      case 'HE':
+      case 'IT':
         return 'bg-green-100 text-green-800'
-      case 'HS':
+      case 'Ling':
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-yellow-100 text-yellow-800'

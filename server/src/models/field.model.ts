@@ -1,8 +1,9 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
-
+import { IMajor } from './major.model'
 export interface IField extends Document {
   name: string
   description: string
+  major: IMajor['_id']
 }
 
 export const FieldSchema = new Schema<IField>(
@@ -18,7 +19,13 @@ export const FieldSchema = new Schema<IField>(
       type: String,
       trim: true,
       maxlength: [500, 'Description cannot exceed 500 characters']
-    }
+    },
+    major: 
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Major'
+      }
+    
   },
   {
     timestamps: {
