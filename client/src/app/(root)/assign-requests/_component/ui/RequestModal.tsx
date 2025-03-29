@@ -98,7 +98,7 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
       const formData = new FormData()
       formData.append('file', file)
 
-      const uploadResponse = await instance.post('/document', formData, { withCredentials: true })
+      const uploadResponse = await instance.post('/upload/presigned-urls', formData, { withCredentials: true })
       const fileUrl = uploadResponse.data.fileUrl
 
       const documentData = {

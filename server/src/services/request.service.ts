@@ -13,6 +13,9 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { MailService } from './mail.service'
 import ProjectModel from '@/models/project.model'
+import { StatusQueue } from '@/queues/status.queue';
+
+const statusQueue = new StatusQueue();
 
 dotenv.config()
 
@@ -30,79 +33,70 @@ export class RequestService {
   }
 
   async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
-    const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } })
+  const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } });
 
-    if (!toUser) {
-      throw new HttpException('User not found', 404)
+  if (!toUser) {
+    throw new HttpException('User not found', 404);
+  }
+
+  return runTransaction(async (session) => {
+    const request = await this.requestModel.create(
+      [
+        {
+          to_user: toUser._id,
+          from_user: tokenPayload._id,
+          type: requestData.type,
+          remark: requestData.remark || '',
+          status: requestData.status || 'assigned',
+          approve_user: requestData.approve_user,
+          description: requestData.description,
+          documents: requestData.documents,
+          due_date: requestData.due_date || new Date(),
+          created_at: requestData.created_at || new Date(),
+          updated_at: requestData.updated_at || new Date(),
+        },
+      ],
+      { session }
+    );
+
+    if (!request || request.length === 0) {
+      throw new HttpException('Error at creating request', 400);
     }
 
-    return runTransaction(async (session) => {
-      const request = await this.requestModel.create(
-        [
-          {
-            to_user: toUser._id,
-            from_user: tokenPayload._id,
-            type: requestData.type,
-            remark: requestData.remark || '',
-            status: requestData.status || 'assigned',
-            approve_user: requestData.approve_user,
-            description: requestData.description,
-            documents: requestData.documents,
-            due_date: requestData.due_date || new Date(),
-            created_at: requestData.created_at || new Date(),
-            updated_at: requestData.updated_at || new Date()
-          }
-        ],
-        { session }
-      )
+    await statusQueue.addStatusJob(request[0]._id, request[0].due_date);
 
-      if (!request || request.length === 0) {
-        throw new HttpException('Error at creating request', 400)
-      }
+    this.emailQueue.addEmailJob({
+      to: toUser.email,
+      subject: 'You have a new request from your supervisor',
+      templateName: 'new-request',
+      context: {
+        year: new Date().getFullYear(),
+        start_url: `${process.env.CLIENT_URL}/assign-requests`,
+        request: {
+          type: request[0].type,
+          from_user: tokenPayload.username,
+          description: request[0].description,
+          remark: request[0].remark,
+          due_date: request[0].due_date.toLocaleString('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true,
+          }),
+          status: request[0].status,
+        },
+      },
+    });
 
-      const formatDate = (due_date: Date) => {
-        return new Date(due_date).toLocaleString('en-US', {
-          month: 'numeric',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: true
-        })
-      }
-
-      const formatDescription = (description: string) => {
-        return description
-          .split('\n')  
-          .map((description) => `${description.trim()}`)  
-          .join('<br>')  
-      }
-
-      this.emailQueue.addEmailJob({
-        to: toUser.email,
-        subject: 'You have a new request from your supervisor',
-        templateName: 'new-request',
-        context: {
-          year: new Date().getFullYear(),
-          start_url: `${process.env.CLIENT_URL}/assign-requests`,
-          request: {
-            type: request[0].type,
-            from_user: tokenPayload.username,
-            description: formatDescription(request[0].description),
-            remark: request[0].remark,
-            due_date: formatDate(request[0].due_date),
-            status: request[0].status
-          }
-        }
-      })
-
-      return {
-        request: request[0],
-        requestData: requestData
-      }
-    })
-  }
+    return {
+      request: request[0],
+      requestData: requestData,
+    };
+  });
+}
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
     return runTransaction(async (session) => {

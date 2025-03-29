@@ -3,6 +3,7 @@ import { IUser } from './user.model'
 import { IUploadDocument } from './document.model'
 
 export interface IRequest extends Document {
+  _id: string
   to_user: IUser['_id']
   from_user: IUser['_id']
   status: string
