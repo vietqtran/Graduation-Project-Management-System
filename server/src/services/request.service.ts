@@ -63,7 +63,7 @@ export class RequestService {
       throw new HttpException('Error at creating request', 400);
     }
 
-    await statusQueue.addStatusJob(request[0]._id, request[0].due_date);
+    await statusQueue.addStatusJob(request[0].remark, request[0].due_date);
 
     this.emailQueue.addEmailJob({
       to: toUser.email,

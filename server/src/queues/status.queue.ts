@@ -25,8 +25,8 @@ export class StatusQueue {
 
     this.statusQueue.process(async (job: Job) => {
       try {
-        console.log(`Processing status update for request ${job.data.requestId}`);
-        await requestModel.findByIdAndUpdate(job.data.requestId, {
+        console.log(`Processing status update for request ${job.data.remark}`);
+        await requestModel.findByIdAndUpdate(job.data.remark, {
           status: 'overdue',
           updated_at: new Date(),
         });
@@ -44,13 +44,13 @@ export class StatusQueue {
     });
   }
 
-  async addStatusJob(requestId: string, dueDate: Date) {
-    console.log(`Scheduling status update for request ${requestId} at ${dueDate}`);
+  async addStatusJob(remark: string, dueDate: Date) {
+    console.log(`Scheduling status update for request ${remark} at ${dueDate}`);
 
     const delay = new Date(dueDate).getTime() - Date.now();
     if (delay > 0) {
       return this.statusQueue.add(
-        { requestId },
+        { remark },
         {
           delay,
           attempts: 3,
@@ -61,6 +61,6 @@ export class StatusQueue {
         }
       );
     }
-    console.log(`Request ${requestId} is already overdue.`);
+    console.log(`Request ${remark} is already overdue.`);
   }
 }
