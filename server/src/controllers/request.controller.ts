@@ -20,7 +20,7 @@ export class RequestController {
       const tokenPayload = getUser(req)
       const userId = tokenPayload._id
 
-      const requests = await this.requestService.getUserRequests(userId) 
+      const requests = await this.requestService.getUserRequests(userId)
       ResponseHandler.sendSuccess(res, requests, 'Get all requests successfully')
     } catch (error) {
       ResponseHandler.sendError(res, error)

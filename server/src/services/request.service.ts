@@ -13,6 +13,7 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { MailService } from './mail.service'
 import ProjectModel from '@/models/project.model'
+import { StatusQueue } from '@/queues/status.queue'
 
 dotenv.config()
 
@@ -21,6 +22,7 @@ export class RequestService {
   private readonly userModel: Model<IUser>
   private readonly mailService: MailService
   private readonly emailQueue: EmailQueue
+  private readonly statusQueue: StatusQueue
 
   constructor() {
     this.requestModel = RequestModel
@@ -30,68 +32,79 @@ export class RequestService {
   }
 
   async createRequest(requestData: Omit<IRequest, '_id'>, tokenPayload: TokenPayload) {
-  const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } });
+    const toUser = await this.userModel.findOne({ email: { $eq: requestData.to_user } })
 
-  if (!toUser) {
-    throw new HttpException('User not found', 404);
-  }
-
-  return runTransaction(async (session) => {
-    const request = await this.requestModel.create(
-      [
-        {
-          to_user: toUser._id,
-          from_user: tokenPayload._id,
-          type: requestData.type,
-          remark: requestData.remark || '',
-          status: requestData.status || 'assigned',
-          approve_user: requestData.approve_user,
-          description: requestData.description,
-          documents: requestData.documents,
-          due_date: requestData.due_date || new Date(),
-          created_at: requestData.created_at || new Date(),
-          updated_at: requestData.updated_at || new Date(),
-        },
-      ],
-      { session }
-    );
-
-    if (!request || request.length === 0) {
-      throw new HttpException('Error at creating request', 400);
+    if (!toUser) {
+      throw new HttpException('User not found', 404)
     }
 
-    this.emailQueue.addEmailJob({
-      to: toUser.email,
-      subject: 'You have a new request from your supervisor',
-      templateName: 'new-request',
-      context: {
-        year: new Date().getFullYear(),
-        start_url: `${process.env.CLIENT_URL}/assign-requests`,
-        request: {
-          type: request[0].type,
-          from_user: tokenPayload.username,
-          description: request[0].description,
-          remark: request[0].remark,
-          due_date: request[0].due_date.toLocaleString('en-US', {
-            month: 'numeric',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            hour12: true,
-          }),
-          status: request[0].status,
-        },
-      },
-    });
+    return runTransaction(async (session) => {
+      const request = await this.requestModel.create(
+        [
+          {
+            to_user: toUser._id,
+            from_user: tokenPayload._id,
+            type: requestData.type,
+            remark: requestData.remark || '',
+            status: requestData.status || 'assigned',
+            approve_user: requestData.approve_user,
+            description: requestData.description,
+            documents: requestData.documents,
+            due_date: requestData.due_date || new Date(),
+            created_at: requestData.created_at || new Date(),
+            updated_at: requestData.updated_at || new Date()
+          }
+        ],
+        { session }
+      )
 
-    return {
-      request: request[0],
-      requestData: requestData,
-    };
-  });
-}
+      if (!request || request.length === 0) {
+        throw new HttpException('Error at creating request', 400)
+      }
+
+      await this.emailQueue.addEmailJob({
+        to: toUser.email,
+        subject: 'You have a new request from your supervisor',
+        templateName: 'new-request',
+        context: {
+          year: new Date().getFullYear(),
+          start_url: `${process.env.CLIENT_URL}/assign-requests`,
+          request: {
+            type: request[0].type,
+            from_user: tokenPayload.username,
+            description: request[0].description,
+            remark: request[0].remark,
+            due_date: request[0].due_date.toLocaleString('en-US', {
+              month: 'numeric',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric',
+              hour12: true
+            }),
+            status: request[0].status
+          }
+        }
+      })
+
+      try {
+        if (!request[0] || !request[0]._id) {
+          throw new Error('Request creation failed, _id not found')
+        }
+
+        await this.statusQueue.addStatusJob(request[0]._id.toString(), request[0].due_date)
+      } catch (error: unknown) {
+        const err = error as Error
+        console.error(`Failed to add status job for request: ${err.message}`)
+      }
+
+      return {
+        request: request[0],
+        requestData: requestData
+      }
+    })
+  }
 
   async updateRequest(requestId: string, userId: string, updateRequestDto: UpdateRequestDto) {
     return runTransaction(async (session) => {
@@ -189,53 +202,51 @@ export class RequestService {
     return this.requestModel.findById(requestId).populate('from_user').populate('to_user').populate('approve_user')
   }
   async getUserRequests(userId: string) {
-  return runTransaction(async (session) => {
-    const requests = await this.requestModel
-      .find({ from_user: userId })
-      .populate('to_user')
-      .populate('approve_user')
-      .populate('documents')
-      .sort({ created_at: -1 })
-      .session(session)
-      .lean()
+    return runTransaction(async (session) => {
+      const requests = await this.requestModel
+        .find({ from_user: userId })
+        .populate('to_user')
+        .populate('approve_user')
+        .populate('documents')
+        .sort({ created_at: -1 })
+        .session(session)
+        .lean()
 
-    const requestsWithProject = await Promise.all(
-      requests.map(async (request) => {
-        let selectedProjectId = null
+      const requestsWithProject = await Promise.all(
+        requests.map(async (request) => {
+          let selectedProjectId = null
 
-        if (request.to_user) {
-          const project = await ProjectModel
-            .findOne({ leader: request.to_user })  
-            .select('_id')
-            .lean()
-            .session(session)
+          if (request.to_user) {
+            const project = await ProjectModel.findOne({ leader: request.to_user })
+              .select('_id')
+              .lean()
+              .session(session)
 
-          if (project) {
-            selectedProjectId = project._id.toString()
+            if (project) {
+              selectedProjectId = project._id.toString()
+            }
           }
-        }
 
-        return {
-          _id: request._id?.toString(),
-          to_user: (request.to_user as IUser)?.username || null,
-          from_user: request.from_user || null,
-          approve_user: request.approve_user || null,
-          type: request.type || null,
-          description: request.description || null,
-          remark: request.remark || null,
-          documents: request.documents || null,
-          due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
-          status: request.status || null,
-          created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
-          updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null,
-          selectedProjectId // Trả về ID của project nếu to_user là leader
-        }
-      })
-    )
-    return requestsWithProject
-  })
-}
-
+          return {
+            _id: request._id?.toString(),
+            to_user: (request.to_user as IUser)?.username || null,
+            from_user: request.from_user || null,
+            approve_user: request.approve_user || null,
+            type: request.type || null,
+            description: request.description || null,
+            remark: request.remark || null,
+            documents: request.documents || null,
+            due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
+            status: request.status || null,
+            created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
+            updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null,
+            selectedProjectId // Trả về ID của project nếu to_user là leader
+          }
+        })
+      )
+      return requestsWithProject
+    })
+  }
 
   async getAllRequests(tokenPayload: any) {
     const userId = tokenPayload._id // Lấy userId từ token

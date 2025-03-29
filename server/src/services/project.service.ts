@@ -668,7 +668,7 @@ export class ProjectService {
         throw new HttpException('Error at getting projects', 400)
       }
       const tasksAll = await TaskModel.find({ project: projects.map((project) => project._id) }).exec()
-      const requestsAll = await RequestModel.find({ to_user: { $in: projects.map(p => p.leader) } }).exec()
+      const requestsAll = await RequestModel.find({ to_user: { $in: projects.map((p) => p.leader) } }).exec()
 
       const formattedProjects = projects.map((project: any) => {
         const membersWithTaskStats =
@@ -702,9 +702,9 @@ export class ProjectService {
             }
           }) || []
 
-        const projectRequests = requestsAll.filter(req => req.to_user === project.leader?.toString());
-        const totalRequests = projectRequests.length;
-        const completedRequests = projectRequests.filter(req => req.status === 'completed').length
+        const projectRequests = requestsAll.filter((req) => req.to_user === project.leader?.toString())
+        const totalRequests = projectRequests.length
+        const completedRequests = projectRequests.filter((req) => req.status === 'completed').length
         const requestProgress = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0
         return {
           _id: project._id,
@@ -739,7 +739,6 @@ export class ProjectService {
 
   async getProjectsToReview(supervisorId: string) {
     return runTransaction(async (session) => {
-
       const sampleProject = await this.projectModel.findOne().lean().exec()
       let projects: any[] = []
 
@@ -837,14 +836,14 @@ export class ProjectService {
         const projects = await this.projectModel
           .find({
             supervisor: supervisorObjectId,
-            leader: { $ne: null }  
+            leader: { $ne: null }
           })
           .populate<{ leader: { id: string; name: string; email: string } }>('leader', 'id name email')
           .session(session)
           .exec()
 
         if (!projects.length) {
-          return []  
+          return []
         }
 
         const leaders: { id: string; name: string; email: string }[] = []
