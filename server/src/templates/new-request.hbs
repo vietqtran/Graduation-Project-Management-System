@@ -1,0 +1,46 @@
+<html>
+
+  <head>
+    <meta charset='UTF-8' />
+    <title>You Have a New Request</title>
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; } .container { max-width: 600px; margin: 0
+      auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; } .header { font-size:
+      20px; font-weight: bold; margin-bottom: 20px; color: #007bff; } .content { font-size: 16px; margin-bottom: 20px; }
+      .footer { font-size: 14px; color: #666; margin-top: 20px; } .button { display: inline-block; background-color:
+      #007bff; color: #fff; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 16px; }
+    </style>
+  </head>
+
+  <body>
+    <div class='container'>
+      <div class='header'>📌 New Request Notification</div>
+
+      <div class='content'>
+        <p>Hello,</p>
+        <p>You have received a new request from your supervisor.</p>
+
+        <strong>Request Details:</strong>
+        <ul>
+          <li><strong>Type:</strong> {{request.type}}</li>
+          <li><strong>From:</strong> {{request.from_user}}</li>
+          <li><strong>Description:</strong> {{{request.description}}}</li>
+          <li><strong>Remark:</strong> {{request.remark}}</li>
+          <li><strong>Due Date:</strong> {{request.due_date}}</li>
+          <li><strong>Status:</strong> {{request.status}}</li>
+        </ul>
+
+        <p>Please review the request and take necessary actions.</p>
+
+        <p>
+          <a href='{{start_url}}' class='button'>View Request</a>
+        </p>
+      </div>
+
+      <div class='footer'>
+        <p>&copy; {{year}} Your Organization. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+
+</html>

@@ -1,7 +1,7 @@
-import HomePage from '@/components/pages/home/HomePage'
+import DefenseNotification from '@/components/pages/home/DefenseNotification'
 
 const page = () => {
-  return <HomePage />
+  return <DefenseNotification />
 }
 
 export default page
