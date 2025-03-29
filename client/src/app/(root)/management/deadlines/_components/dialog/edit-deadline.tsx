@@ -95,9 +95,7 @@ const EditDeadlineDialog = ({ deadline, onClose, open, onOpenChange }: EditDeadl
   }
 
   // Format the current date for display
-  const formattedDate = selectedDate 
-    ? dayjs(selectedDate).format('YYYY-MM-DD') 
-    : ''
+  const formattedDate = selectedDate ? dayjs(selectedDate).format('YYYY-MM-DD') : ''
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,12 +114,12 @@ const EditDeadlineDialog = ({ deadline, onClose, open, onOpenChange }: EditDeadl
           {/* Calendar directly in the form */}
           <div>
             <Label>Deadline Date</Label>
-            <div className="border rounded-md p-2 mt-1">
+            <div className='border rounded-md p-2 mt-1'>
               <Calendar
                 mode='single'
                 selected={selectedDate}
                 onSelect={(date) => date && setValue('deadline_date', date)}
-                className="mx-auto"
+                className='mx-auto'
               />
             </div>
             {errors.deadline_date && <p className='text-red-500 text-sm'>{errors.deadline_date.message}</p>}
@@ -130,16 +128,12 @@ const EditDeadlineDialog = ({ deadline, onClose, open, onOpenChange }: EditDeadl
           {/* Time Input */}
           <div>
             <Label htmlFor='deadline_time'>Time</Label>
-            <Input 
-              id='deadline_time' 
-              type='time' 
-              {...register('deadline_time')} 
-            />
+            <Input id='deadline_time' type='time' {...register('deadline_time')} />
             {errors.deadline_time && <p className='text-red-500 text-sm'>{errors.deadline_time.message}</p>}
           </div>
 
           {/* Selected Date and Time Display */}
-          <div className="text-sm text-muted-foreground">
+          <div className='text-sm text-muted-foreground'>
             Selected: {formattedDate} {selectedTime}
           </div>
 
