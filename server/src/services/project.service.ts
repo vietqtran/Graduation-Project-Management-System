@@ -985,7 +985,7 @@ export class ProjectService {
   async getAllProjectsByUserId(userId: string) {
     return runTransaction(async (session) => {
       const projects = await this.projectModel
-        .find({ members: userId, supervisor: { $ne: userId }})
+        .find({ members: userId, supervisor: { $ne: userId }, status: { $ne: 17 } })
         .populate('members')
         .populate('leader')
         .populate('supervisor')
