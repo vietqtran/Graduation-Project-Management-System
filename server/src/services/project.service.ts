@@ -408,7 +408,7 @@ export class ProjectService {
             throw new HttpException('Leader already has a project', 400)
           }
         }
-
+        status = leaderId ? 17 : 26;
         const project = await this.projectModel.create(
           [
             {
@@ -427,7 +427,7 @@ export class ProjectService {
               slow_count: 0,
               updated_by: tokenPayload._id,
               leader: leaderId || null,
-              status: status || 26,
+              status: status,
               stage: 1,
               created_at: new Date(),
               updated_at: new Date()
@@ -757,7 +757,7 @@ export class ProjectService {
       projects = [...projects, ...stringQuery]
 
       const arrayStringQuery = await this.projectModel
-        .find({ supervisor: { $in: [supervisorId] } })
+        .find({ supervisor: { $in: [supervisorId] }, status: { $in: [3, 4, 17] } })
         .lean()
         .exec()
       projects = [...projects, ...arrayStringQuery]
@@ -791,8 +791,8 @@ export class ProjectService {
             { supervisor: { $in: [supervisorId] }, status: { $in: [3, 4, 17] } },
             ...(Types.ObjectId.isValid(supervisorId)
               ? [
-                  { supervisor: new Types.ObjectId(supervisorId) },
-                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] } }
+                  { supervisor: new Types.ObjectId(supervisorId), status: { $in: [3, 4, 17] } },
+                  { supervisor: { $in: [new Types.ObjectId(supervisorId)] }, status: { $in: [3, 4, 17] } }
                 ]
               : [])
           ]

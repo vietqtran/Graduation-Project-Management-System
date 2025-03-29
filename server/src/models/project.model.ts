@@ -51,7 +51,7 @@ const ProjectSchema = new Schema<IProject>(
       {
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'At least one member is required']
+        required: [false, 'At least one member is required']
       }
     ],
     leader: {
