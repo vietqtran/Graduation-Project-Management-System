@@ -5,6 +5,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from '
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/hooks'
 import instance from '@/utils/axios'
 import React, { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -22,6 +23,7 @@ interface RequestModalProps {
     description?: string
     documents?: string[]
     due_date?: string
+    selectedProjectId?: string
   }
   type: 'update' | 'detail'
   onClose: () => void
@@ -29,6 +31,22 @@ interface RequestModalProps {
 }
 
 const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onSubmit }) => {
+  const { me } = useAuth()
+  interface User {
+    id: string
+    name: string
+    email: string
+  }
+
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await me()
+      setCurrentUser(user)
+    }
+    fetchUser()
+  }, [])
   interface FormValues {
     to_user: string
     from_user: string
@@ -70,13 +88,27 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
   }, [request, form])
 
   const handleUpload = async (file: File) => {
+    if (!currentUser || !request.selectedProjectId) {
+      toast.error('User or Project ID not found!')
+      return
+    }
+
     setUploading(true)
     try {
-      // Giả định đây là logic tải file lên server, thay bằng API thực tế của bạn
       const formData = new FormData()
       formData.append('file', file)
-      const response = await instance.post('/upload', formData, { withCredentials: true })
-      setDocumentId(response.data.documentId) // Giả định server trả về documentId
+
+      const uploadResponse = await instance.post('/upload/presigned-urls', formData, { withCredentials: true })
+      const fileUrl = uploadResponse.data.fileUrl
+
+      const documentData = {
+        user: currentUser.id,
+        project_id: request.selectedProjectId,
+        fileUrl
+      }
+      const documentResponse = await instance.post('/documents', documentData, { withCredentials: true })
+
+      setDocumentId(documentResponse.data.documentId)
       toast.success('Document uploaded successfully!')
     } catch (error) {
       console.error('Error uploading document:', error)
@@ -164,7 +196,6 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
               )}
             />
 
-            {/* Hiển thị danh sách tài liệu trong chế độ chi tiết */}
             {type === 'detail' && request.documents && request.documents.length > 0 && (
               <div className='col-span-2'>
                 <FormLabel>Documents</FormLabel>
@@ -180,7 +211,6 @@ const RequestModal: React.FC<RequestModalProps> = ({ request, type, onClose, onS
               </div>
             )}
 
-            {/* Tải lên tài liệu trong chế độ cập nhật */}
             {type === 'update' && (
               <div className='col-span-2'>
                 <FormLabel>Upload Document</FormLabel>

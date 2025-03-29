@@ -12,6 +12,7 @@ interface RequestDialogProps {
     description: string
     document: string
     due_date: string
+    selectedProjectId?: string
   }) => void
   onConfirm: () => void
 }
@@ -19,9 +20,9 @@ interface RequestDialogProps {
 const RequestDialog = ({ open, onOpenChange, onSubmit, onConfirm }: RequestDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-2xl'>
+      <DialogContent className='max-w-6xl'>
         <DialogHeader>
-          <DialogTitle>Add New Request</DialogTitle>
+          <DialogTitle></DialogTitle>
         </DialogHeader>
         <div className='mt-4'>
           <RequestForm onClose={() => onOpenChange(false)} onSubmit={onSubmit} />

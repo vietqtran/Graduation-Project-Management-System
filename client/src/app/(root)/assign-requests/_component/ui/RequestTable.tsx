@@ -23,6 +23,7 @@ interface Request {
   description?: string
   approve_user?: string
   documents?: string[]
+  selectedProjectId?: string
 }
 
 interface RequestTableProps {
@@ -199,7 +200,6 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
         onConfirm={confirmDeleteRequest}
       />
 
-      {/* Pagination Controls */}
       <div className='flex justify-center mt-4 space-x-4'>
         <Button variant='secondary' onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
           Prev

@@ -1,33 +1,68 @@
 <html>
 
-  <head>
-    <style>
-      body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; } h2 { color: #2c3e50; font-size: 24px;
-      margin-bottom: 20px; } p { font-size: 16px; margin: 10px 0; } ul { list-style-type: none; padding: 0; } li {
-      margin: 5px 0; font-size: 16px; } strong { color: #2980b9; } a { color: #2980b9; text-decoration: none;
-      font-weight: bold; } .footer { margin-top: 30px; font-size: 14px; color: #7f8c8d; }
-    </style>
-  </head>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      line-height: 1.6;
+    }
 
-  <body>
-    <h2>Xin chào em <em>{{leader.first_name}} {{leader.last_name}}</em>,</h2>
-    <p>Tôi rất vui mừng thông báo rằng em đã được thêm vào một dự án của kì đồ án với chức vụ leader với các thông tin
-      sau:</p>
-    <ul>
-      <li><strong>Tên dự án:</strong> {{projectDetails.name}}</li>
-      <li><strong>Mô tả:</strong> {{projectDetails.description}}</li>
-      <li><strong>Chuyên ngành:</strong> {{projectDetails.major}}</li>
-      <li><strong>Lĩnh vực:</strong> {{projectDetails.field}} </li>
-      <li><strong>Cơ sở:</strong> {{projectDetails.campus}}</li>
-      <li><strong>Danh mục:</strong> {{projectDetails.category}}</li>
-    </ul>
-    <p>Để bắt đầu làm việc với kì đồ án của em, vui lòng nhấp vào liên kết sau:
-      <a href='{{start_url}}'>Truy cập dự án</a></p>
-    <p>Nếu em có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với tôi</p>
-    <p>Trân trọng,<br />
-      Giảng viên hướng dẫn
-      {{supervisor_name}}</p>
-    <p class='footer'>© {{year}} Trường đại học FPT. All rights reserved.</p>
-  </body>
+    h2 {
+      color: #2c3e50;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    strong {
+      color: #2980b9;
+    }
+
+    a {
+      color: #2980b9;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Hello <em>{{leader.first_name}} {{leader.last_name}}</em>,</h2>
+  <p>I am pleased to inform you that you have been added to a capstone project as the leader with the following details:
+  </p>
+  <ul>
+    <li><strong>Project Name:</strong> {{projectDetails.name}}</li>
+    <li><strong>Description:</strong> {{projectDetails.description}}</li>
+  </ul>
+  <p>To start working on your capstone project, please click on the following link:
+    <a href='{{start_url}}'>Access Project</a>
+  </p>
+  <p>If you have any questions, please do not hesitate to contact me.</p>
+  <p>Best regards,<br />
+    Supervising Lecturer
+    {{supervisor_name}}</p>
+  <p class='footer'>© {{year}} FPT University. All rights reserved.</p>
+</body>
 
 </html>

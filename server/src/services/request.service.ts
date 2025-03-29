@@ -13,6 +13,7 @@ import { HttpException } from '@/shared/exceptions/http.exception'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
 import { MailService } from './mail.service'
 import ProjectModel from '@/models/project.model'
+import { StatusQueue } from '@/queues/status.queue'
 
 dotenv.config()
 
@@ -21,6 +22,7 @@ export class RequestService {
   private readonly userModel: Model<IUser>
   private readonly mailService: MailService
   private readonly emailQueue: EmailQueue
+  private readonly statusQueue: StatusQueue
 
   constructor() {
     this.requestModel = RequestModel
@@ -60,26 +62,7 @@ export class RequestService {
         throw new HttpException('Error at creating request', 400)
       }
 
-      const formatDate = (due_date: Date) => {
-        return new Date(due_date).toLocaleString('en-US', {
-          month: 'numeric',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: true
-        })
-      }
-
-      const formatDescription = (description: string) => {
-        return description
-          .split('\n') // Tách từng dòng
-          .map((description) => `${description.trim()}`) // Thêm dấu đầu dòng
-          .join('<br>') // Ghép lại với thẻ xuống dòng HTML
-      }
-
-      this.emailQueue.addEmailJob({
+      await this.emailQueue.addEmailJob({
         to: toUser.email,
         subject: 'You have a new request from your supervisor',
         templateName: 'new-request',
@@ -89,14 +72,36 @@ export class RequestService {
           request: {
             type: request[0].type,
             from_user: tokenPayload.username,
-            description: formatDescription(request[0].description),
+            description: request[0].description,
             remark: request[0].remark,
-            due_date: formatDate(request[0].due_date),
+            due_date: request[0].due_date.toLocaleString('en-US', {
+              month: 'numeric',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric',
+              hour12: true
+            }),
             status: request[0].status
           }
         }
       })
 
+      try {
+        if (!request[0] || !request[0]._id) {
+          throw new Error('Request creation failed, _id not found')
+        }
+
+        await this.statusQueue.addStatusJob((request[0]._id as mongoose.Types.ObjectId).toHexString(), request[0].due_date)
+      } catch (error: unknown) {
+        const err = error as Error
+        console.error(`Failed to add status job for request: ${err.message}`)
+      }
+
+      console.log(request[0])
+      console.log(request[0]._id)
+      console.log(request[0].due_date)
       return {
         request: request[0],
         requestData: requestData
@@ -210,20 +215,39 @@ export class RequestService {
         .session(session)
         .lean()
 
-      return requests.map((request) => ({
-        _id: request._id?.toString(),
-        to_user: (request.to_user as IUser)?.username || null,
-        from_user: request.from_user || null,
-        approve_user: request.approve_user || null,
-        type: request.type || null,
-        description: request.description || null,
-        remark: request.remark || null,
-        documents: request.documents || null,
-        due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
-        status: request.status || null,
-        created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
-        updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null
-      }))
+      const requestsWithProject = await Promise.all(
+        requests.map(async (request) => {
+          let selectedProjectId = null
+
+          if (request.to_user) {
+            const project = await ProjectModel.findOne({ leader: request.to_user })
+              .select('_id')
+              .lean()
+              .session(session)
+
+            if (project) {
+              selectedProjectId = project._id.toString()
+            }
+          }
+
+          return {
+            _id: request._id?.toString(),
+            to_user: (request.to_user as IUser)?.username || null,
+            from_user: request.from_user || null,
+            approve_user: request.approve_user || null,
+            type: request.type || null,
+            description: request.description || null,
+            remark: request.remark || null,
+            documents: request.documents || null,
+            due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
+            status: request.status || null,
+            created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
+            updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null,
+            selectedProjectId // Trả về ID của project nếu to_user là leader
+          }
+        })
+      )
+      return requestsWithProject
     })
   }
 

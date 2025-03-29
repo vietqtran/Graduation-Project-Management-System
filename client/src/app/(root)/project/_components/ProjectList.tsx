@@ -53,7 +53,7 @@ export default function ProjectList({ projects }: Readonly<ProjectListProps>) {
 
   return (
     <div className='grid gap-6 p-5 md:grid-cols-2 lg:grid-cols-3'>
-      {projects?.map((project) => (
+      {(projects.list ?? projects)?.map((project) => (
         <Card
           key={project._id}
           className='cursor-pointer hover:shadow-md transition-shadow'

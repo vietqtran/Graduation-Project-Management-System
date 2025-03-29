@@ -1,25 +1,51 @@
 <html>
 
-  <head>
-    <style>
-      body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; } h2 { color: #2c3e50; font-size: 24px;
-      margin-bottom: 20px; } p { font-size: 16px; margin: 10px 0; } a { color: #2980b9; text-decoration: none;
-      font-weight: bold; } .footer { margin-top: 30px; font-size: 14px; color: #7f8c8d; }
-    </style>
-  </head>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      line-height: 1.6;
+    }
 
-  <body>
-    <h2>Chào em {{leaderName}},</h2>
-    <p>Chúng tôi xin thông báo rằng trạng thái của dự án
-      <strong>{{projectTitle}}</strong>
-      đã được cập nhật thành
-      <strong>{{status}}</strong>.</p>
-    <p>Để xem chi tiết dự án, em hãy nhấp vào liên kết sau: <a href='{{start_url}}'>Truy cập dự án</a></p>
-    <p>Nếu em có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.</p>
-    <p>Trân trọng,<br />
-      Giảng viên hướng dẫn
-      {{supervisor_name}}</p>
-    <p class='footer'>© {{year}} Trường ĐH FPT. All rights reserved.</p>
-  </body>
+    h2 {
+      color: #2c3e50;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    a {
+      color: #2980b9;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Hello {{leaderName}},</h2>
+  <p>We would like to inform you that the status of the project
+    <strong>{{projectTitle}}</strong>
+    has been updated to
+    <strong>{{status}}</strong>.
+  </p>
+  <p>To view the project details, please click on the following link: <a href='{{start_url}}'>Access Project</a></p>
+  <p>If you have any questions, please do not hesitate to contact us.</p>
+  <p>Best regards,<br />
+    Supervising Lecturer
+    {{supervisor_name}}</p>
+  <p class='footer'>© {{year}} FPT University. All rights reserved.</p>
+</body>
 
 </html>

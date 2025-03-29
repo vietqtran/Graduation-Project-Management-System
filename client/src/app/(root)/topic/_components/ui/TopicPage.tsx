@@ -59,7 +59,6 @@ const TopicPage = () => {
         toast.error(response.data.message || 'Có lỗi xảy ra')
       }
     } catch (error: unknown) {
-      toast.error('Leader already has a project')
       console.log('Chi tiết lỗi:', error)
     } finally {
       setLoading(false)
