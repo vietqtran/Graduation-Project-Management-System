@@ -4,18 +4,15 @@ import RequestModel, { IRequest } from '@/models/request.model'
 import UserModel, { IUser } from '@/models/user.model'
 import mongoose, { Model } from 'mongoose'
 
-import { CreateRequestDto } from '@/dtos/request/create-request.dto'
+import { RequestStatus } from '@/constants/request-status.enum'
+import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
+import { runTransaction } from '@/helpers/transaction-helper'
+import DeadlineModel from '@/models/deadline.model'
 import { EmailQueue } from '@/queues/email.queue'
 import { HttpException } from '@/shared/exceptions/http.exception'
-import { IUploadDocument } from '@/models/document.model'
-import { MailService } from './mail.service'
-import { RequestStatus } from '@/constants/request-status.enum'
-import { STATUS_MASTER } from '@/constants/status'
 import { TokenPayload } from '@/shared/interfaces/token-payload.interface'
-import { UpdateRequestDto } from '@/dtos/request/update-request.dto'
-import { create } from 'domain'
-import { runTransaction } from '@/helpers/transaction-helper'
-import { session } from 'passport'
+import { MailService } from './mail.service'
+import ProjectModel from '@/models/project.model'
 
 dotenv.config()
 
@@ -300,5 +297,34 @@ export class RequestService {
         return { message: 'Request summited' }
       }
     })
+  }
+
+  async checkEligibility(userId: string) {
+    return runTransaction(async (session) => {
+      const findProject = await ProjectModel.findOne({ members: userId }).session(session);
+        if (!findProject) return false;
+
+        const leader = await UserModel.findById(findProject.leader).populate('planned_semester').session(session);
+        if (!leader || !leader.planned_semester) return false;
+
+        const semester = leader.planned_semester;
+
+        const [totalRequests, completedCount, deadline] = await Promise.all([
+            RequestModel.countDocuments({ to_user: userId }).session(session),
+            RequestModel.countDocuments({ to_user: userId, status: 'completed' }).session(session),
+            DeadlineModel.findOne({ deadline_key: 'thesis_defense', semester: semester }).session(session),
+        ]);
+
+        if (totalRequests === 0) return false;
+        if (!deadline || !deadline.deadline_date) {
+            throw new HttpException('Deadline not found', 404);
+        }
+
+        const currentDate = new Date();
+        const deadlineDate = new Date(deadline.deadline_date);
+
+        const completionRate = completedCount / totalRequests;
+        return completionRate > 0.7 && currentDate >= deadlineDate;
+    });
   }
 }
