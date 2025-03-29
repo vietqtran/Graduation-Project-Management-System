@@ -23,6 +23,7 @@ interface Request {
   description?: string
   approve_user?: string
   documents?: string[]
+  selectedProjectId?: string
 }
 
 interface RequestTableProps {
@@ -106,6 +107,7 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
           <TableRow>
             <TableHead>Status</TableHead>
             <TableHead>Remark</TableHead>
+            <TableHead>Description</TableHead>
             <TableHead>Updated At</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Due Date</TableHead>
@@ -120,6 +122,27 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
                 {request?.status || 'N/A'}
               </TableCell>
               <TableCell>{request?.remark || 'N/A'}</TableCell>
+              <TableCell>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: (() => {
+                      if (!request?.description) return 'N/A'
+
+                      const parts = request.description
+                        .split('-')
+                        .map((item) => item.trim())
+                        .filter(Boolean)
+
+                      if (parts.length === 0) return 'N/A'
+
+                      return [
+                        parts[0], // Giữ nguyên câu đầu tiên
+                        ...parts.slice(1).map((item) => `• ${item}`) // Thêm dấu "•" cho các dòng sau
+                      ].join('<br />')
+                    })()
+                  }}
+                />
+              </TableCell>
               <TableCell>{request?.updated_at ? new Date(request.updated_at).toLocaleString() : 'N/A'}</TableCell>
               <TableCell>{request?.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</TableCell>
               <TableCell>{request?.due_date ? new Date(request.due_date).toLocaleString() : 'N/A'}</TableCell>
@@ -177,7 +200,6 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, setRefresh }) => 
         onConfirm={confirmDeleteRequest}
       />
 
-      {/* Pagination Controls */}
       <div className='flex justify-center mt-4 space-x-4'>
         <Button variant='secondary' onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
           Prev

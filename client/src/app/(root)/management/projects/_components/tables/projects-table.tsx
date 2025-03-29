@@ -164,7 +164,7 @@ const ProjectsTable = () => {
 
   const getCategoryBadge = (category: 1 | 2) => {
     return (
-      <Badge variant={category === 1 ? 'default' : 'secondary'}>{category === 1 ? 'Category 1' : 'Category 2'}</Badge>
+      <Badge variant={category === 1 ? 'default' : 'secondary'}>{category === 1 ? 'Student' : 'Supervisor'}</Badge>
     )
   }
 
@@ -316,8 +316,8 @@ const ProjectsTable = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>All Categories</SelectItem>
-                  <SelectItem value='1'>Category 1</SelectItem>
-                  <SelectItem value='2'>Category 2</SelectItem>
+                  <SelectItem value='1'>Student</SelectItem>
+                  <SelectItem value='2'>Supervisor</SelectItem>
                 </SelectContent>
               </Select>
             </div>

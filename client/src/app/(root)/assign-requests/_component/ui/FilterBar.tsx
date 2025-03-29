@@ -107,7 +107,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, onClearFilter, se
     }
 
     const { to_user, description, document, due_date } = currentFormData.current
-    if (!to_user || !description || !document || !due_date) {
+    if (!to_user || !description || !due_date) {
       toast.error('Please fill all required fields')
       return
     }

@@ -15,4 +15,5 @@ router.patch('/update-request/:requestId', requestController.updateRequest)
 router.get('/student', requestController.getStudentRequests)
 router.post('/student/upload', requestController.uploadDocument)
 router.post('/student/submit', requestController.submitRequest)
+router.get('/check-eligibility', requestController.checkEligibility)
 export { router as requestRoutes }
