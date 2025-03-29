@@ -74,9 +74,9 @@ export class RequestService {
 
       const formatDescription = (description: string) => {
         return description
-          .split('\n') // Tách từng dòng
-          .map((description) => `${description.trim()}`) // Thêm dấu đầu dòng
-          .join('<br>') // Ghép lại với thẻ xuống dòng HTML
+          .split('\n')  
+          .map((description) => `${description.trim()}`)  
+          .join('<br>')  
       }
 
       this.emailQueue.addEmailJob({
@@ -200,32 +200,53 @@ export class RequestService {
     return this.requestModel.findById(requestId).populate('from_user').populate('to_user').populate('approve_user')
   }
   async getUserRequests(userId: string) {
-    return runTransaction(async (session) => {
-      const requests = await this.requestModel
-        .find({ from_user: userId })
-        .populate('to_user')
-        .populate('approve_user')
-        .populate('documents')
-        .sort({ created_at: -1 })
-        .session(session)
-        .lean()
+  return runTransaction(async (session) => {
+    const requests = await this.requestModel
+      .find({ from_user: userId })
+      .populate('to_user')
+      .populate('approve_user')
+      .populate('documents')
+      .sort({ created_at: -1 })
+      .session(session)
+      .lean()
 
-      return requests.map((request) => ({
-        _id: request._id?.toString(),
-        to_user: (request.to_user as IUser)?.username || null,
-        from_user: request.from_user || null,
-        approve_user: request.approve_user || null,
-        type: request.type || null,
-        description: request.description || null,
-        remark: request.remark || null,
-        documents: request.documents || null,
-        due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
-        status: request.status || null,
-        created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
-        updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null
-      }))
-    })
-  }
+    const requestsWithProject = await Promise.all(
+      requests.map(async (request) => {
+        let selectedProjectId = null
+
+        if (request.to_user) {
+          const project = await ProjectModel
+            .findOne({ leader: request.to_user })  
+            .select('_id')
+            .lean()
+            .session(session)
+
+          if (project) {
+            selectedProjectId = project._id.toString()
+          }
+        }
+
+        return {
+          _id: request._id?.toString(),
+          to_user: (request.to_user as IUser)?.username || null,
+          from_user: request.from_user || null,
+          approve_user: request.approve_user || null,
+          type: request.type || null,
+          description: request.description || null,
+          remark: request.remark || null,
+          documents: request.documents || null,
+          due_date: request.due_date ? new Date(request.due_date).toISOString() : null,
+          status: request.status || null,
+          created_at: request.created_at ? new Date(request.created_at).toISOString() : null,
+          updated_at: request.updated_at ? new Date(request.updated_at).toISOString() : null,
+          selectedProjectId // Trả về ID của project nếu to_user là leader
+        }
+      })
+    )
+    return requestsWithProject
+  })
+}
+
 
   async getAllRequests(tokenPayload: any) {
     const userId = tokenPayload._id // Lấy userId từ token

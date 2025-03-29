@@ -3,12 +3,17 @@
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useUpload } from '@/hooks/useUpload'
+import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/hooks'
+import instance from '@/utils/axios'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import instance from '@/utils/axios'
-import { Textarea } from '@/components/ui/textarea'
+interface Project {
+  _id: string
+  leader: string
+  name: string // Thêm các field khác nếu có
+}
 
 type RequestFormProps = {
   onSubmit: (data: {
@@ -18,6 +23,7 @@ type RequestFormProps = {
     description: string
     document: string
     due_date: string
+    selectedProjectId?: string
   }) => void
   onClose: () => void
 }
@@ -34,7 +40,25 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
     }
   })
 
-  const { upload } = useUpload()
+  const { me } = useAuth()
+  interface User {
+    id: string
+    name: string
+    email: string
+  }
+
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [selectedLeaderId, setSelectedLeaderId] = useState<string>('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await me()
+      setCurrentUser(user)
+    }
+    fetchUser()
+  }, [])
+
   const [uploading, setUploading] = useState(false)
   const [documentId, setDocumentId] = useState<string | null>(null)
   const [leaders, setLeaders] = useState<{ id: string; email: string }[]>([])
@@ -73,50 +97,50 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
 
     return () => subscription.unsubscribe()
   }, [form, onSubmit])
-  async function handleUpload(file: File) {
-    if (!file) {
-      toast.error('Please select a file first')
+  const handleUpload = async (file: File, leaderId: string) => {
+    if (!currentUser || !leaderId) {
+      toast.error('User or Leader ID not found!')
       return
     }
 
     setUploading(true)
     try {
-      const fileList = {
-        length: 1,
-        item: (index: number) => (index === 0 ? file : null),
-        0: file,
-        [Symbol.iterator]: function* () {
-          yield this[0]
-        }
-      } as FileList
+      const formData = new FormData()
+      formData.append('file', file)
 
-      const uploadResponse = await upload(fileList)
+      const uploadResponse = await instance.post('/document', formData, { withCredentials: true })
+      const fileUrl = uploadResponse.data.fileUrl
 
-      if (!uploadResponse?.success || !uploadResponse.results) {
-        throw new Error('Upload failed')
+      const projectByLeader = await instance.get('/project/get-project-leader-for-supervisor', {
+        withCredentials: true
+      })
+
+      const selectedProject = projectByLeader.data.data.find((p: Project) => p.leader === leaderId)
+
+      const selectedProjectId = selectedProject ? selectedProject._id : null
+
+      const documentData = {
+        user: currentUser.id,
+        project_id: selectedProjectId,
+        fileUrl
       }
 
-      const fileResult = uploadResponse.results[0]
-      if (!fileResult) {
-        throw new Error('Invalid upload response')
-      }
+      const documentResponse = await instance.post('/documents', documentData, { withCredentials: true })
 
-      setDocumentId(fileResult.key)
-      form.setValue('document', fileResult.key)
-      toast.success('File uploaded successfully!')
+      setDocumentId(documentResponse.data.documentId)
+      toast.success('Document uploaded successfully!')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Upload failed')
+      console.error('Error uploading document:', error)
+      toast.error('Failed to upload document!')
     } finally {
       setUploading(false)
     }
   }
 
-  // Định nghĩa hàm handleFormSubmit để xử lý khi form được submit
-
   return (
     <div>
       <div className='bg-white grid p-1 gap-4'>
-        <h2 className='text-2xl font-bold text-center mt-12'>Submit a Request</h2>
+        <h2 className='text-2xl font-bold text-center'>Submit a Request</h2>
         <Form {...form}>
           <form className='grid grid-cols-2 gap-4'>
             <FormField
@@ -126,7 +150,16 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
                 <FormItem>
                   <FormLabel>To User (Leader)</FormLabel>
                   <FormControl>
-                    <select {...field} className='border rounded p-2 w-full text-black bg-white'>
+                    <select
+                      {...field}
+                      value={field.value} // Giữ giá trị từ form
+                      onChange={(e) => {
+                        const leaderId = e.target.value
+                        setSelectedLeaderId(leaderId) // Cập nhật selectedLeaderId
+                        field.onChange(leaderId) // Cập nhật giá trị của form
+                      }}
+                      className='border rounded p-2 w-full text-black bg-white'
+                    >
                       <option value=''>Select a leader</option>
                       {Array.isArray(leaders) && leaders.length > 0 ? (
                         leaders.map((leader) => (
@@ -188,22 +221,31 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
             <FormField
               control={form.control}
               name='document'
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Upload Document</FormLabel>
                   <FormControl>
                     <Input
                       type='file'
                       onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleUpload(file)
+                        if (e.target.files && e.target.files.length > 0) {
+                          const file = e.target.files[0]
+                          setSelectedFile(file)  
+                          field.onChange(file)  
+                        }
                       }}
                       disabled={uploading}
                     />
                   </FormControl>
                   <Button
                     type='button'
-                    onClick={() => documentId && toast.success('Document already uploaded!')}
+                    onClick={() => {
+                      if (!selectedFile) {
+                        toast.error('Please select a file first!')
+                        return
+                      }
+                      handleUpload(selectedFile, selectedLeaderId)
+                    }}
                     disabled={uploading || !!documentId}
                     className='mt-2'
                   >
