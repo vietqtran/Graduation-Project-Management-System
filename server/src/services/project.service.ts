@@ -447,7 +447,7 @@ export class ProjectService {
         const projectDetails = {
           name: projectData.name,
           description: projectData.description || 'No description provided.',
-          category: projectData.category === 2 ? 'From Teacher' : 'From School',
+          category: projectData.category === 2 ? 'From Teacher' : 'From School'
         }
 
         const user = await this.userModel
@@ -899,7 +899,10 @@ export class ProjectService {
     return runTransaction(async (session) => {
       console.log(`🔍 Processing project approval - Project ID: ${projectId}, Status: ${status}`)
 
-      const project = await this.projectModel.findOne({ _id: new Types.ObjectId(projectId) }).populate('leader').session(session)
+      const project = await this.projectModel
+        .findOne({ _id: new Types.ObjectId(projectId) })
+        .populate('leader')
+        .session(session)
       if (!project) {
         console.log('Project not found:', projectId)
         throw new HttpException('Project not found', 404)
@@ -936,8 +939,7 @@ export class ProjectService {
       }
 
       console.log(`✅ Project status updated to ${status}`)
-      const leaderEmail = await this.userModel.findOne(
-        { _id: project.leader },)
+      const leaderEmail = await this.userModel.findOne({ _id: project.leader })
 
       await this.emailQueue.addEmailJob({
         to: leaderEmail?.email || '',

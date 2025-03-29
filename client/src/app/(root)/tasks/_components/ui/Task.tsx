@@ -1,7 +1,7 @@
 // TaskComponent.jsx
 
-import React,{ memo } from 'react'
-import { Task,TaskLabel } from '@/types/task.type'
+import React, { memo } from 'react'
+import { Task, TaskLabel } from '@/types/task.type'
 
 import AvatarGroup from '@/components/ui/avatar-group'
 import { Badge } from '@/components/ui/badge'
@@ -23,23 +23,23 @@ interface TaskProps {
   isViewOnly?: boolean
 }
 
-const TaskComponent: React.FC<TaskProps> = ({ task,index,onUpdate,onOpen,isEditing = false,isViewOnly }) => {
+const TaskComponent: React.FC<TaskProps> = ({ task, index, onUpdate, onOpen, isEditing = false, isViewOnly }) => {
   const handleToggleComplete = async () => {
     if (isViewOnly) {
       toast.error('You are supervisor, you just have view permission')
       return
     }
     try {
-      await instance.patch(`/board/tasks/${task._id}`,{ is_completed: !task.is_completed },{ withCredentials: true })
+      await instance.patch(`/board/tasks/${task._id}`, { is_completed: !task.is_completed }, { withCredentials: true })
       onUpdate()
     } catch (error) {
-      console.error('Failed to update task completion status',error)
+      console.error('Failed to update task completion status', error)
     }
   }
 
   return (
     <Draggable draggableId={task._id} index={index}>
-      {(provided,snapshot) => (
+      {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
@@ -49,10 +49,11 @@ const TaskComponent: React.FC<TaskProps> = ({ task,index,onUpdate,onOpen,isEditi
             ...provided.draggableProps.style,
             rotate: snapshot.isDragging ? '3deg' : '0deg'
           }}
-          className={`bg-background shadow-md border rounded-lg select-none ${snapshot.isDragging
-            ? 'shadow-xl rotate-3 cursor-grabbing bg-white ring-2 ring-blue-500 z-[9999]'
-            : 'cursor-grab hover:bg-neutral-50'
-            } transition-colors duration-200 ${isEditing ? 'border-2 border-blue-500' : ''}`}
+          className={`bg-background shadow-md border rounded-lg select-none ${
+            snapshot.isDragging
+              ? 'shadow-xl rotate-3 cursor-grabbing bg-white ring-2 ring-blue-500 z-[9999]'
+              : 'cursor-grab hover:bg-neutral-50'
+          } transition-colors duration-200 ${isEditing ? 'border-2 border-blue-500' : ''}`}
         >
           <div className='flex flex-col'>
             <div className='p-2 flex items-start flex-col gap-2'>
@@ -67,10 +68,26 @@ const TaskComponent: React.FC<TaskProps> = ({ task,index,onUpdate,onOpen,isEditi
                 {!task.is_completed && <span className='text-sm text-muted-foreground'>Not Completed</span>}
               </div>
               <div>
-                {task.priority === 'low' && <Badge className='bg-green-500' variant='default'>Low</Badge>}
-                {task.priority === 'medium' && <Badge className='bg-yellow-500' variant='default'>Medium</Badge>}
-                {task.priority === 'high' && <Badge className='bg-red-500' variant='default'>High</Badge>}
-                {task.priority === 'urgent' && <Badge className='bg-red-500' variant='default'>Urgent</Badge>}
+                {task.priority === 'low' && (
+                  <Badge className='bg-green-500' variant='default'>
+                    Low
+                  </Badge>
+                )}
+                {task.priority === 'medium' && (
+                  <Badge className='bg-yellow-500' variant='default'>
+                    Medium
+                  </Badge>
+                )}
+                {task.priority === 'high' && (
+                  <Badge className='bg-red-500' variant='default'>
+                    High
+                  </Badge>
+                )}
+                {task.priority === 'urgent' && (
+                  <Badge className='bg-red-500' variant='default'>
+                    Urgent
+                  </Badge>
+                )}
               </div>
               <p className={`text-sm max-w-full break-all ${task.is_completed ? 'line-through text-destructive' : ''}`}>
                 {task.name}
@@ -80,13 +97,13 @@ const TaskComponent: React.FC<TaskProps> = ({ task,index,onUpdate,onOpen,isEditi
                   {task.start_date && (
                     <div className='flex items-center gap-1'>
                       <CalendarIcon className='h-3 w-3' />
-                      <span>Start: {format(new Date(task.start_date),'MMM dd')}</span>
+                      <span>Start: {format(new Date(task.start_date), 'MMM dd')}</span>
                     </div>
                   )}
                   {task.due_date && (
                     <div className='flex items-center gap-1'>
                       <CalendarIcon className='h-3 w-3' />
-                      <span>Due: {format(new Date(task.due_date),'MMM dd')}</span>
+                      <span>Due: {format(new Date(task.due_date), 'MMM dd')}</span>
                     </div>
                   )}
                 </div>
@@ -95,7 +112,7 @@ const TaskComponent: React.FC<TaskProps> = ({ task,index,onUpdate,onOpen,isEditi
             {task.labels.length > 0 && (
               <div className='p-2'>
                 <div className='flex items-center justify-start gap-2 flex-wrap'>
-                  {task.labels.map((label: TaskLabel,idx) => (
+                  {task.labels.map((label: TaskLabel, idx) => (
                     <Badge key={idx} variant='secondary' style={{ backgroundColor: label.color }}>
                       {label.text}
                     </Badge>

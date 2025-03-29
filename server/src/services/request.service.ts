@@ -63,6 +63,43 @@ export class RequestService {
         throw new HttpException('Error at creating request', 400)
       }
 
+      const formatDate = (due_date: Date) => {
+        return new Date(due_date).toLocaleString('en-US', {
+          month: 'numeric',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+        })
+      }
+
+      const formatDescription = (description: string) => {
+        return description
+          .split('\n') // Tách từng dòng
+          .map((description) => `${description.trim()}`) // Thêm dấu đầu dòng
+          .join('<br>') // Ghép lại với thẻ xuống dòng HTML
+      }
+
+      this.emailQueue.addEmailJob({
+        to: toUser.email,
+        subject: 'You have a new request from your supervisor',
+        templateName: 'new-request',
+        context: {
+          year: new Date().getFullYear(),
+          start_url: `${process.env.CLIENT_URL}/assign-requests`,
+          request: {
+            type: request[0].type,
+            from_user: tokenPayload.username,
+            description: formatDescription(request[0].description),
+            remark: request[0].remark,
+            due_date: formatDate(request[0].due_date),
+            status: request[0].status
+          }
+        }
+      })
+
       return {
         request: request[0],
         requestData: requestData
