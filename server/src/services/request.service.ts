@@ -172,6 +172,7 @@ export class RequestService {
         .populate('to_user')
         .populate('approve_user')
         .populate('documents')
+        .sort({ created_at: -1 })
         .session(session)
         .lean()
 

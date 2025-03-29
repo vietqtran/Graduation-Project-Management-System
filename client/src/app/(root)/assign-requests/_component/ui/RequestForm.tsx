@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import instance from '@/utils/axios'
+import { Textarea } from '@/components/ui/textarea'
 
 type RequestFormProps = {
   onSubmit: (data: {
@@ -125,7 +126,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
                 <FormItem>
                   <FormLabel>To User (Leader)</FormLabel>
                   <FormControl>
-                    <select {...field} className='border rounded p-2 w-full'>
+                    <select {...field} className='border rounded p-2 w-full text-black bg-white'>
                       <option value=''>Select a leader</option>
                       {Array.isArray(leaders) && leaders.length > 0 ? (
                         leaders.map((leader) => (
@@ -164,7 +165,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSubmit }) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input type='text' placeholder='Enter description' {...field} />
+                    <Textarea placeholder='Enter description' {...field} className='h-24' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
